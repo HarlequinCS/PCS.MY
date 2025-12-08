@@ -1794,7 +1794,9 @@
       messageDiv.style.display = 'none';
 
       try {
-        const response = await fetch('api/comments.php', {
+        // Try simplified API first, fallback to main API
+        let apiUrl = 'api/comments.php';
+        const response = await fetch(apiUrl, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'

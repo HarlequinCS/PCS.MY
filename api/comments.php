@@ -147,64 +147,49 @@ if ($method === 'POST') {
         // Rate limiting removed - Admin approval system provides spam protection
         // Comments are set to 'pending' status and require admin approval before display
         
-        // Insert comment - Based on your table structure: comment_id, comment, created_at, status
-        // created_at has default, so we only need to specify comment and status
+        // Insert comment - Based on your exact table structure:
+        // comment_id (auto increment), comment (longtext), created_at (default), status (varchar), ip_address (varchar)
         try {
-            // First, try to update status column default if it's set to 'approved'
-            // Then insert with explicit 'pending' status
-            $stmt = $pdo->prepare("INSERT INTO comment (comment, status) VALUES (?, ?)");
-            $stmt->execute([$comment, 'pending']);
+            // Insert based on your exact table structure:
+            // comment_id (auto), comment (required), created_at (default), status (varchar), ip_address (varchar)
+            $stmt = $pdo->prepare("INSERT INTO comment (comment, status, ip_address) VALUES (?, 'pending', ?)");
+            $result = $stmt->execute([$comment, $ip]);
+            
+            if ($result === false) {
+                throw new Exception("INSERT execution returned false");
+            }
+            
             $commentId = $pdo->lastInsertId();
             
-            if (!$commentId) {
-                // Try to get the last insert ID differently
-                $lastId = $pdo->query("SELECT LAST_INSERT_ID() as id")->fetch();
-                $commentId = $lastId['id'] ?? null;
+            // Verify we got an ID
+            if (!$commentId || $commentId == 0) {
+                $check = $pdo->query("SELECT LAST_INSERT_ID() as id")->fetch();
+                $commentId = $check['id'] ?? null;
                 
-                if (!$commentId) {
-                    // If still no ID, the insert might have failed silently
-                    // Try a simple insert without status to see if that works
-                    $stmt2 = $pdo->prepare("INSERT INTO comment (comment) VALUES (?)");
-                    $stmt2->execute([$comment]);
-                    $commentId = $pdo->lastInsertId();
-                    
-                    if ($commentId) {
-                        // Update status to pending after insert
-                        $pdo->prepare("UPDATE comment SET status = 'pending' WHERE comment_id = ?")->execute([$commentId]);
-                    } else {
-                        throw new Exception("Failed to insert comment - no ID returned");
-                    }
+                if (!$commentId || $commentId == 0) {
+                    throw new Exception("Failed to retrieve comment ID - insert may have failed");
                 }
             }
         } catch (PDOException $e) {
-            error_log("Insert failed: " . $e->getMessage());
+            // Log detailed error
+            error_log("INSERT PDO Error: " . $e->getMessage());
             error_log("SQL Error Code: " . $e->getCode());
             error_log("SQL Error Info: " . print_r($e->errorInfo, true));
-            error_log("Comment text length: " . strlen($comment));
-            error_log("Comment preview: " . substr($comment, 0, 100));
             
-            // Try fallback - insert without status, then update
-            try {
-                error_log("Trying fallback insert method");
-                $stmt = $pdo->prepare("INSERT INTO comment (comment) VALUES (?)");
-                $stmt->execute([$comment]);
-                $commentId = $pdo->lastInsertId();
-                
-                if ($commentId) {
-                    // Try to update status if column exists
-                    try {
-                        $pdo->prepare("UPDATE comment SET status = 'pending' WHERE comment_id = ?")->execute([$commentId]);
-                    } catch (PDOException $e2) {
-                        error_log("Status update failed (column might not exist): " . $e2->getMessage());
-                        // Continue anyway - comment is inserted
-                    }
-                } else {
-                    throw new Exception("Fallback insert also failed");
-                }
-            } catch (Exception $e2) {
-                error_log("Fallback insert failed: " . $e2->getMessage());
-                throw new Exception("Database insert error: " . $e->getMessage() . " | Fallback: " . $e2->getMessage());
-            }
+            // Return error with details for debugging
+            http_response_code(500);
+            echo json_encode([
+                'error' => 'Database insert failed',
+                'message' => $e->getMessage(),
+                'code' => $e->getCode(),
+                'sql_state' => $e->errorInfo[0] ?? null,
+                'driver_code' => $e->errorInfo[1] ?? null,
+                'driver_message' => $e->errorInfo[2] ?? null
+            ]);
+            exit;
+        } catch (Exception $e) {
+            error_log("INSERT General Error: " . $e->getMessage());
+            throw $e;
         }
         
         echo json_encode([
