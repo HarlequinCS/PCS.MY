@@ -262,7 +262,13 @@ if ($method === 'POST') {
                     
                     if ($commentId && $commentId > 0) {
                         error_log("Retry successful after AUTO_INCREMENT fix, comment_id: $commentId");
-                        // Success - continue to response
+                        // Success - return response immediately
+                        echo json_encode([
+                            'success' => true,
+                            'message' => 'Thank you for your comment! It will be reviewed by our admin before being displayed.',
+                            'comment_id' => $commentId
+                        ]);
+                        exit; // Exit here to prevent further execution
                     } else {
                         throw new Exception("AUTO_INCREMENT fix failed. Please run fix_database_permanent.php");
                     }
@@ -281,7 +287,7 @@ if ($method === 'POST') {
             }
         }
         
-        // Success - return response
+        // Success - return response (normal flow, no errors)
         echo json_encode([
             'success' => true,
             'message' => 'Thank you for your comment! It will be reviewed by our admin before being displayed.',
