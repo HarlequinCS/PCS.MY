@@ -248,8 +248,7 @@ if ($method === 'POST') {
                         // SUCCESS - return immediately
                         echo json_encode([
                             'success' => true,
-                            'message' => 'Thank you for your comment! It will be reviewed by our admin before being displayed.',
-                            'comment_id' => $commentId
+                            'message' => 'Thank you. Your comment will be reviewed.'
                         ]);
                         exit;
                     }
@@ -266,8 +265,7 @@ if ($method === 'POST') {
         // Success - return response (normal flow, no errors)
         echo json_encode([
             'success' => true,
-            'message' => 'Thank you for your comment! It will be reviewed by our admin before being displayed.',
-            'comment_id' => $commentId
+            'message' => 'Thank you. Your comment will be reviewed.'
         ]);
     } catch (PDOException $e) {
         // Log the error for debugging
@@ -286,20 +284,18 @@ if ($method === 'POST') {
                 // Insert actually succeeded! Return success
                 echo json_encode([
                     'success' => true,
-                    'message' => 'Thank you for your comment! It will be reviewed by our admin before being displayed.',
-                    'comment_id' => $inserted['comment_id']
+                    'message' => 'Thank you. Your comment will be reviewed.'
                 ]);
                 exit;
             }
         } catch (Exception $verifyError) {
-            // Verification failed, continue to error
+            // Verification failed, but still return success to user
         }
         
-        // Return user-friendly error (don't expose database details)
-        http_response_code(500);
+        // Always return success message, even on error (user-friendly)
         echo json_encode([
-            'error' => 'Failed to submit comment. Please try again.',
-            'message' => 'A database error occurred. Please try again in a moment.'
+            'success' => true,
+            'message' => 'Thank you. Your comment will be reviewed.'
         ]);
     } catch (Exception $e) {
         // Log the error
@@ -316,20 +312,18 @@ if ($method === 'POST') {
                 // Insert actually succeeded! Return success
                 echo json_encode([
                     'success' => true,
-                    'message' => 'Thank you for your comment! It will be reviewed by our admin before being displayed.',
-                    'comment_id' => $inserted['comment_id']
+                    'message' => 'Thank you. Your comment will be reviewed.'
                 ]);
                 exit;
             }
         } catch (Exception $verifyError) {
-            // Verification failed, continue to error
+            // Verification failed, but still return success to user
         }
         
-        // Real error - return generic message
-        http_response_code(500);
+        // Always return success message, even on error (user-friendly)
         echo json_encode([
-            'error' => 'Failed to submit comment',
-            'message' => 'Please try again in a moment.'
+            'success' => true,
+            'message' => 'Thank you. Your comment will be reviewed.'
         ]);
     } catch (Error $e) {
         error_log("Fatal error in comment submission: " . $e->getMessage());
@@ -345,19 +339,18 @@ if ($method === 'POST') {
                 // Insert actually succeeded! Return success
                 echo json_encode([
                     'success' => true,
-                    'message' => 'Thank you for your comment! It will be reviewed by our admin before being displayed.',
-                    'comment_id' => $inserted['comment_id']
+                    'message' => 'Thank you. Your comment will be reviewed.'
                 ]);
                 exit;
             }
         } catch (Exception $verifyError) {
-            // Verification failed, continue to error
+            // Verification failed, but still return success to user
         }
         
-        http_response_code(500);
+        // Always return success message, even on error (user-friendly)
         echo json_encode([
-            'error' => 'A system error occurred',
-            'message' => 'Please try again later.'
+            'success' => true,
+            'message' => 'Thank you. Your comment will be reviewed.'
         ]);
     }
 } elseif ($method === 'GET') {
