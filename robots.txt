@@ -1,0 +1,15 @@
+# Robots.txt for Projek Cuti Sem
+# https://projectcutisem.com/robots.txt
+
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /config/
+Disallow: /includes/
+
+# Sitemap
+Sitemap: https://projectcutisem.com/sitemap.xml
+
+# Crawl-delay (optional - adjust if needed)
+Crawl-delay: 1
+
