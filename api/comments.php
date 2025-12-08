@@ -59,56 +59,117 @@ if ($method === 'POST') {
             exit;
         }
         
-        // Basic spam check (simple rate limiting)
+        // Get database connection
         $ip = getVisitorIP();
         $pdo = getDBConnection();
         
-        // Check for recent comments from same IP (max 1 per 5 minutes)
-        $stmt = $pdo->prepare("SELECT COUNT(*) as count FROM comment WHERE ip_address = ? AND created_at > DATE_SUB(NOW(), INTERVAL 5 MINUTE)");
-        $stmt->execute([$ip]);
-        $result = $stmt->fetch();
-        
-        if ($result['count'] > 0) {
-            http_response_code(429);
-            echo json_encode(['error' => 'Please wait a few minutes before posting again']);
+        // Check if table exists first
+        $tableExists = false;
+        try {
+            $tableExists = $pdo->query("SHOW TABLES LIKE 'comment'")->rowCount() > 0;
+        } catch (PDOException $e) {
+            error_log("Table check error: " . $e->getMessage());
+            http_response_code(500);
+            echo json_encode(['error' => 'Database error. Please contact support.']);
             exit;
+        }
+        
+        if (!$tableExists) {
+            // Create table if it doesn't exist
+            try {
+                $pdo->exec("CREATE TABLE IF NOT EXISTS comment (
+                    comment_id INT AUTO_INCREMENT PRIMARY KEY,
+                    comment TEXT NOT NULL,
+                    ip_address VARCHAR(45) DEFAULT NULL,
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    status VARCHAR(20) DEFAULT 'pending',
+                    INDEX idx_status (status),
+                    INDEX idx_created (created_at)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+            } catch (PDOException $e) {
+                error_log("Table creation error: " . $e->getMessage());
+                http_response_code(500);
+                echo json_encode(['error' => 'Database setup error. Please contact support.']);
+                exit;
+            }
         }
         
         // Ensure table has required columns (MySQL doesn't support IF NOT EXISTS in ALTER TABLE)
         try {
-            // Check if table exists first
-            $tableExists = $pdo->query("SHOW TABLES LIKE 'comment'")->rowCount() > 0;
+            $columns = $pdo->query("SHOW COLUMNS FROM comment")->fetchAll(PDO::FETCH_COLUMN);
             
-            if ($tableExists) {
-                // Check if columns exist before adding
-                $columns = $pdo->query("SHOW COLUMNS FROM comment")->fetchAll(PDO::FETCH_COLUMN);
-                
-                if (!in_array('ip_address', $columns)) {
-                    $pdo->exec("ALTER TABLE comment ADD COLUMN ip_address VARCHAR(45)");
-                }
-                if (!in_array('created_at', $columns)) {
-                    $pdo->exec("ALTER TABLE comment ADD COLUMN created_at DATETIME DEFAULT CURRENT_TIMESTAMP");
-                }
-                if (!in_array('status', $columns)) {
-                    $pdo->exec("ALTER TABLE comment ADD COLUMN status VARCHAR(20) DEFAULT 'approved'");
-                }
+            if (!in_array('ip_address', $columns)) {
+                $pdo->exec("ALTER TABLE comment ADD COLUMN ip_address VARCHAR(45) DEFAULT NULL");
+            }
+            if (!in_array('created_at', $columns)) {
+                $pdo->exec("ALTER TABLE comment ADD COLUMN created_at DATETIME DEFAULT CURRENT_TIMESTAMP");
+            }
+            if (!in_array('status', $columns)) {
+                $pdo->exec("ALTER TABLE comment ADD COLUMN status VARCHAR(20) DEFAULT 'approved'");
             }
         } catch (PDOException $e) {
-            // Columns might already exist or table structure issue, log and continue
+            // Columns might already exist, continue
             error_log("Column check error: " . $e->getMessage());
         }
         
-        // Insert comment - handle both old and new table structures
+        // Basic spam check (simple rate limiting) - only if columns exist
         try {
-            $stmt = $pdo->prepare("INSERT INTO comment (comment, ip_address, created_at, status) VALUES (?, ?, NOW(), 'approved')");
-            $stmt->execute([$comment, $ip]);
+            $columns = $pdo->query("SHOW COLUMNS FROM comment")->fetchAll(PDO::FETCH_COLUMN);
+            if (in_array('ip_address', $columns) && in_array('created_at', $columns)) {
+                $stmt = $pdo->prepare("SELECT COUNT(*) as count FROM comment WHERE ip_address = ? AND created_at > DATE_SUB(NOW(), INTERVAL 5 MINUTE)");
+                $stmt->execute([$ip]);
+                $result = $stmt->fetch();
+                
+                if ($result && $result['count'] > 0) {
+                    http_response_code(429);
+                    echo json_encode(['error' => 'Please wait a few minutes before posting again']);
+                    exit;
+                }
+            }
         } catch (PDOException $e) {
-            // Fallback to basic insert if columns don't exist
+            // Rate limiting failed, but continue with submission
+            error_log("Rate limit check error: " . $e->getMessage());
+        }
+        
+        // Insert comment - handle table structure
+        $columns = $pdo->query("SHOW COLUMNS FROM comment")->fetchAll(PDO::FETCH_COLUMN);
+        $insertSuccess = false;
+        
+        // Check which columns exist
+        $hasIpAddress = in_array('ip_address', $columns);
+        $hasStatus = in_array('status', $columns);
+        $hasCreatedAt = in_array('created_at', $columns);
+        
+        // Build insert query based on available columns
+        if ($hasIpAddress && $hasStatus && $hasCreatedAt) {
+            // Full insert with all columns - set status as 'pending' for admin approval
+            try {
+                $stmt = $pdo->prepare("INSERT INTO comment (comment, ip_address, status) VALUES (?, ?, 'pending')");
+                $stmt->execute([$comment, $ip]);
+                $insertSuccess = true;
+            } catch (PDOException $e) {
+                error_log("Full insert failed: " . $e->getMessage());
+            }
+        } elseif ($hasStatus && $hasCreatedAt) {
+            // Insert without IP address
+            try {
+                $stmt = $pdo->prepare("INSERT INTO comment (comment, status) VALUES (?, 'pending')");
+                $stmt->execute([$comment]);
+                $insertSuccess = true;
+            } catch (PDOException $e) {
+                error_log("Insert without IP failed: " . $e->getMessage());
+            }
+        }
+        
+        // Fallback to basic insert if other methods failed
+        if (!$insertSuccess) {
             try {
                 $stmt = $pdo->prepare("INSERT INTO comment (comment) VALUES (?)");
                 $stmt->execute([$comment]);
-            } catch (PDOException $e2) {
-                throw new Exception("Database error: " . $e2->getMessage());
+                $insertSuccess = true;
+            } catch (PDOException $e) {
+                error_log("Basic insert failed: " . $e->getMessage());
+                throw new Exception("Database insert error: " . $e->getMessage());
             }
         }
         
@@ -119,8 +180,20 @@ if ($method === 'POST') {
         ]);
     } catch (Exception $e) {
         error_log("Comment submission error: " . $e->getMessage());
+        error_log("Stack trace: " . $e->getTraceAsString());
         http_response_code(500);
-        echo json_encode(['error' => 'Failed to submit comment. Please try again.']);
+        echo json_encode([
+            'error' => 'Failed to submit comment. Please try again.',
+            'debug' => (ini_get('display_errors') ? $e->getMessage() : null)
+        ]);
+    } catch (Error $e) {
+        error_log("Fatal error in comment submission: " . $e->getMessage());
+        error_log("Stack trace: " . $e->getTraceAsString());
+        http_response_code(500);
+        echo json_encode([
+            'error' => 'A system error occurred. Please try again later.',
+            'debug' => (ini_get('display_errors') ? $e->getMessage() : null)
+        ]);
     }
 } elseif ($method === 'GET') {
     // Get all comments
