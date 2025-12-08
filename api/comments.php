@@ -74,18 +74,43 @@ if ($method === 'POST') {
             exit;
         }
         
-        // Ensure table has required columns
+        // Ensure table has required columns (MySQL doesn't support IF NOT EXISTS in ALTER TABLE)
         try {
-            $pdo->exec("ALTER TABLE comment ADD COLUMN IF NOT EXISTS ip_address VARCHAR(45)");
-            $pdo->exec("ALTER TABLE comment ADD COLUMN IF NOT EXISTS created_at DATETIME DEFAULT CURRENT_TIMESTAMP");
-            $pdo->exec("ALTER TABLE comment ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'approved'");
+            // Check if table exists first
+            $tableExists = $pdo->query("SHOW TABLES LIKE 'comment'")->rowCount() > 0;
+            
+            if ($tableExists) {
+                // Check if columns exist before adding
+                $columns = $pdo->query("SHOW COLUMNS FROM comment")->fetchAll(PDO::FETCH_COLUMN);
+                
+                if (!in_array('ip_address', $columns)) {
+                    $pdo->exec("ALTER TABLE comment ADD COLUMN ip_address VARCHAR(45)");
+                }
+                if (!in_array('created_at', $columns)) {
+                    $pdo->exec("ALTER TABLE comment ADD COLUMN created_at DATETIME DEFAULT CURRENT_TIMESTAMP");
+                }
+                if (!in_array('status', $columns)) {
+                    $pdo->exec("ALTER TABLE comment ADD COLUMN status VARCHAR(20) DEFAULT 'approved'");
+                }
+            }
         } catch (PDOException $e) {
-            // Columns might already exist, continue
+            // Columns might already exist or table structure issue, log and continue
+            error_log("Column check error: " . $e->getMessage());
         }
         
-        // Insert comment
-        $stmt = $pdo->prepare("INSERT INTO comment (comment, ip_address, created_at, status) VALUES (?, ?, NOW(), 'approved')");
-        $stmt->execute([$comment, $ip]);
+        // Insert comment - handle both old and new table structures
+        try {
+            $stmt = $pdo->prepare("INSERT INTO comment (comment, ip_address, created_at, status) VALUES (?, ?, NOW(), 'approved')");
+            $stmt->execute([$comment, $ip]);
+        } catch (PDOException $e) {
+            // Fallback to basic insert if columns don't exist
+            try {
+                $stmt = $pdo->prepare("INSERT INTO comment (comment) VALUES (?)");
+                $stmt->execute([$comment]);
+            } catch (PDOException $e2) {
+                throw new Exception("Database error: " . $e2->getMessage());
+            }
+        }
         
         echo json_encode([
             'success' => true,
@@ -102,16 +127,46 @@ if ($method === 'POST') {
     try {
         $pdo = getDBConnection();
         
-        // Check if table exists and has required columns
-        try {
-            $pdo->exec("ALTER TABLE comment ADD COLUMN IF NOT EXISTS created_at DATETIME DEFAULT CURRENT_TIMESTAMP");
-            $pdo->exec("ALTER TABLE comment ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'approved'");
-        } catch (PDOException $e) {
-            // Continue if columns exist
+        // Check if table exists
+        $tableExists = $pdo->query("SHOW TABLES LIKE 'comment'")->rowCount() > 0;
+        
+        if (!$tableExists) {
+            echo json_encode([
+                'success' => true,
+                'comments' => [],
+                'count' => 0
+            ]);
+            exit;
         }
         
-        $stmt = $pdo->query("SELECT comment_id, comment, created_at FROM comment WHERE status = 'approved' ORDER BY created_at DESC LIMIT 50");
-        $comments = $stmt->fetchAll();
+        // Check if table has required columns
+        try {
+            $columns = $pdo->query("SHOW COLUMNS FROM comment")->fetchAll(PDO::FETCH_COLUMN);
+            
+            if (!in_array('created_at', $columns)) {
+                $pdo->exec("ALTER TABLE comment ADD COLUMN created_at DATETIME DEFAULT CURRENT_TIMESTAMP");
+            }
+            if (!in_array('status', $columns)) {
+                $pdo->exec("ALTER TABLE comment ADD COLUMN status VARCHAR(20) DEFAULT 'approved'");
+            }
+        } catch (PDOException $e) {
+            // Continue if columns exist
+            error_log("Column check error: " . $e->getMessage());
+        }
+        
+        // Query comments - handle both old and new table structures
+        try {
+            $stmt = $pdo->query("SELECT comment_id, comment, created_at FROM comment WHERE status = 'approved' ORDER BY created_at DESC LIMIT 50");
+            $comments = $stmt->fetchAll();
+        } catch (PDOException $e) {
+            // Fallback to basic query if status column doesn't exist
+            try {
+                $stmt = $pdo->query("SELECT comment_id, comment, NOW() as created_at FROM comment ORDER BY comment_id DESC LIMIT 50");
+                $comments = $stmt->fetchAll();
+            } catch (PDOException $e2) {
+                throw new Exception("Database error: " . $e2->getMessage());
+            }
+        }
         
         echo json_encode([
             'success' => true,
