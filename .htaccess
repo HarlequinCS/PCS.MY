@@ -42,6 +42,12 @@
     </FilesMatch>
 </IfModule>
 
+# Protect config directory
+<IfModule mod_rewrite.c>
+    RewriteRule ^config/ - [F,L]
+    RewriteRule ^includes/ - [F,L]
+</IfModule>
+
 # Security Headers
 <IfModule mod_headers.c>
     # Prevent clickjacking

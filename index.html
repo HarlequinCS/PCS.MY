@@ -408,6 +408,193 @@
       text-transform: uppercase;
     }
 
+    /* Visitor Counter */
+    .visitor-counter {
+      margin-top: 30px;
+      padding: 15px 25px;
+      background: rgba(255, 0, 0, 0.1);
+      border-radius: 15px;
+      border: 2px solid rgba(255, 0, 0, 0.2);
+      display: inline-block;
+      opacity: 0;
+      animation: fadeIn 1s ease-out 1.1s forwards;
+      position: relative;
+      z-index: 2;
+    }
+
+    .visitor-counter-text {
+      font-size: 0.95rem;
+      color: #ff0000;
+      font-weight: 600;
+      letter-spacing: 1px;
+    }
+
+    .visitor-count {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #ff0000;
+      margin-left: 8px;
+    }
+
+    /* Comments Section */
+    .comments-section {
+      margin-top: 60px;
+      padding-top: 40px;
+      border-top: 2px solid rgba(255, 0, 0, 0.1);
+      opacity: 0;
+      animation: fadeIn 1s ease-out 1.3s forwards;
+      position: relative;
+      z-index: 2;
+    }
+
+    .comments-title {
+      font-size: 1.8rem;
+      font-weight: 600;
+      color: #1a1a1a;
+      margin-bottom: 25px;
+      text-align: center;
+    }
+
+    .comment-form {
+      margin-bottom: 40px;
+    }
+
+    .comment-input-wrapper {
+      position: relative;
+      margin-bottom: 15px;
+    }
+
+    .comment-input {
+      width: 100%;
+      padding: 15px 20px;
+      border: 2px solid rgba(255, 0, 0, 0.2);
+      border-radius: 12px;
+      font-size: 1rem;
+      font-family: inherit;
+      resize: vertical;
+      min-height: 100px;
+      transition: border-color 0.3s ease, box-shadow 0.3s ease;
+      background: rgba(255, 255, 255, 0.9);
+    }
+
+    .comment-input:focus {
+      outline: none;
+      border-color: #ff0000;
+      box-shadow: 0 0 0 3px rgba(255, 0, 0, 0.1);
+    }
+
+    .comment-submit-btn {
+      background: linear-gradient(135deg, #ff0000 0%, #cc0000 100%);
+      color: white;
+      border: none;
+      padding: 12px 35px;
+      border-radius: 25px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .comment-submit-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 20px rgba(255, 0, 0, 0.3);
+    }
+
+    .comment-submit-btn:active {
+      transform: translateY(0);
+    }
+
+    .comment-submit-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .comment-message {
+      margin-top: 15px;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      text-align: center;
+      display: none;
+    }
+
+    .comment-message.success {
+      background: rgba(0, 200, 0, 0.1);
+      color: #00a000;
+      border: 1px solid rgba(0, 200, 0, 0.3);
+      display: block;
+    }
+
+    .comment-message.error {
+      background: rgba(255, 0, 0, 0.1);
+      color: #ff0000;
+      border: 1px solid rgba(255, 0, 0, 0.3);
+      display: block;
+    }
+
+    .comments-list {
+      max-height: 400px;
+      overflow-y: auto;
+      padding-right: 10px;
+    }
+
+    .comments-list::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .comments-list::-webkit-scrollbar-track {
+      background: rgba(0, 0, 0, 0.05);
+      border-radius: 10px;
+    }
+
+    .comments-list::-webkit-scrollbar-thumb {
+      background: rgba(255, 0, 0, 0.3);
+      border-radius: 10px;
+    }
+
+    .comment-item {
+      background: rgba(255, 255, 255, 0.7);
+      padding: 20px;
+      margin-bottom: 15px;
+      border-radius: 12px;
+      border-left: 4px solid #ff0000;
+      animation: slideInLeft 0.5s ease-out;
+    }
+
+    @keyframes slideInLeft {
+      from {
+        opacity: 0;
+        transform: translateX(-20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    .comment-text {
+      font-size: 1rem;
+      color: #333;
+      line-height: 1.6;
+      margin-bottom: 10px;
+    }
+
+    .comment-date {
+      font-size: 0.85rem;
+      color: #999;
+      font-style: italic;
+    }
+
+    .no-comments {
+      text-align: center;
+      color: #999;
+      padding: 40px;
+      font-style: italic;
+    }
+
     /* Decorative animated elements */
     .sparkle {
       position: absolute;
@@ -507,6 +694,37 @@
           <div class="status-text">Loading...</div>
         </div>
       </div>
+
+      <!-- Visitor Counter -->
+      <div class="visitor-counter">
+        <span class="visitor-counter-text">Total Visitors:</span>
+        <span class="visitor-count" id="visitorCount">0</span>
+      </div>
+
+      <!-- Comments Section -->
+      <div class="comments-section">
+        <h2 class="comments-title">Leave Your Encouragement</h2>
+        
+        <form class="comment-form" id="commentForm">
+          <div class="comment-input-wrapper">
+            <textarea 
+              class="comment-input" 
+              id="commentInput" 
+              placeholder="Share your thoughts, encouragement, or feedback..."
+              required
+              maxlength="1000"
+            ></textarea>
+          </div>
+          <button type="submit" class="comment-submit-btn" id="submitBtn">
+            Submit Comment
+          </button>
+          <div class="comment-message" id="commentMessage"></div>
+        </form>
+
+        <div class="comments-list" id="commentsList">
+          <div class="no-comments">Loading comments...</div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -593,12 +811,183 @@
       requestAnimationFrame(animateParallax);
     }
 
+    // Visitor Counter
+    async function trackVisitor() {
+      try {
+        const response = await fetch('api/visitor.php', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+        const data = await response.json();
+        if (data.success) {
+          updateVisitorCount(data.total_visitors);
+        }
+      } catch (error) {
+        console.error('Visitor tracking error:', error);
+        // Try to get count anyway
+        getVisitorCount();
+      }
+    }
+
+    async function getVisitorCount() {
+      try {
+        const response = await fetch('api/visitor.php');
+        const data = await response.json();
+        if (data.success) {
+          updateVisitorCount(data.total_visitors);
+        }
+      } catch (error) {
+        console.error('Error getting visitor count:', error);
+      }
+    }
+
+    function updateVisitorCount(count) {
+      const counter = document.getElementById('visitorCount');
+      if (counter) {
+        // Animate count up
+        const currentCount = parseInt(counter.textContent) || 0;
+        const targetCount = count;
+        const increment = targetCount > currentCount ? 1 : -1;
+        const duration = 1000;
+        const steps = Math.abs(targetCount - currentCount);
+        const stepDuration = duration / steps;
+
+        let current = currentCount;
+        const timer = setInterval(() => {
+          current += increment;
+          counter.textContent = current;
+          
+          if (current === targetCount) {
+            clearInterval(timer);
+          }
+        }, stepDuration);
+      }
+    }
+
+    // Comments
+    async function loadComments() {
+      try {
+        const response = await fetch('api/comments.php');
+        const data = await response.json();
+        
+        if (data.success) {
+          displayComments(data.comments);
+        }
+      } catch (error) {
+        console.error('Error loading comments:', error);
+        document.getElementById('commentsList').innerHTML = 
+          '<div class="no-comments">Unable to load comments. Please try again later.</div>';
+      }
+    }
+
+    function displayComments(comments) {
+      const container = document.getElementById('commentsList');
+      
+      if (!comments || comments.length === 0) {
+        container.innerHTML = '<div class="no-comments">No comments yet. Be the first to share your thoughts!</div>';
+        return;
+      }
+
+      container.innerHTML = comments.map(comment => {
+        const date = new Date(comment.created_at);
+        const formattedDate = date.toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'short',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+        
+        return `
+          <div class="comment-item">
+            <div class="comment-text">${escapeHtml(comment.comment)}</div>
+            <div class="comment-date">${formattedDate}</div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // Handle comment submission
+    document.getElementById('commentForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const input = document.getElementById('commentInput');
+      const submitBtn = document.getElementById('submitBtn');
+      const messageDiv = document.getElementById('commentMessage');
+      const comment = input.value.trim();
+
+      if (!comment) {
+        showMessage('Please enter a comment', 'error');
+        return;
+      }
+
+      // Disable form
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Submitting...';
+      messageDiv.className = 'comment-message';
+      messageDiv.style.display = 'none';
+
+      try {
+        const response = await fetch('api/comments.php', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ comment: comment })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          showMessage(data.message || 'Thank you for your comment!', 'success');
+          input.value = '';
+          // Reload comments
+          setTimeout(() => {
+            loadComments();
+          }, 500);
+        } else {
+          showMessage(data.error || 'Failed to submit comment. Please try again.', 'error');
+        }
+      } catch (error) {
+        console.error('Comment submission error:', error);
+        showMessage('Network error. Please check your connection and try again.', 'error');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Submit Comment';
+      }
+    });
+
+    function showMessage(message, type) {
+      const messageDiv = document.getElementById('commentMessage');
+      messageDiv.textContent = message;
+      messageDiv.className = `comment-message ${type}`;
+      messageDiv.style.display = 'block';
+
+      // Auto-hide after 5 seconds
+      setTimeout(() => {
+        messageDiv.style.display = 'none';
+      }, 5000);
+    }
+
     // Initialize everything
     window.addEventListener('load', () => {
       createFloatingShapes();
       createParticles();
       createSparkles();
       animateParallax();
+      trackVisitor();
+      loadComments();
+      
+      // Refresh comments every 30 seconds
+      setInterval(loadComments, 30000);
     });
 
     // Update status text periodically
