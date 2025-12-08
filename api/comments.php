@@ -147,27 +147,59 @@ if ($method === 'POST') {
         // Rate limiting removed - Admin approval system provides spam protection
         // Comments are set to 'pending' status and require admin approval before display
         
-        // Insert comment - Based on your exact table structure:
-        // comment_id (auto increment), comment (longtext), created_at (default), status (varchar), ip_address (varchar)
+        // Fix AUTO_INCREMENT if it's broken (comment_id = 0 issue)
+        // This happens when AUTO_INCREMENT tries to use 0 which already exists
         try {
-            // Insert based on your exact table structure:
-            // comment_id (auto), comment (required), created_at (default), status (varchar), ip_address (varchar)
-            $stmt = $pdo->prepare("INSERT INTO comment (comment, status, ip_address) VALUES (?, 'pending', ?)");
-            $result = $stmt->execute([$comment, $ip]);
+            $tableStatus = $pdo->query("SHOW TABLE STATUS LIKE 'comment'")->fetch();
+            $autoIncrement = $tableStatus['Auto_increment'] ?? null;
+            
+            // If AUTO_INCREMENT is 0 or 1, fix it
+            if ($autoIncrement == 0 || $autoIncrement == 1) {
+                $maxId = $pdo->query("SELECT MAX(comment_id) as max_id FROM comment")->fetch();
+                $nextId = ($maxId['max_id'] ?? 0) + 1;
+                if ($nextId < 1) $nextId = 1; // Ensure it's at least 1
+                $pdo->exec("ALTER TABLE comment AUTO_INCREMENT = $nextId");
+                error_log("Fixed AUTO_INCREMENT to: $nextId");
+            }
+        } catch (PDOException $e) {
+            error_log("AUTO_INCREMENT check failed: " . $e->getMessage());
+            // Continue anyway
+        }
+        
+        // Insert comment - Based on your exact table structure
+        // IMPORTANT: Do NOT specify comment_id - let AUTO_INCREMENT handle it
+        try {
+            // Insert with comment, status, and ip_address
+            // comment_id will auto-increment (don't specify it)
+            $stmt = $pdo->prepare("INSERT INTO comment (comment, status, ip_address) VALUES (?, ?, ?)");
+            $result = $stmt->execute([$comment, 'pending', $ip]);
             
             if ($result === false) {
-                throw new Exception("INSERT execution returned false");
+                $errorInfo = $stmt->errorInfo();
+                throw new PDOException("INSERT returned false. Error: " . ($errorInfo[2] ?? 'Unknown error'));
             }
             
             $commentId = $pdo->lastInsertId();
             
-            // Verify we got an ID
+            // Verify we got a valid ID (should not be 0)
             if (!$commentId || $commentId == 0) {
-                $check = $pdo->query("SELECT LAST_INSERT_ID() as id")->fetch();
-                $commentId = $check['id'] ?? null;
+                // Try to fix AUTO_INCREMENT and retry
+                try {
+                    $maxId = $pdo->query("SELECT MAX(comment_id) as max_id FROM comment")->fetch();
+                    $nextId = ($maxId['max_id'] ?? 0) + 1;
+                    if ($nextId < 1) $nextId = 1;
+                    $pdo->exec("ALTER TABLE comment AUTO_INCREMENT = $nextId");
+                    
+                    // Retry insert
+                    $stmt = $pdo->prepare("INSERT INTO comment (comment, status, ip_address) VALUES (?, ?, ?)");
+                    $stmt->execute([$comment, 'pending', $ip]);
+                    $commentId = $pdo->lastInsertId();
+                } catch (PDOException $e2) {
+                    error_log("AUTO_INCREMENT fix and retry failed: " . $e2->getMessage());
+                }
                 
                 if (!$commentId || $commentId == 0) {
-                    throw new Exception("Failed to retrieve comment ID - insert may have failed");
+                    throw new Exception("Failed to get comment ID - AUTO_INCREMENT may be broken. Please run fix_autoincrement.php");
                 }
             }
         } catch (PDOException $e) {

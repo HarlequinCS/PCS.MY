@@ -1804,6 +1804,20 @@
           body: JSON.stringify({ comment: comment })
         });
 
+        // Check response status first
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({ error: 'Unknown error occurred' }));
+          console.error('API Error:', errorData);
+          
+          // Show detailed error message
+          let errorMsg = errorData.error || 'Failed to submit comment';
+          if (errorData.driver_message) {
+            errorMsg += ' - ' + errorData.driver_message;
+          }
+          showMessage(errorMsg, 'error');
+          return;
+        }
+
         const data = await response.json();
 
         if (data.success) {
