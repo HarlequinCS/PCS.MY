@@ -29,8 +29,14 @@ $pdo = getDBConnection();
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
 </head>
 <body class="admin-dashboard">
+    <!-- Mobile Menu Toggle -->
+    <button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Toggle menu">☰</button>
+    
+    <!-- Sidebar Overlay -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    
     <!-- Sidebar -->
-    <aside class="sidebar">
+    <aside class="sidebar" id="sidebar">
         <div class="sidebar-header">
             <h2>PCS Admin</h2>
             <p>Comment Moderation</p>

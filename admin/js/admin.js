@@ -8,7 +8,53 @@ let currentFilter = 'pending';
 document.addEventListener('DOMContentLoaded', () => {
     loadComments('pending');
     setupEventListeners();
+    setupMobileMenu();
 });
+
+// Mobile Menu Setup
+function setupMobileMenu() {
+    const mobileMenuToggle = document.getElementById('mobileMenuToggle');
+    const sidebar = document.getElementById('sidebar');
+    const sidebarOverlay = document.getElementById('sidebarOverlay');
+    
+    if (mobileMenuToggle && sidebar && sidebarOverlay) {
+        // Toggle sidebar
+        mobileMenuToggle.addEventListener('click', function() {
+            sidebar.classList.toggle('active');
+            sidebarOverlay.classList.toggle('active');
+            mobileMenuToggle.classList.toggle('active');
+        });
+        
+        // Close sidebar when clicking overlay
+        sidebarOverlay.addEventListener('click', function() {
+            sidebar.classList.remove('active');
+            sidebarOverlay.classList.remove('active');
+            mobileMenuToggle.classList.remove('active');
+        });
+        
+        // Close sidebar when clicking outside on mobile
+        document.addEventListener('click', function(e) {
+            if (window.innerWidth <= 768) {
+                if (!sidebar.contains(e.target) && 
+                    !mobileMenuToggle.contains(e.target) && 
+                    sidebar.classList.contains('active')) {
+                    sidebar.classList.remove('active');
+                    sidebarOverlay.classList.remove('active');
+                    mobileMenuToggle.classList.remove('active');
+                }
+            }
+        });
+        
+        // Handle window resize
+        window.addEventListener('resize', function() {
+            if (window.innerWidth > 768) {
+                sidebar.classList.remove('active');
+                sidebarOverlay.classList.remove('active');
+                mobileMenuToggle.classList.remove('active');
+            }
+        });
+    }
+}
 
 function setupEventListeners() {
     // Tab buttons
@@ -224,16 +270,27 @@ function showNotification(message, type) {
     const notification = document.createElement('div');
     notification.className = `notification notification-${type}`;
     notification.textContent = message;
+    
+    // Responsive positioning for mobile
+    const isMobile = window.innerWidth <= 768;
+    const topPosition = isMobile ? '15px' : '20px';
+    const rightPosition = isMobile ? '15px' : '20px';
+    const padding = isMobile ? '12px 16px' : '15px 20px';
+    const fontSize = isMobile ? '0.9rem' : '1rem';
+    
     notification.style.cssText = `
         position: fixed;
-        top: 20px;
-        right: 20px;
-        padding: 15px 20px;
+        top: ${topPosition};
+        right: ${rightPosition};
+        left: ${isMobile ? '15px' : 'auto'};
+        padding: ${padding};
         background: ${type === 'success' ? '#10b981' : '#ef4444'};
         color: white;
         border-radius: 8px;
         box-shadow: 0 4px 12px rgba(0,0,0,0.15);
         z-index: 10000;
+        font-size: ${fontSize};
+        max-width: ${isMobile ? 'calc(100% - 30px)' : '400px'};
         animation: slideInRight 0.3s ease-out;
     `;
     

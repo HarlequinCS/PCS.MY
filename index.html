@@ -919,22 +919,24 @@
     }
 
     .comment-item {
-      background: linear-gradient(145deg, #ffffff 0%, #f8f8f8 100%);
-      padding: 25px;
+      background: linear-gradient(145deg, #ffffff 0%, #fafafa 50%, #ffffff 100%);
+      padding: 28px;
       margin-bottom: 0;
-      border-radius: 20px;
-      border: 1px solid rgba(255, 0, 0, 0.1);
+      border-radius: 24px;
+      border: 2px solid rgba(255, 0, 0, 0.08);
       box-shadow: 
-        0 10px 30px rgba(0, 0, 0, 0.1),
-        0 1px 8px rgba(0, 0, 0, 0.05),
-        inset 0 1px 0 rgba(255, 255, 255, 0.9);
-      animation: slideInUp 0.6s ease-out both;
+        0 8px 32px rgba(0, 0, 0, 0.08),
+        0 4px 16px rgba(255, 0, 0, 0.05),
+        0 2px 8px rgba(0, 0, 0, 0.04),
+        inset 0 1px 0 rgba(255, 255, 255, 0.95);
+      animation: cardSlideIn 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) both;
       transform-style: preserve-3d;
-      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
       cursor: pointer;
       position: relative;
       overflow: hidden;
       perspective: 1000px;
+      backdrop-filter: blur(10px);
     }
 
     .comment-item::before {
@@ -943,29 +945,75 @@
       top: 0;
       left: 0;
       width: 100%;
-      height: 4px;
-      background: linear-gradient(90deg, #ff0000 0%, #cc0000 50%, #ff0000 100%);
+      height: 5px;
+      background: linear-gradient(90deg, 
+        #ff0000 0%, 
+        #ff3333 25%, 
+        #ff0000 50%, 
+        #cc0000 75%, 
+        #ff0000 100%);
+      background-size: 200% 100%;
       transform: scaleX(0);
       transform-origin: left;
-      transition: transform 0.4s ease;
+      transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+      animation: shimmer 3s infinite;
+    }
+
+    .comment-item::after {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle, rgba(255, 0, 0, 0.1) 0%, transparent 70%);
+      opacity: 0;
+      transition: opacity 0.5s ease;
+      pointer-events: none;
     }
 
     .comment-item:hover::before {
       transform: scaleX(1);
     }
 
+    .comment-item:hover::after {
+      opacity: 1;
+    }
+
     .comment-item:hover {
-      transform: translateY(-8px) rotateX(2deg) rotateY(-2deg) scale(1.02);
+      transform: translateY(-12px) rotateX(3deg) rotateY(-3deg) scale(1.03);
       box-shadow: 
-        0 20px 50px rgba(255, 0, 0, 0.2),
-        0 10px 20px rgba(0, 0, 0, 0.15),
-        inset 0 1px 0 rgba(255, 255, 255, 0.9);
-      border-color: rgba(255, 0, 0, 0.3);
+        0 24px 60px rgba(255, 0, 0, 0.25),
+        0 12px 30px rgba(0, 0, 0, 0.15),
+        0 6px 15px rgba(255, 0, 0, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.95);
+      border-color: rgba(255, 0, 0, 0.4);
+      background: linear-gradient(145deg, #ffffff 0%, #fff5f5 50%, #ffffff 100%);
     }
 
     .comment-item:active {
-      transform: translateY(-4px) rotateX(1deg) rotateY(-1deg) scale(1.01);
-      transition: all 0.2s ease;
+      transform: translateY(-6px) rotateX(1.5deg) rotateY(-1.5deg) scale(1.015);
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    @keyframes shimmer {
+      0% {
+        background-position: -200% 0;
+      }
+      100% {
+        background-position: 200% 0;
+      }
+    }
+
+    @keyframes cardSlideIn {
+      from {
+        opacity: 0;
+        transform: translateY(40px) rotateX(-15deg) scale(0.9);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) rotateX(0deg) scale(1);
+      }
     }
 
     @keyframes slideInUp {
@@ -1007,32 +1055,70 @@
     }
 
     .comment-avatar {
-      width: 40px;
-      height: 40px;
+      width: 48px;
+      height: 48px;
       border-radius: 50%;
-      background: linear-gradient(135deg, #ff0000 0%, #cc0000 100%);
+      background: linear-gradient(135deg, #ff0000 0%, #cc0000 50%, #990000 100%);
       display: flex;
       align-items: center;
       justify-content: center;
       color: white;
-      font-weight: 700;
-      font-size: 1.1rem;
-      box-shadow: 0 4px 10px rgba(255, 0, 0, 0.3);
-      transition: transform 0.3s ease;
+      font-weight: 800;
+      font-size: 1.3rem;
+      box-shadow: 
+        0 6px 20px rgba(255, 0, 0, 0.4),
+        0 2px 8px rgba(255, 0, 0, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3);
+      transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+      position: relative;
+      overflow: hidden;
+      border: 3px solid rgba(255, 255, 255, 0.3);
+    }
+
+    .comment-avatar::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+      transform: rotate(45deg);
+      animation: avatarShine 3s infinite;
+    }
+
+    @keyframes avatarShine {
+      0% {
+        transform: translateX(-100%) translateY(-100%) rotate(45deg);
+      }
+      100% {
+        transform: translateX(100%) translateY(100%) rotate(45deg);
+      }
     }
 
     .comment-item:hover .comment-avatar {
-      transform: rotate(360deg) scale(1.1);
+      transform: rotate(360deg) scale(1.15);
+      box-shadow: 
+        0 8px 25px rgba(255, 0, 0, 0.5),
+        0 4px 12px rgba(255, 0, 0, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.4);
     }
 
     .comment-text {
-      font-size: 1rem;
-      color: #333;
-      line-height: 1.7;
-      margin-bottom: 12px;
+      font-size: 1.05rem;
+      color: #2d2d2d;
+      line-height: 1.8;
+      margin-bottom: 16px;
       position: relative;
       z-index: 1;
       word-wrap: break-word;
+      font-weight: 400;
+      letter-spacing: 0.3px;
+      transition: color 0.3s ease;
+    }
+
+    .comment-item:hover .comment-text {
+      color: #1a1a1a;
     }
 
     .comment-footer {
@@ -1746,18 +1832,18 @@
         const commentId = comment.comment_id || index;
         
         return `
-          <div class="comment-item" data-comment-id="${commentId}" style="animation-delay: ${index * 0.1}s">
+          <div class="comment-item" data-comment-id="${commentId}" style="animation-delay: ${index * 0.08}s">
             <div class="comment-header">
-              <div class="comment-avatar" style="background: linear-gradient(135deg, ${avatarColor} 0%, ${avatarColor}dd 100%);">
+              <div class="comment-avatar" style="background: linear-gradient(135deg, ${avatarColor} 0%, ${avatarColor}dd 50%, ${avatarColor}aa 100%);">
                 ${firstLetter}
-                </div>
-                </div>
+              </div>
+            </div>
             <div class="comment-text">${escapeHtml(comment.comment)}</div>
             <div class="comment-footer">
               <div class="comment-date">${formattedDate}</div>
-              <div class="comment-like" onclick="handleLike(this, ${commentId})">
+              <button class="comment-like" onclick="handleLike(this, ${commentId})" aria-label="Like comment">
                 Like
-              </div>
+              </button>
             </div>
           </div>
         `;
@@ -1857,12 +1943,20 @@
       }, 5000);
     }
 
-    // 3D Tilt Effect for Comment Cards
+    // Enhanced 3D Tilt Effect for Comment Cards
     function add3DTiltEffect() {
       const commentItems = document.querySelectorAll('.comment-item');
       
       commentItems.forEach(item => {
+        let isHovering = false;
+        
+        item.addEventListener('mouseenter', () => {
+          isHovering = true;
+        });
+        
         item.addEventListener('mousemove', (e) => {
+          if (!isHovering) return;
+          
           const rect = item.getBoundingClientRect();
           const x = e.clientX - rect.left;
           const y = e.clientY - rect.top;
@@ -1870,14 +1964,27 @@
           const centerX = rect.width / 2;
           const centerY = rect.height / 2;
           
-          const rotateX = (y - centerY) / 10;
-          const rotateY = (centerX - x) / 10;
+          const rotateX = (y - centerY) / 12;
+          const rotateY = (centerX - x) / 12;
           
-          item.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-8px) scale(1.02)`;
+          // Add parallax effect to avatar
+          const avatar = item.querySelector('.comment-avatar');
+          if (avatar) {
+            const avatarX = (x - centerX) / 20;
+            const avatarY = (y - centerY) / 20;
+            avatar.style.transform = `translate(${avatarX}px, ${avatarY}px) rotate(360deg) scale(1.15)`;
+          }
+          
+          item.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-12px) scale(1.03)`;
         });
         
         item.addEventListener('mouseleave', () => {
+          isHovering = false;
           item.style.transform = '';
+          const avatar = item.querySelector('.comment-avatar');
+          if (avatar) {
+            avatar.style.transform = '';
+          }
         });
       });
     }
