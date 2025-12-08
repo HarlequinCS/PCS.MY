@@ -42,7 +42,16 @@ $method = $_SERVER['REQUEST_METHOD'];
 if ($method === 'POST') {
     // Submit new comment
     try {
-        $input = json_decode(file_get_contents('php://input'), true);
+        // Get input
+        $rawInput = file_get_contents('php://input');
+        $input = json_decode($rawInput, true);
+        
+        // Check if JSON decode failed
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Invalid JSON data']);
+            exit;
+        }
         
         if (!isset($input['comment']) || empty(trim($input['comment']))) {
             http_response_code(400);
@@ -63,12 +72,17 @@ if ($method === 'POST') {
         $ip = getVisitorIP();
         $pdo = getDBConnection();
         
+        if (!$pdo) {
+            throw new Exception("Database connection failed");
+        }
+        
         // Check if table exists first
         $tableExists = false;
         try {
             $tableExists = $pdo->query("SHOW TABLES LIKE 'comment'")->rowCount() > 0;
         } catch (PDOException $e) {
             error_log("Table check error: " . $e->getMessage());
+            error_log("Stack trace: " . $e->getTraceAsString());
             http_response_code(500);
             echo json_encode(['error' => 'Database error. Please contact support.']);
             exit;
@@ -115,52 +129,39 @@ if ($method === 'POST') {
         // Rate limiting removed - Admin approval system provides spam protection
         // Comments are set to 'pending' status and require admin approval before display
         
-        // Insert comment - handle table structure
-        $columns = $pdo->query("SHOW COLUMNS FROM comment")->fetchAll(PDO::FETCH_COLUMN);
-        $insertSuccess = false;
-        
-        // Check which columns exist
-        $hasIpAddress = in_array('ip_address', $columns);
-        $hasStatus = in_array('status', $columns);
-        $hasCreatedAt = in_array('created_at', $columns);
-        
-        // Build insert query based on available columns
-        if ($hasIpAddress && $hasStatus && $hasCreatedAt) {
-            // Full insert with all columns - set status as 'pending' for admin approval
-            try {
-                $stmt = $pdo->prepare("INSERT INTO comment (comment, ip_address, status) VALUES (?, ?, 'pending')");
-                $stmt->execute([$comment, $ip]);
-                $insertSuccess = true;
-            } catch (PDOException $e) {
-                error_log("Full insert failed: " . $e->getMessage());
+        // Insert comment - Based on your table structure: comment_id, comment, created_at, status
+        // created_at has default, so we only need to specify comment and status
+        try {
+            // Simple insert - just comment and status (created_at uses default)
+            $stmt = $pdo->prepare("INSERT INTO comment (comment, status) VALUES (?, 'pending')");
+            $stmt->execute([$comment]);
+            $commentId = $pdo->lastInsertId();
+            
+            if (!$commentId) {
+                throw new Exception("Failed to get comment ID after insert");
             }
-        } elseif ($hasStatus && $hasCreatedAt) {
-            // Insert without IP address
-            try {
-                $stmt = $pdo->prepare("INSERT INTO comment (comment, status) VALUES (?, 'pending')");
-                $stmt->execute([$comment]);
-                $insertSuccess = true;
-            } catch (PDOException $e) {
-                error_log("Insert without IP failed: " . $e->getMessage());
-            }
-        }
-        
-        // Fallback to basic insert if other methods failed
-        if (!$insertSuccess) {
-            try {
-                $stmt = $pdo->prepare("INSERT INTO comment (comment) VALUES (?)");
-                $stmt->execute([$comment]);
-                $insertSuccess = true;
-            } catch (PDOException $e) {
-                error_log("Basic insert failed: " . $e->getMessage());
-                throw new Exception("Database insert error: " . $e->getMessage());
-            }
+        } catch (PDOException $e) {
+            error_log("Insert failed: " . $e->getMessage());
+            error_log("SQL Error Code: " . $e->getCode());
+            error_log("SQL Error Info: " . print_r($e->errorInfo, true));
+            error_log("Comment text length: " . strlen($comment));
+            throw new Exception("Database insert error: " . $e->getMessage());
         }
         
         echo json_encode([
             'success' => true,
-            'message' => 'Thank you for your comment!',
-            'comment_id' => $pdo->lastInsertId()
+            'message' => 'Thank you for your comment! It will be reviewed by our admin before being displayed.',
+            'comment_id' => $commentId
+        ]);
+    } catch (PDOException $e) {
+        error_log("Database error in comment submission: " . $e->getMessage());
+        error_log("SQL Error Code: " . $e->getCode());
+        error_log("SQL Error Info: " . print_r($e->errorInfo, true));
+        error_log("Stack trace: " . $e->getTraceAsString());
+        http_response_code(500);
+        echo json_encode([
+            'error' => 'Database error. Please try again or contact support.',
+            'debug' => (ini_get('display_errors') ? $e->getMessage() : null)
         ]);
     } catch (Exception $e) {
         error_log("Comment submission error: " . $e->getMessage());
