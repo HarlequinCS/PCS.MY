@@ -231,32 +231,10 @@ if ($method === 'POST') {
         
         // Verify we got a valid ID
         if (!$commentId || $commentId == 0) {
-            throw new Exception("Failed to insert comment - AUTO_INCREMENT may be broken. Please run fix_autoincrement.php");
+            throw new Exception("Failed to insert comment - AUTO_INCREMENT may be broken. Please run fix_zero_id.php");
         }
         
-        // Success - continue with response
-        try {
-            // Log detailed error
-            error_log("INSERT PDO Error: " . $e->getMessage());
-            error_log("SQL Error Code: " . $e->getCode());
-            error_log("SQL Error Info: " . print_r($e->errorInfo, true));
-            
-            // Return error with details for debugging
-            http_response_code(500);
-            echo json_encode([
-                'error' => 'Database insert failed',
-                'message' => $e->getMessage(),
-                'code' => $e->getCode(),
-                'sql_state' => $e->errorInfo[0] ?? null,
-                'driver_code' => $e->errorInfo[1] ?? null,
-                'driver_message' => $e->errorInfo[2] ?? null
-            ]);
-            exit;
-        } catch (Exception $e) {
-            error_log("INSERT General Error: " . $e->getMessage());
-            throw $e;
-        }
-        
+        // Success - return response
         echo json_encode([
             'success' => true,
             'message' => 'Thank you for your comment! It will be reviewed by our admin before being displayed.',
@@ -267,26 +245,56 @@ if ($method === 'POST') {
         error_log("SQL Error Code: " . $e->getCode());
         error_log("SQL Error Info: " . print_r($e->errorInfo, true));
         error_log("Stack trace: " . $e->getTraceAsString());
+        
+        // Check if it's the duplicate entry error and try to fix it
+        if ($e->getCode() == 23000 && strpos($e->getMessage(), 'Duplicate entry') !== false) {
+            try {
+                // Try to fix AUTO_INCREMENT one more time
+                $pdo = getDBConnection();
+                $maxId = $pdo->query("SELECT MAX(comment_id) as max_id FROM comment WHERE comment_id > 0")->fetch();
+                $nextId = ($maxId['max_id'] ?? 0) + 1;
+                if ($nextId < 1) $nextId = 1;
+                $pdo->exec("ALTER TABLE comment AUTO_INCREMENT = $nextId");
+                
+                http_response_code(500);
+                echo json_encode([
+                    'error' => 'AUTO_INCREMENT was broken but has been fixed. Please try submitting again.',
+                    'message' => 'The database has been fixed. Please refresh and try again.',
+                    'fixed' => true,
+                    'debug' => $e->getMessage()
+                ]);
+                exit;
+            } catch (Exception $e2) {
+                // Fix failed, show error
+            }
+        }
+        
         http_response_code(500);
         echo json_encode([
-            'error' => 'Database error. Please try again or contact support.',
-            'debug' => (ini_get('display_errors') ? $e->getMessage() : null)
+            'error' => 'Database error occurred',
+            'message' => $e->getMessage(),
+            'code' => $e->getCode(),
+            'sql_state' => $e->errorInfo[0] ?? null,
+            'driver_code' => $e->errorInfo[1] ?? null,
+            'driver_message' => $e->errorInfo[2] ?? null
         ]);
     } catch (Exception $e) {
         error_log("Comment submission error: " . $e->getMessage());
         error_log("Stack trace: " . $e->getTraceAsString());
         http_response_code(500);
         echo json_encode([
-            'error' => 'Failed to submit comment. Please try again.',
-            'debug' => (ini_get('display_errors') ? $e->getMessage() : null)
+            'error' => 'Failed to submit comment',
+            'message' => $e->getMessage(),
+            'type' => get_class($e)
         ]);
     } catch (Error $e) {
         error_log("Fatal error in comment submission: " . $e->getMessage());
         error_log("Stack trace: " . $e->getTraceAsString());
         http_response_code(500);
         echo json_encode([
-            'error' => 'A system error occurred. Please try again later.',
-            'debug' => (ini_get('display_errors') ? $e->getMessage() : null)
+            'error' => 'A system error occurred',
+            'message' => $e->getMessage(),
+            'type' => get_class($e)
         ]);
     }
 } elseif ($method === 'GET') {
