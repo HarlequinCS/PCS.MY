@@ -175,63 +175,110 @@ if ($method === 'POST') {
             // Continue anyway - will try to fix on error
         }
         
-        // Insert comment - Based on your exact table structure
-        // IMPORTANT: Do NOT specify comment_id - let AUTO_INCREMENT handle it
-        $maxRetries = 2;
-        $commentId = null;
+        // ============================================
+        // PRODUCTION-READY INSERT STATEMENT
+        // ============================================
+        // CRITICAL: Never include comment_id in INSERT
+        // MySQL AUTO_INCREMENT will handle comment_id automatically
+        // ============================================
         
-        for ($attempt = 0; $attempt < $maxRetries; $attempt++) {
-            try {
-                // Insert with comment, status, and ip_address
-                // comment_id will auto-increment (don't specify it)
-                $stmt = $pdo->prepare("INSERT INTO comment (comment, status, ip_address) VALUES (?, ?, ?)");
-                $result = $stmt->execute([$comment, 'pending', $ip]);
+        try {
+            // Clean INSERT - only specify non-auto columns
+            // comment_id is AUTO_INCREMENT PRIMARY KEY - DO NOT include it
+            $stmt = $pdo->prepare("INSERT INTO comment (comment, status, ip_address) VALUES (?, ?, ?)");
+            
+            // Execute with sanitized values
+            $result = $stmt->execute([
+                $comment,      // User's comment text
+                'pending',     // Status for admin approval
+                $ip            // Visitor IP address
+            ]);
+            
+            // Verify execution
+            if ($result === false) {
+                $errorInfo = $stmt->errorInfo();
+                throw new PDOException(
+                    "INSERT execution failed: " . ($errorInfo[2] ?? 'Unknown database error'),
+                    (int)($errorInfo[1] ?? 0)
+                );
+            }
+            
+            // Get the auto-generated comment_id
+            $commentId = $pdo->lastInsertId();
+            
+            // Validate we got a valid ID (should never be 0 for AUTO_INCREMENT)
+            if (!$commentId || $commentId <= 0) {
+                // This should never happen with proper AUTO_INCREMENT
+                // But if it does, it means AUTO_INCREMENT is broken
+                error_log("CRITICAL: lastInsertId() returned invalid value: $commentId");
                 
-                if ($result === false) {
-                    $errorInfo = $stmt->errorInfo();
-                    throw new PDOException("INSERT returned false. Error: " . ($errorInfo[2] ?? 'Unknown error'));
-                }
+                // Try to verify the insert actually happened
+                $verify = $pdo->prepare("SELECT comment_id FROM comment WHERE comment = ? AND ip_address = ? ORDER BY comment_id DESC LIMIT 1");
+                $verify->execute([$comment, $ip]);
+                $inserted = $verify->fetch(PDO::FETCH_ASSOC);
                 
-                $commentId = $pdo->lastInsertId();
-                
-                // Success - break out of retry loop
-                if ($commentId && $commentId > 0) {
-                    break;
-                }
-                
-            } catch (PDOException $e) {
-                // Check if it's the duplicate entry error
-                if ($e->getCode() == 23000 && strpos($e->getMessage(), 'Duplicate entry') !== false && strpos($e->getMessage(), "key 'PRIMARY'") !== false) {
-                    // This is the AUTO_INCREMENT = 0 issue
-                    error_log("Detected duplicate entry '0' error - fixing AUTO_INCREMENT");
-                    
-                    try {
-                        // Fix AUTO_INCREMENT
-                        $maxId = $pdo->query("SELECT MAX(comment_id) as max_id FROM comment")->fetch();
-                        $nextId = ($maxId['max_id'] ?? 0) + 1;
-                        if ($nextId < 1) $nextId = 1;
-                        $pdo->exec("ALTER TABLE comment AUTO_INCREMENT = $nextId");
-                        error_log("Fixed AUTO_INCREMENT to: $nextId");
-                        
-                        // If this was the first attempt, retry
-                        if ($attempt < $maxRetries - 1) {
-                            continue; // Retry the insert
-                        }
-                    } catch (PDOException $e2) {
-                        error_log("Failed to fix AUTO_INCREMENT: " . $e2->getMessage());
-                    }
-                }
-                
-                // If we're on the last attempt or it's not the duplicate error, throw
-                if ($attempt == $maxRetries - 1) {
-                    throw $e;
+                if ($inserted && $inserted['comment_id'] > 0) {
+                    $commentId = $inserted['comment_id'];
+                    error_log("Recovered comment_id from database: $commentId");
+                } else {
+                    throw new Exception(
+                        "AUTO_INCREMENT failure: Insert may have succeeded but no valid ID returned. " .
+                        "Please run fix_database_permanent.php to repair the database."
+                    );
                 }
             }
-        }
-        
-        // Verify we got a valid ID
-        if (!$commentId || $commentId == 0) {
-            throw new Exception("Failed to insert comment - AUTO_INCREMENT may be broken. Please run fix_zero_id.php");
+            
+        } catch (PDOException $e) {
+            // Handle duplicate entry error (comment_id = 0 issue)
+            if ($e->getCode() == 23000 && 
+                strpos($e->getMessage(), 'Duplicate entry') !== false && 
+                strpos($e->getMessage(), "key 'PRIMARY'") !== false) {
+                
+                error_log("CRITICAL: Duplicate entry error detected - AUTO_INCREMENT is broken");
+                
+                // Attempt automatic fix
+                try {
+                    // Fix the row with comment_id = 0 first
+                    $zeroRow = $pdo->query("SELECT comment_id FROM comment WHERE comment_id = 0 LIMIT 1")->fetch();
+                    if ($zeroRow) {
+                        $maxId = $pdo->query("SELECT MAX(comment_id) as max_id FROM comment WHERE comment_id > 0")->fetch(PDO::FETCH_ASSOC);
+                        $newId = ($maxId['max_id'] ?? 0) + 1;
+                        if ($newId < 1) $newId = 1;
+                        $pdo->prepare("UPDATE comment SET comment_id = ? WHERE comment_id = 0")->execute([$newId]);
+                        error_log("Fixed row with comment_id = 0, updated to: $newId");
+                    }
+                    
+                    // Fix AUTO_INCREMENT
+                    $maxId = $pdo->query("SELECT MAX(comment_id) as max_id FROM comment")->fetch(PDO::FETCH_ASSOC);
+                    $nextId = ($maxId['max_id'] ?? 0) + 1;
+                    if ($nextId < 1) $nextId = 1;
+                    $pdo->exec("ALTER TABLE comment AUTO_INCREMENT = $nextId");
+                    error_log("Fixed AUTO_INCREMENT to: $nextId");
+                    
+                    // Retry the insert
+                    $stmt = $pdo->prepare("INSERT INTO comment (comment, status, ip_address) VALUES (?, ?, ?)");
+                    $stmt->execute([$comment, 'pending', $ip]);
+                    $commentId = $pdo->lastInsertId();
+                    
+                    if ($commentId && $commentId > 0) {
+                        error_log("Retry successful after AUTO_INCREMENT fix, comment_id: $commentId");
+                        // Success - continue to response
+                    } else {
+                        throw new Exception("AUTO_INCREMENT fix failed. Please run fix_database_permanent.php");
+                    }
+                    
+                } catch (Exception $fixError) {
+                    error_log("Failed to auto-fix AUTO_INCREMENT: " . $fixError->getMessage());
+                    throw new Exception(
+                        "Database AUTO_INCREMENT is broken. " .
+                        "Please visit: /api/fix_database_permanent.php to fix it permanently. " .
+                        "Original error: " . $e->getMessage()
+                    );
+                }
+            } else {
+                // Re-throw if it's not the duplicate entry error
+                throw $e;
+            }
         }
         
         // Success - return response
