@@ -1812,7 +1812,13 @@
             loadComments();
           }, 500);
         } else {
-          showMessage(data.error || 'Failed to submit comment. Please try again.', 'error');
+          // Handle rate limiting (429) with better message
+          if (response.status === 429) {
+            const retryAfter = data.retry_after || 60;
+            showMessage(data.error || `Please wait ${retryAfter} seconds before posting again.`, 'error');
+          } else {
+            showMessage(data.error || 'Failed to submit comment. Please try again.', 'error');
+          }
         }
       } catch (error) {
         console.error('Comment submission error:', error);

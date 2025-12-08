@@ -112,24 +112,8 @@ if ($method === 'POST') {
             error_log("Column check error: " . $e->getMessage());
         }
         
-        // Basic spam check (simple rate limiting) - only if columns exist
-        try {
-            $columns = $pdo->query("SHOW COLUMNS FROM comment")->fetchAll(PDO::FETCH_COLUMN);
-            if (in_array('ip_address', $columns) && in_array('created_at', $columns)) {
-                $stmt = $pdo->prepare("SELECT COUNT(*) as count FROM comment WHERE ip_address = ? AND created_at > DATE_SUB(NOW(), INTERVAL 5 MINUTE)");
-                $stmt->execute([$ip]);
-                $result = $stmt->fetch();
-                
-                if ($result && $result['count'] > 0) {
-                    http_response_code(429);
-                    echo json_encode(['error' => 'Please wait a few minutes before posting again']);
-                    exit;
-                }
-            }
-        } catch (PDOException $e) {
-            // Rate limiting failed, but continue with submission
-            error_log("Rate limit check error: " . $e->getMessage());
-        }
+        // Rate limiting removed - Admin approval system provides spam protection
+        // Comments are set to 'pending' status and require admin approval before display
         
         // Insert comment - handle table structure
         $columns = $pdo->query("SHOW COLUMNS FROM comment")->fetchAll(PDO::FETCH_COLUMN);
