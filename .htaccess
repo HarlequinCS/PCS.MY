@@ -2,15 +2,11 @@
 RewriteEngine On
 
 # Base directory
-# For local Laragon with subdirectory: RewriteBase /pcs.my/
-# For production root: RewriteBase /
-# Comment/uncomment the appropriate line below:
+# IMPORTANT: Change this based on your environment!
+# For PRODUCTION (root domain): RewriteBase /
+# For LOCAL (Laragon subdirectory): RewriteBase /pcs.my/
 
-# Local development (Laragon subdirectory):
-RewriteBase /pcs.my/
-
-# Production (root domain):
-# RewriteBase /
+RewriteBase /
 
 # Security: Disable directory browsing
 Options -Indexes
@@ -47,8 +43,8 @@ RewriteRule ^(.*)$ $1.html [L]
 RewriteCond %{THE_REQUEST} \s/+(.+)\.html[\s?] [NC]
 RewriteRule ^ /%1 [R=301,L]
 
-# Root redirect
-RewriteCond %{REQUEST_URI} ^/$
+# Serve index.html for root
+RewriteCond %{REQUEST_URI} ^/?$
 RewriteRule ^$ index.html [L]
 
 # Default index
