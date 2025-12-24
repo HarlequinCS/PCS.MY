@@ -11,5 +11,19 @@
     <priority>1.0</priority>
   </url>
   
+  <url>
+    <loc>https://projectcutisem.com/behind-the-product</loc>
+    <lastmod>2024-12-19</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  
+  <url>
+    <loc>https://projectcutisem.com/workshirt</loc>
+    <lastmod>2024-12-19</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  
 </urlset>
 

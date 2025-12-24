@@ -3,7 +3,12 @@
 
 User-agent: *
 Allow: /
+Allow: /css/
+Allow: /js/
+Allow: /images/
+Allow: /favicon.ico
 Disallow: /api/
+Disallow: /admin/
 Disallow: /config/
 Disallow: /includes/
 
