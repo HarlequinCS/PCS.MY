@@ -1,299 +1,741 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
+  <head>
+    <!-- Preconnect to CDNs for faster loading -->
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
+    
+    <!-- Google Fonts - Pinyon Script -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Pinyon+Script&display=swap" rel="stylesheet">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
     <meta name="robots" content="index, follow">
     <meta name="description" content="Japanese Drill Half-Zip Workshirt by Projek Cuti Sem. Premium heavyweight Japanese drill fabric, metal half-zip closure, relaxed workwear fit. Built for work, designed for everyday wear.">
-    <title>Japanese Drill Half-Zip Workshirt | Projek Cuti Sem (PCS)</title>
+    <title>Projek Cuti Sem (PCS) X WORKSHIRT COLLECTION</title>
     <link rel="canonical" href="https://projectcutisem.com/workshirt">
-    <link rel="stylesheet" href="css/workshirt.css">
+    <link rel="stylesheet" href="css/workshirt.css?v=14">
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
     <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico">
 </head>
-<body class="theme-black">
-    <!-- Sticky Logo -->
-    <div class="sticky-logo">
-        <img src="images/PCS logo.svg" alt="Projek Cuti Sem" class="logo">
+<body>
+  <!-- Top Navigation Bar -->
+  <nav class="top-nav">
+    <div class="nav-container">
+      <!-- Left Side: Logo + Brand Name -->
+      <div class="nav-brand">
+        <figure class="nav-logo">
+          <img src="images/PCS logo.svg" alt="Projek Cuti Sem">
+        </figure>
+        <span class="nav-brand-text">PROJEK CUTI SEM</span>
+      </div>
+      
+      <!-- Right Side: Action Buttons (Desktop) -->
+      <div class="nav-actions" id="navActions">
+        <button class="nav-btn nav-btn--primary js-buy-now-btn">BUY NOW</button>
+        <a href="/behind-the-product" class="nav-btn nav-btn--secondary">OUR STORY</a>
+        <a href="mailto:info@projectcutisem.com" class="nav-btn nav-btn--secondary">CONTACT</a>
+      </div>
+      
+      <!-- Hamburger Menu Button (Mobile) -->
+      <button class="hamburger-menu js-hamburger" aria-label="Toggle menu">
+        <span class="hamburger-line"></span>
+        <span class="hamburger-line"></span>
+        <span class="hamburger-line"></span>
+      </button>
     </div>
-
-    <!-- Hero Product View -->
-    <section class="hero-product">
-        <div class="product-image-container">
-            <img src="https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=800&h=1000&fit=crop" alt="Japanese Drill Half-Zip Workshirt" class="product-image" id="heroImage">
-        </div>
-        <div class="product-info">
-            <h1 class="product-name">Japanese Drill<br>Half-Zip Workshirt</h1>
-            <p class="product-description">Durable drill fabric. Relaxed workwear fit.</p>
-            <div class="countdown-minimal" id="countdown">
-                <span class="countdown-number" id="days">00</span>
-                <span class="countdown-separator">:</span>
-                <span class="countdown-number" id="hours">00</span>
-                <span class="countdown-separator">:</span>
-                <span class="countdown-number" id="minutes">00</span>
-                <span class="countdown-separator">:</span>
-                <span class="countdown-number" id="seconds">00</span>
-            </div>
-        </div>
-    </section>
-
-    <!-- Color Selection -->
-    <section class="color-selection">
-        <div class="color-selector">
-            <button class="color-dot active" data-theme="green" data-image="https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=600&h=800&fit=crop" aria-label="Dark Green">
-                <span class="color-preview" style="background: #2d5016;"></span>
-                <span class="color-label">Green</span>
-            </button>
-            <button class="color-dot" data-theme="red" data-image="https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=600&h=800&fit=crop" aria-label="Red">
-                <span class="color-preview" style="background: #ff0000;"></span>
-                <span class="color-label">Red</span>
-            </button>
-            <button class="color-dot" data-theme="black" data-image="https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=600&h=800&fit=crop" aria-label="Black">
-                <span class="color-preview" style="background: #000000;"></span>
-                <span class="color-label">Black</span>
-            </button>
-        </div>
-    </section>
-
-    <!-- Key Features -->
-    <section class="key-features">
-        <div class="feature-card">
-            <div class="feature-icon">🧵</div>
-            <div class="feature-content">
-                <h3 class="feature-title">Heavyweight Japanese Drill</h3>
-                <p class="feature-text">Premium drill fabric sourced from Japan, known for durability and texture.</p>
-            </div>
-        </div>
-        <div class="feature-card">
-            <div class="feature-icon">⚙️</div>
-            <div class="feature-content">
-                <h3 class="feature-title">Half-Zip Metal Zipper</h3>
-                <p class="feature-text">Precision-engineered metal zipper for reliable daily use.</p>
-            </div>
-        </div>
-        <div class="feature-card">
-            <div class="feature-icon">📐</div>
-            <div class="feature-content">
-                <h3 class="feature-title">Relaxed Workwear Fit</h3>
-                <p class="feature-text">Designed for comfort and movement, works for any occasion.</p>
-            </div>
-        </div>
-        <div class="feature-card">
-            <div class="feature-icon">🛡️</div>
-            <div class="feature-content">
-                <h3 class="feature-title">Durable Daily Wear</h3>
-                <p class="feature-text">Built to withstand everyday life while maintaining character.</p>
-            </div>
-        </div>
-    </section>
-
-    <!-- Product Details -->
-    <section class="product-details">
-        <div class="detail-block">
-            <img src="https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=600&h=800&fit=crop" alt="Fabric Detail" class="detail-image">
-            <div class="detail-text-block">
-                <h3 class="detail-title">Fabric</h3>
-                <p class="detail-description">Heavyweight Japanese drill fabric with distinctive texture. Designed to age gracefully with daily wear.</p>
-            </div>
-        </div>
-        <div class="detail-block">
-            <img src="https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=600&h=800&fit=crop" alt="Zipper Detail" class="detail-image">
-            <div class="detail-text-block">
-                <h3 class="detail-title">Zipper</h3>
-                <p class="detail-description">Metal half-zip closure. Precision-engineered for smooth operation and authentic workwear aesthetic.</p>
-            </div>
-        </div>
-        <div class="detail-block">
-            <img src="https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=600&h=800&fit=crop" alt="Construction Detail" class="detail-image">
-            <div class="detail-text-block">
-                <h3 class="detail-title">Construction</h3>
-                <p class="detail-description">Reinforced stitching at stress points. Built to last through years of daily use.</p>
-            </div>
-        </div>
-    </section>
-
-    <!-- Fit & Size Info -->
-    <section class="fit-size">
-        <button class="accordion-toggle" id="fitToggle">
-            <span>Fit & Size Information</span>
-            <span class="accordion-icon">+</span>
-        </button>
-        <div class="accordion-content" id="fitContent">
-            <div class="fit-info-grid">
-                <div class="fit-item">
-                    <span class="fit-label">Fit</span>
-                    <span class="fit-value">Relaxed workwear fit with room for layering</span>
-                </div>
-                <div class="fit-item">
-                    <span class="fit-label">Model Height</span>
-                    <span class="fit-value">6'0" (183 cm)</span>
-                </div>
-                <div class="fit-item">
-                    <span class="fit-label">Size Worn</span>
-                    <span class="fit-value">Medium</span>
-                </div>
-                <div class="fit-item">
-                    <span class="fit-label">Care</span>
-                    <span class="fit-value">Machine wash cold, hang dry</span>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Lifestyle / Usage -->
-    <section class="lifestyle">
-        <img src="https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=800&h=1000&fit=crop" alt="Lifestyle" class="lifestyle-image">
-        <p class="lifestyle-caption">Built for work. Designed for everyday wear.</p>
-    </section>
-
-    <!-- Release Countdown & CTA -->
-    <section class="release-cta">
-        <div class="countdown-large" id="countdownFinal">
-            <div class="countdown-item-large">
-                <span class="countdown-number-large" id="daysFinal">00</span>
-                <span class="countdown-label-large">Days</span>
-            </div>
-            <div class="countdown-item-large">
-                <span class="countdown-number-large" id="hoursFinal">00</span>
-                <span class="countdown-label-large">Hours</span>
-            </div>
-            <div class="countdown-item-large">
-                <span class="countdown-number-large" id="minutesFinal">00</span>
-                <span class="countdown-label-large">Minutes</span>
-            </div>
-            <div class="countdown-item-large">
-                <span class="countdown-number-large" id="secondsFinal">00</span>
-                <span class="countdown-label-large">Seconds</span>
-            </div>
-        </div>
-    </section>
-
-    <!-- Sticky Bottom CTA -->
-    <div class="sticky-cta">
-        <button class="cta-button-sticky" id="ctaButton">Join the Drop</button>
+    
+    <!-- Mobile Menu Overlay -->
+    <div class="mobile-menu js-mobile-menu">
+      <div class="mobile-menu-content">
+        <button class="nav-btn nav-btn--primary js-buy-now-btn">BUY NOW</button>
+        <a href="/behind-the-product" class="nav-btn nav-btn--secondary">OUR STORY</a>
+        <a href="mailto:info@projectcutisem.com" class="nav-btn nav-btn--secondary">CONTACT</a>
+      </div>
     </div>
+  </nav>
+  
+  <div class="slider js-slider">
+    <div class="slider__inner js-slider__inner"></div>
+    
+    <div class="slider__slides-wrapper">
+    <!-- Slide 1: WebGL Morph Background -->
+    <div class="slide js-slide">
+      <div class="slide__content">
+        <figure class="slide__img js-slide__img">
+          <img src="images/hijaufront.svg" alt="Hijau Front">
+        </figure>
+        <figure class="slide__img js-slide__img">
+          <img src="images/hijauback.svg" alt="Hijau Back">
+        </figure>
+      </div>
+      
+      <div class="slider__text js-slider__text">
+        <div class="slider__text-line js-slider__text-line"><div>Japanese Drill</div></div>
+        <div class="slider__text-line js-slider__text-line"><div>Half-Zip Workshirt</div></div>
+        <div class="slider__text-line js-slider__text-line"><div>Made in Malaysia</div></div>
+      </div>
+    </div>
+    
+    <!-- Slide 2: WebGL Morph Background -->
+    <div class="slide js-slide">
+      <div class="slide__content">
+        <figure class="slide__img js-slide__img">
+          <img src="images/hitamdepan.svg" alt="Hitam Depan">
+        </figure>
+        <figure class="slide__img js-slide__img">
+          <img src="images/hitamback.svg" alt="Hitam Back">
+        </figure>
+      </div>
+      
+      <div class="slider__text js-slider__text">
+        <div class="slider__text-line js-slider__text-line"><div>Heavyweight</div></div>
+        <div class="slider__text-line js-slider__text-line"><div>Japanese Drill</div></div>
+        <div class="slider__text-line js-slider__text-line"><div>Fabric</div></div>
+      </div>
+    </div>
+    
+    <!-- Slide 3: WebGL Morph Background -->
+    <div class="slide js-slide">
+      <div class="slide__content">
+        <figure class="slide__img js-slide__img">
+          <img src="images/merahdepan.svg" alt="Merah Depan">
+        </figure>
+        <figure class="slide__img js-slide__img">
+          <img src="images/merahback.svg" alt="Merah Back">
+        </figure>
+      </div>
+      
+      <div class="slider__text js-slider__text">
+        <div class="slider__text-line js-slider__text-line"><div>Relaxed</div></div>
+        <div class="slider__text-line js-slider__text-line"><div>Workwear Fit</div></div>
+        <div class="slider__text-line js-slider__text-line"><div>Everyday Wear</div></div>
+      </div>
+    </div>
+    </div>
+    <!-- End slides wrapper -->
+    
+    <!-- Navigation Buttons -->
+    <button class="slider-btn slider-btn--prev js-slider-btn-prev" aria-label="Previous slide">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polyline points="15 18 9 12 15 6"></polyline>
+      </svg>
+    </button>
+    <button class="slider-btn slider-btn--next js-slider-btn-next" aria-label="Next slide">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polyline points="9 18 15 12 9 6"></polyline>
+      </svg>
+    </button>
+    
+    <nav class="slider__nav js-slider__nav">
+      <div class="slider-bullet js-slider-bullet" data-slide="0">
+        <span class="slider-bullet__text js-slider-bullet__text">01</span>
+        <span class="slider-bullet__line js-slider-bullet__line"></span>
+      </div>
+      <div class="slider-bullet js-slider-bullet" data-slide="1">
+        <span class="slider-bullet__text js-slider-bullet__text">02</span>
+        <span class="slider-bullet__line js-slider-bullet__line"></span>
+      </div>
+      <div class="slider-bullet js-slider-bullet" data-slide="2">
+        <span class="slider-bullet__text js-slider-bullet__text">03</span>
+        <span class="slider-bullet__line js-slider-bullet__line"></span>
+      </div>
+    </nav>
+  </div>
+  
+  <div class="vert-text">
+    <span>
+      PROJEK CUTI SEM<br>
+      X WORKSHIRT COLLECTION
+    </span>
+  </div>
 
-    <!-- Footer -->
-    <footer class="site-footer">
-        <div class="footer-brand">Projek Cuti Sem</div>
-        <div class="footer-links">
-            <a href="https://instagram.com/projectcutisem" class="footer-link" target="_blank">Instagram</a>
-            <a href="mailto:info@projectcutisem.com" class="footer-link">Email</a>
+  <!-- Additional Content Sections -->
+  <main class="content-wrapper">
+    <!-- Features Section -->
+    <section class="content-section content-section--features">
+      <div class="section-container">
+        <h2 class="section-title">Premium Features</h2>
+        <p class="section-subtitle">Crafted with attention to detail and quality</p>
+        
+        <div class="features-grid">
+          <div class="feature-card">
+            <div class="feature-icon">
+              <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="8" y="12" width="48" height="40" rx="2" stroke="currentColor" stroke-width="2" fill="none"/>
+                <path d="M8 24 L56 24 M8 32 L56 32 M8 40 L56 40 M8 48 L56 48" stroke="currentColor" stroke-width="1.5" opacity="0.6"/>
+                <path d="M16 12 L16 52 M24 12 L24 52 M32 12 L32 52 M40 12 L40 52 M48 12 L48 52" stroke="currentColor" stroke-width="1.5" opacity="0.4"/>
+              </svg>
+            </div>
+            <h3 class="feature-card__title">Heavyweight Japanese Drill</h3>
+            <p class="feature-card__text">Premium drill fabric sourced from Japan, known for durability and distinctive texture. Designed to age gracefully with daily wear.</p>
+          </div>
+          
+          <div class="feature-card">
+            <div class="feature-icon">
+              <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="12" y="16" width="40" height="32" rx="1" stroke="currentColor" stroke-width="2" fill="none"/>
+                <path d="M12 24 L52 24 M12 32 L52 32 M12 40 L52 40" stroke="currentColor" stroke-width="2"/>
+                <circle cx="20" cy="24" r="2" fill="currentColor"/>
+                <circle cx="20" cy="32" r="2" fill="currentColor"/>
+                <circle cx="20" cy="40" r="2" fill="currentColor"/>
+                <circle cx="44" cy="24" r="2" fill="currentColor"/>
+                <circle cx="44" cy="32" r="2" fill="currentColor"/>
+                <circle cx="44" cy="40" r="2" fill="currentColor"/>
+                <path d="M32 20 L32 44" stroke="currentColor" stroke-width="2"/>
+                <circle cx="32" cy="20" r="3" fill="currentColor"/>
+              </svg>
+            </div>
+            <h3 class="feature-card__title">Half-Zip Metal Zipper</h3>
+            <p class="feature-card__text">Precision-engineered metal zipper for reliable daily use. Smooth operation with authentic workwear aesthetic.</p>
+          </div>
+          
+          <div class="feature-card">
+            <div class="feature-icon">
+              <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="10" y="18" width="44" height="6" rx="1" stroke="currentColor" stroke-width="2" fill="none"/>
+                <rect x="10" y="28" width="44" height="6" rx="1" stroke="currentColor" stroke-width="2" fill="none"/>
+                <rect x="10" y="38" width="44" height="6" rx="1" stroke="currentColor" stroke-width="2" fill="none"/>
+                <path d="M14 21 L14 42 M20 21 L20 42 M26 21 L26 42 M32 21 L32 42 M38 21 L38 42 M44 21 L44 42 M50 21 L50 42" stroke="currentColor" stroke-width="1" opacity="0.5"/>
+                <path d="M12 14 L12 46" stroke="currentColor" stroke-width="2"/>
+                <circle cx="12" cy="12" r="2" fill="currentColor"/>
+                <circle cx="12" cy="48" r="2" fill="currentColor"/>
+              </svg>
+            </div>
+            <h3 class="feature-card__title">Relaxed Workwear Fit</h3>
+            <p class="feature-card__text">Designed for comfort and movement, perfect for work and everyday occasions. Room for layering when needed.</p>
+          </div>
+          
+          <div class="feature-card">
+            <div class="feature-icon">
+              <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M32 10 L42 16 L42 28 C42 35 38 40 32 44 C26 40 22 35 22 28 L22 16 Z" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linejoin="round"/>
+                <path d="M32 18 L32 44" stroke="currentColor" stroke-width="2"/>
+                <path d="M28 26 L36 26 M28 32 L36 32 M28 38 L36 38" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                <circle cx="32" cy="50" r="3" fill="currentColor" opacity="0.6"/>
+                <circle cx="32" cy="50" r="6" stroke="currentColor" stroke-width="1.5" opacity="0.4"/>
+              </svg>
+            </div>
+            <h3 class="feature-card__title">Durable Daily Wear</h3>
+            <p class="feature-card__text">Built to withstand everyday life while maintaining character and style. Reinforced stitching at stress points.</p>
+          </div>
         </div>
-    </footer>
+      </div>
+    </section>
 
-    <script>
-        // Countdown Timer
-        function updateCountdown() {
-            // Set release date to March 1, 2026
-            const releaseDate = new Date('2026-03-01T00:00:00');
+    <!-- Product Showcase Section -->
+    <section class="content-section content-section--showcase">
+      <div class="section-container">
+        <!-- 1️⃣ Half Zipper (LEFT) -->
+        <div class="showcase-item showcase-item--left">
+          <div class="showcase-images">
+            <div class="showcase-image-main">
+              <img src="images/halfzip.svg" alt="Half Zipper Detail - Main View" loading="lazy">
+            </div>
+            <div class="showcase-image-support">
+              <img src="images/halfzip2.svg" alt="Half Zipper Detail - Supporting View" loading="lazy">
+            </div>
+          </div>
+          <div class="showcase-content">
+            <h3 class="showcase-title">Half Zipper</h3>
+            <p class="showcase-text">Engineered for effortless style and comfort, the half-zipper lets you adapt your look with ease — whether on the move or standing out in the crowd.</p>
+          </div>
+        </div>
 
-            const now = new Date().getTime();
-            const distance = releaseDate.getTime() - now;
+        <!-- 2️⃣ Left Pocket Embroidery (PCS Logo) (RIGHT) -->
+        <div class="showcase-item showcase-item--right">
+          <div class="showcase-content">
+            <h3 class="showcase-title">Left Pocket Embroidery (PCS Logo)</h3>
+            <p class="showcase-text">Every detail matters. The left pocket proudly bears the PCS logo, a symbol of Malaysian craftsmanship and a legacy of quality you can wear.</p>
+          </div>
+          <div class="showcase-images">
+            <div class="showcase-image-main">
+              <img src="images/pcs.svg" alt="Left Pocket PCS Logo Embroidery - Main View" loading="lazy">
+            </div>
+            <div class="showcase-image-support">
+              <img src="images/pcs2.svg" alt="Left Pocket PCS Logo Embroidery - Supporting View" loading="lazy">
+            </div>
+          </div>
+        </div>
 
-            const days = Math.floor(distance / (1000 * 60 * 60 * 24));
-            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+        <!-- 3️⃣ Right Pocket Embroidery ('We Lead The Future' Emblem) (LEFT) -->
+        <div class="showcase-item showcase-item--left">
+          <div class="showcase-images">
+            <div class="showcase-image-main">
+              <img src="images/lead.svg" alt="Right Pocket 'We Lead The Future' Emblem - Main View" loading="lazy">
+            </div>
+            <div class="showcase-image-support">
+              <img src="images/lead2.svg" alt="Right Pocket 'We Lead The Future' Emblem - Supporting View" loading="lazy">
+            </div>
+          </div>
+          <div class="showcase-content">
+            <h3 class="showcase-title">Right Pocket Embroidery ('We Lead The Future' Emblem)</h3>
+            <p class="showcase-text">Ambition stitched into every thread. The right pocket's 'We Lead The Future' emblem is for those who dare to shape tomorrow, today.</p>
+          </div>
+        </div>
 
-            // Update hero countdown
-            document.getElementById('days').textContent = String(days).padStart(2, '0');
-            document.getElementById('hours').textContent = String(hours).padStart(2, '0');
-            document.getElementById('minutes').textContent = String(minutes).padStart(2, '0');
-            document.getElementById('seconds').textContent = String(seconds).padStart(2, '0');
+        <!-- 4️⃣ Back Embroidery ('Les Étudiants Mènent le Monde') (RIGHT) -->
+        <div class="showcase-item showcase-item--right">
+          <div class="showcase-content">
+            <h3 class="showcase-title">Back Embroidery ('Les Étudiants Mènent le Monde')</h3>
+            <p class="showcase-text">Make a statement without saying a word. The back embroidery, 'Les Étudiants Mènent le Monde,' embodies the vision of students who lead the world.</p>
+          </div>
+          <div class="showcase-images">
+            <div class="showcase-image-main">
+              <img src="images/etudiants.svg" alt="Back Embroidery 'Les Étudiants Mènent le Monde' - Main View" loading="lazy">
+            </div>
+            <div class="showcase-image-support">
+              <img src="images/etudiants2.svg" alt="Back Embroidery 'Les Étudiants Mènent le Monde' - Supporting View" loading="lazy">
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
 
-            // Update final countdown
-            document.getElementById('daysFinal').textContent = String(days).padStart(2, '0');
-            document.getElementById('hoursFinal').textContent = String(hours).padStart(2, '0');
-            document.getElementById('minutesFinal').textContent = String(minutes).padStart(2, '0');
-            document.getElementById('secondsFinal').textContent = String(seconds).padStart(2, '0');
-        }
+    <!-- Product Details Section -->
+    <section class="content-section content-section--details">
+      <div class="section-container">
+        <h2 class="section-title">Product Details</h2>
+        
+        <div class="details-grid">
+          <div class="detail-card">
+            <h4 class="detail-card__label">Fit</h4>
+            <p class="detail-card__value">Relaxed workwear fit with room for layering</p>
+          </div>
+          
+          <div class="detail-card">
+            <h4 class="detail-card__label">Fabric</h4>
+            <p class="detail-card__value">Heavyweight Japanese drill fabric with distinctive texture</p>
+          </div>
+          
+          <div class="detail-card">
+            <h4 class="detail-card__label">Colors</h4>
+            <p class="detail-card__value">Red, Green, Black</p>
+          </div>
+          
+          <div class="detail-card">
+            <h4 class="detail-card__label">Care</h4>
+            <p class="detail-card__value">Machine wash cold, hang dry</p>
+          </div>
+        </div>
+      </div>
+    </section>
 
-        setInterval(updateCountdown, 1000);
-        updateCountdown();
+    <!-- CTA Section -->
+    <section class="content-section content-section--cta">
+      <div class="section-container">
+        <h2 class="cta-title">Coming Soon</h2>
+        <p class="cta-text">Be the first to experience premium Malaysian workwear</p>
+        <p class="cta-subtext" style="font-size: 0.9rem; color: rgba(255, 255, 255, 0.5); margin-top: 0.5rem; font-style: italic;">(When exactly? We're as unpredictable as Malaysian weather — stay tuned!)</p>
+        <button class="cta-button js-buy-now-btn">Notify Me</button>
+      </div>
+    </section>
 
-        // Color Variant Switching
-        const colorButtons = document.querySelectorAll('.color-dot');
-        const body = document.body;
-        const heroImage = document.getElementById('heroImage');
+    <!-- Story Section -->
+    <section class="content-section content-section--story">
+      <div class="section-container">
+        <div class="story-content">
+          <div class="story-text">
+            <h2 class="section-title">Our Story</h2>
+            <p class="story-paragraph">
+              Setiap karya Projek Cuti Sem lahir daripada satu misi — menghasilkan workshirt premium yang bukan sahaja bergaya, tetapi juga tahan lasak untuk kehidupan moden. Dari setiap jahitan hingga ke setiap butang, semuanya direka dengan penuh perhatian, supaya anda bukan sahaja nampak hebat, tetapi juga rasa selesa sepanjang hari.
+            </p>
+            <p class="story-paragraph">
+              Japanese Drill Half-Zip Workshirt ini adalah bukti nyata dedikasi kami. Menggabungkan kehalusan tekstil tradisi Jepun dengan rekaan moden, setiap helaian kain membawa cerita craftsmanship yang teliti, menegaskan bahawa gaya dan kualiti boleh berjalan seiring.
+            </p>
+            <a href="/behind-the-product" class="story-link">Learn More</a>
+          </div>
+          <div class="story-image">
+            <img src="images/story.svg" alt="Craftsmanship Detail">
+          </div>
+        </div>
 
-        colorButtons.forEach(button => {
-            button.addEventListener('click', () => {
-                // Remove active class
-                colorButtons.forEach(btn => btn.classList.remove('active'));
-                button.classList.add('active');
+        <!-- Visitor Counter -->
+        <div class="visitor-counter-section">
+          <div class="visitor-counter-box">
+            <span class="visitor-counter-label">Total Visitors</span>
+            <span class="visitor-count" id="visitorCount">0</span>
+          </div>
+        </div>
 
-                // Get theme and image
-                const theme = button.dataset.theme;
-                const imageUrl = button.dataset.image;
+        <!-- Comments Section -->
+        <div class="comments-section">
+          <h3 class="comments-title">Leave Your Encouragement</h3>
+          
+          <form class="comment-form" id="commentForm">
+            <div class="comment-input-wrapper">
+              <textarea 
+                class="comment-input" 
+                id="commentInput" 
+                placeholder="Share your thoughts, encouragement, or feedback..."
+                required
+                maxlength="1000"
+              ></textarea>
+            </div>
+            <button type="submit" class="comment-submit-btn" id="submitBtn">
+              Submit Comment
+            </button>
+            <div class="comment-message" id="commentMessage"></div>
+          </form>
 
-                // Update body theme
-                body.className = `theme-${theme}`;
+          <div class="comments-list-wrapper">
+            <div class="comments-list" id="commentsList">
+              <div class="no-comments">Loading comments...</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
 
-                // Update image with fade
-                if (heroImage) {
-                    heroImage.style.opacity = '0';
-                    setTimeout(() => {
-                        heroImage.src = imageUrl;
-                        heroImage.style.opacity = '1';
-                    }, 200);
-                }
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-container">
+      <div class="footer-content">
+        <div class="footer-social">
+          <a href="https://www.instagram.com/pcs.clthng" target="_blank" rel="noopener noreferrer" class="social-link" aria-label="Follow us on Instagram">
+            <svg fill="currentColor" viewBox="0 0 24 24" width="24" height="24" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+            </svg>
+            <span>Instagram</span>
+          </a>
+          <a href="https://www.instagram.com/pcs.clthng" target="_blank" rel="noopener noreferrer" class="social-link" aria-label="Contact us on Instagram">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="24" height="24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+            </svg>
+            <span>Contact</span>
+          </a>
+        </div>
+        <p class="footer-text">PCS(Projek Cuti Sem) 2025 all right reserve develop by Team ChendAwan</p>
+      </div>
+    </div>
+  </footer>
 
-                // Haptic feedback (if supported)
-                if (navigator.vibrate) {
-                    navigator.vibrate(10);
-                }
-            });
+  <!-- Back to Top Button -->
+  <button id="backToTop" class="back-to-top" aria-label="Back to top">
+    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"></path>
+    </svg>
+  </button>
+
+  <!-- Three.js Library - Using jsDelivr CDN (faster) -->
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js" defer crossorigin="anonymous"></script>
+  
+  <!-- GSAP Library (required for animations) - Using jsDelivr CDN (faster) -->
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js" defer crossorigin="anonymous"></script>
+  
+  <!-- Coming Soon Modal -->
+  <div class="coming-soon-modal js-coming-soon-modal">
+    <div class="modal-overlay js-modal-overlay"></div>
+    <div class="modal-content">
+      <button class="modal-close js-modal-close" aria-label="Close modal">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="24" height="24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+      </button>
+      <div class="modal-icon">🚀</div>
+      <h2 class="modal-title">Coming Soon!</h2>
+      <p class="modal-message">
+        We're putting the finishing touches on something special. <br>
+        Meanwhile, our workshirt is practicing its runway walk.
+      </p>
+      <p class="modal-submessage">
+        Enter your email and we'll notify you when we're ready to launch!
+      </p>
+      
+      <!-- Email Form -->
+      <form class="notification-form js-notification-form">
+        <div class="form-group">
+          <input 
+            type="email" 
+            name="email" 
+            class="form-input js-email-input" 
+            placeholder="your.email@example.com" 
+            required
+            autocomplete="email"
+          >
+          <div class="form-error js-form-error" style="display: none;"></div>
+        </div>
+        <div class="modal-actions">
+          <button type="submit" class="modal-btn modal-btn--primary js-submit-btn">
+            <span class="btn-text">Get Notified</span>
+            <span class="btn-loader" style="display: none;">⏳</span>
+          </button>
+          <button type="button" class="modal-btn modal-btn--secondary js-modal-close">Maybe Later</button>
+        </div>
+      </form>
+      
+      <!-- Success Message (hidden by default) -->
+      <div class="form-success js-form-success" style="display: none;">
+        <div class="success-icon">✓</div>
+        <p class="success-message"></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Workshirt JavaScript - Loads after libraries -->
+  <script src="js/workshirt.js" defer></script>
+  
+  <!-- Visitor Counter & Comments Script -->
+  <script>
+    // Visitor Counter
+    async function trackVisitor() {
+      try {
+        const response = await fetch('api/visitor.php', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          }
         });
-
-        // Accordion Toggle
-        const fitToggle = document.getElementById('fitToggle');
-        const fitContent = document.getElementById('fitContent');
-
-        if (fitToggle && fitContent) {
-            fitToggle.addEventListener('click', () => {
-                const isOpen = fitContent.classList.contains('open');
-                fitContent.classList.toggle('open');
-                fitToggle.querySelector('.accordion-icon').textContent = isOpen ? '+' : '−';
-                
-                // Haptic feedback
-                if (navigator.vibrate) {
-                    navigator.vibrate(10);
-                }
-            });
+        const data = await response.json();
+        if (data.success) {
+          updateVisitorCount(data.total_visitors);
         }
+      } catch (error) {
+        console.error('Visitor tracking error:', error);
+        getVisitorCount();
+      }
+    }
 
-        // CTA Button Handler
-        const ctaButton = document.getElementById('ctaButton');
-        if (ctaButton) {
-            ctaButton.addEventListener('click', (e) => {
-                e.preventDefault();
-                // Haptic feedback
-                if (navigator.vibrate) {
-                    navigator.vibrate(20);
-                }
-                alert('Thank you for your interest. We will notify you when the product is available.');
-            });
+    async function getVisitorCount() {
+      try {
+        const response = await fetch('api/visitor.php');
+        const data = await response.json();
+        if (data.success) {
+          updateVisitorCount(data.total_visitors);
         }
+      } catch (error) {
+        console.error('Error getting visitor count:', error);
+      }
+    }
 
-        // Scroll Animations (lightweight)
-        const observerOptions = {
-            threshold: 0.1,
-            rootMargin: '0px 0px -20px 0px'
-        };
+    function updateVisitorCount(count) {
+      const counter = document.getElementById('visitorCount');
+      if (counter) {
+        const currentCount = parseInt(counter.textContent) || 0;
+        const targetCount = count;
+        const increment = targetCount > currentCount ? 1 : -1;
+        const duration = 1000;
+        const steps = Math.abs(targetCount - currentCount);
+        const stepDuration = duration / steps;
 
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.classList.add('visible');
-                }
-            });
-        }, observerOptions);
+        let current = currentCount;
+        const timer = setInterval(() => {
+          current += increment;
+          counter.textContent = current;
+          
+          if (current === targetCount) {
+            clearInterval(timer);
+          }
+        }, stepDuration);
+      }
+    }
 
-        // Observe elements
-        document.querySelectorAll('.fade-in').forEach(el => {
-            observer.observe(el);
+    // Comments
+    async function loadComments() {
+      try {
+        const response = await fetch('api/comments.php');
+        const data = await response.json();
+        
+        if (data.success) {
+          displayComments(data.comments);
+        }
+      } catch (error) {
+        console.error('Error loading comments:', error);
+        const container = document.getElementById('commentsList');
+        if (container) {
+          container.innerHTML = '<div class="no-comments">Unable to load comments. Please try again later.</div>';
+        }
+      }
+    }
+
+    function displayComments(comments) {
+      const container = document.getElementById('commentsList');
+      if (!container) return;
+      
+      if (!comments || comments.length === 0) {
+        container.innerHTML = '<div class="no-comments">No comments yet. Be the first to share your thoughts!</div>';
+        return;
+      }
+
+      container.innerHTML = comments.map((comment, index) => {
+        const date = new Date(comment.created_at);
+        const formattedDate = date.toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'short',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
         });
-    </script>
+        
+        const firstLetter = comment.comment.charAt(0).toUpperCase();
+        const avatarColors = [
+          'rgba(255, 255, 255, 0.2)',
+          'rgba(255, 255, 255, 0.15)',
+          'rgba(255, 255, 255, 0.25)',
+          'rgba(255, 255, 255, 0.18)'
+        ];
+        const avatarColor = avatarColors[index % avatarColors.length];
+        const commentId = comment.comment_id || index;
+        
+        return `
+          <div class="comment-item" data-comment-id="${commentId}">
+            <div class="comment-header">
+              <div class="comment-avatar" style="background: ${avatarColor};">
+                ${firstLetter}
+              </div>
+            </div>
+            <div class="comment-text">${escapeHtml(comment.comment)}</div>
+            <div class="comment-footer">
+              <div class="comment-date">${formattedDate}</div>
+              <button class="comment-like" onclick="handleLike(this, ${commentId})" aria-label="Like comment">
+                ❤️ Like
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function showMessage(message, type) {
+      const messageDiv = document.getElementById('commentMessage');
+      if (!messageDiv) return;
+      
+      messageDiv.textContent = message;
+      messageDiv.className = `comment-message ${type}`;
+      messageDiv.style.display = 'block';
+
+      setTimeout(() => {
+        messageDiv.style.display = 'none';
+      }, 5000);
+    }
+
+    function handleLike(button, commentId) {
+      button.style.transform = 'scale(1.2)';
+      button.style.transition = 'transform 0.2s ease';
+      
+      setTimeout(() => {
+        button.style.transform = 'scale(1)';
+      }, 200);
+      
+      const originalText = button.textContent;
+      button.textContent = '❤️ Liked!';
+      
+      setTimeout(() => {
+        button.textContent = originalText;
+      }, 1000);
+    }
+
+    // Initialize when DOM is ready
+    document.addEventListener('DOMContentLoaded', function() {
+      // Handle comment submission
+      const commentForm = document.getElementById('commentForm');
+      if (commentForm) {
+        commentForm.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          
+          const input = document.getElementById('commentInput');
+          const submitBtn = document.getElementById('submitBtn');
+          const messageDiv = document.getElementById('commentMessage');
+          if (!input || !submitBtn || !messageDiv) return;
+          
+          const comment = input.value.trim();
+
+          if (!comment) {
+            showMessage('Please enter a comment', 'error');
+            return;
+          }
+
+          submitBtn.disabled = true;
+          submitBtn.textContent = 'Submitting...';
+          messageDiv.className = 'comment-message';
+          messageDiv.style.display = 'none';
+
+          try {
+            const response = await fetch('api/comments.php', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({ comment: comment })
+            });
+
+            if (!response.ok) {
+              const errorData = await response.json().catch(() => ({ error: 'Unknown error occurred' }));
+              showMessage(errorData.error || 'Failed to submit comment', 'error');
+              return;
+            }
+
+            const data = await response.json();
+
+            if (data.success) {
+              showMessage(data.message || 'Thank you for your comment!', 'success');
+              input.value = '';
+              setTimeout(() => {
+                loadComments();
+              }, 500);
+            } else {
+              if (response.status === 429) {
+                const retryAfter = data.retry_after || 60;
+                showMessage(data.error || `Please wait ${retryAfter} seconds before posting again.`, 'error');
+              } else {
+                showMessage(data.error || 'Failed to submit comment. Please try again.', 'error');
+              }
+            }
+          } catch (error) {
+            console.error('Comment submission error:', error);
+            showMessage('Network error. Please check your connection and try again.', 'error');
+          } finally {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Submit Comment';
+          }
+        });
+      }
+
+      // Load initial data
+      trackVisitor();
+      loadComments();
+      
+      // Refresh comments every 30 seconds
+      setInterval(loadComments, 30000);
+    });
+
+    // Back to Top Button
+    const backToTopButton = document.getElementById('backToTop');
+    
+    if (backToTopButton) {
+      // Show/hide button based on scroll position
+      function toggleBackToTop() {
+        if (window.pageYOffset > 200) {
+          backToTopButton.classList.add('visible');
+        } else {
+          backToTopButton.classList.remove('visible');
+        }
+      }
+      
+      // Check on load
+      toggleBackToTop();
+      
+      // Check on scroll
+      window.addEventListener('scroll', toggleBackToTop);
+
+      // Scroll to top functionality
+      backToTopButton.addEventListener('click', () => {
+        window.scrollTo({
+          top: 0,
+          behavior: 'smooth'
+        });
+      });
+    }
+  </script>
 </body>
 </html>

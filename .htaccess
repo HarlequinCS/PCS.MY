@@ -2,10 +2,14 @@
 RewriteEngine On
 
 # Base directory
-# IMPORTANT: Change this based on your environment!
+# IMPORTANT: Toggle this based on your environment!
+# For LOCALHOST (Laragon subdirectory): RewriteBase /pcs.my/
 # For PRODUCTION (root domain): RewriteBase /
-# For LOCAL (Laragon subdirectory): RewriteBase /pcs.my/
 
+# LOCALHOST MODE (uncomment for local development)
+# RewriteBase /pcs.my/
+
+# PRODUCTION MODE (comment out above and uncomment below for production)
 RewriteBase /
 
 # Security: Disable directory browsing
@@ -19,6 +23,15 @@ ServerSignature Off
     Order allow,deny
     Deny from all
 </FilesMatch>
+
+# Redirect index.html to workshirt.html (301 permanent redirect)
+RewriteCond %{THE_REQUEST} \s/+index\.html[\s?] [NC]
+RewriteRule ^index\.html$ /workshirt.html [R=301,L]
+
+# Redirect root (/) to workshirt.html (301 permanent redirect)
+RewriteCond %{THE_REQUEST} \s/+\sHTTP [NC]
+RewriteCond %{REQUEST_URI} ^/?$
+RewriteRule ^$ /workshirt.html [R=301,L]
 
 # Handle trailing slashes - remove them
 RewriteCond %{REQUEST_FILENAME} !-d
@@ -44,14 +57,17 @@ RewriteCond %{REQUEST_FILENAME}.html -f
 RewriteRule ^(.*)$ $1.html [L]
 
 # Redirect .html requests to clean URLs (hides file extensions)
-# But exclude admin directory and PHP files
+# But exclude admin directory, PHP files, and index.html (already redirected)
 RewriteCond %{THE_REQUEST} \s/+(.+)\.html[\s?] [NC]
 RewriteCond %{REQUEST_URI} !^/admin [NC]
+RewriteCond %{REQUEST_URI} !^/index\.html [NC]
 RewriteRule ^ /%1 [R=301,L]
 
-# Serve index.html for root
+# Internal rewrite: Serve workshirt.html for root if not already redirected
+# This is a fallback in case redirects above don't catch it
 RewriteCond %{REQUEST_URI} ^/?$
-RewriteRule ^$ index.html [L]
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^$ /workshirt.html [L]
 
 # Admin directory - allow PHP files
 RewriteCond %{REQUEST_URI} ^/admin [NC]
@@ -60,8 +76,8 @@ RewriteCond %{REQUEST_FILENAME} !-d
 RewriteCond %{REQUEST_FILENAME}.php -f
 RewriteRule ^(.*)$ $1.php [L]
 
-# Default index files (check PHP first, then HTML)
-DirectoryIndex index.php index.html index.htm
+# Default index files (check PHP first, then workshirt.html)
+DirectoryIndex index.php workshirt.html index.html index.htm
 
 # Security: Prevent access to config files
 <FilesMatch "(^#.*#|\.(bak|conf|dist|fla|in[ci]|log|psd|sh|sql|sw[op])|~)$">
