@@ -856,17 +856,8 @@ class Slider {
       })
       */
       
-      // Disable touch swipe - only prevent scrolling, navigation is button-only
-      this.el.addEventListener('touchmove', (e) => {
-        e.preventDefault() // Prevent scrolling
-      }, { passive: false })
-      
-      this.el.addEventListener('touchstart', (e) => {
-        // Only prevent default to stop scrolling, no swipe handling
-        if (e.touches.length > 1) {
-          e.preventDefault()
-        }
-      }, { passive: false })
+      // Allow page scrolling - navigation is button-only, so no need to prevent touch events
+      // Removed touchmove preventDefault to allow normal page scrolling on mobile
       
       // Update button states
       this.updateButtonStates()

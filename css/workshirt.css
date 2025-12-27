@@ -3,12 +3,17 @@
 html {
   font-size: 16px;
   scroll-behavior: smooth;
+  overflow-y: scroll;
+  -webkit-overflow-scrolling: touch;
+  height: auto;
 }
 
 html, body {
   min-height: 100%;
   margin: 0;
   padding: 0;
+  height: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 body {
@@ -19,6 +24,11 @@ body {
   overflow-y: auto;
   margin: 0;
   padding: 0;
+  position: relative;
+  min-height: 100vh;
+  height: auto;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
 }
 
 a {
@@ -509,6 +519,7 @@ ul, li {
   pointer-events: none;
   z-index: 1;
   background-color: #111;
+  touch-action: none;
 }
 
 /* Navigation Buttons */
@@ -718,6 +729,8 @@ figure.logo img {
   padding: 0;
   background-color: #0a0a0a;
   z-index: 5;
+  overflow: visible;
+  -webkit-overflow-scrolling: touch;
 }
 
 .content-section {
@@ -1509,10 +1522,20 @@ figure.logo img {
 }
 
 @media (max-width: 768px) {
+  /* Ensure scrolling works on mobile */
+  html, body {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    height: auto;
+    touch-action: pan-y;
+  }
+  
   /* Slider Mobile Optimizations */
   .slider {
     height: 100vh;
     min-height: 100vh;
+    overflow: hidden;
+    touch-action: none;
   }
   
   .slide__content {
@@ -1717,10 +1740,20 @@ figure.logo img {
 }
 
 @media (max-width: 480px) {
+  /* Ensure scrolling works on mobile */
+  html, body {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    height: auto;
+    touch-action: pan-y;
+  }
+  
   /* Slider Mobile Portrait */
   .slider {
     height: 100vh;
     min-height: 100vh;
+    overflow: hidden;
+    touch-action: none;
   }
   
   .slide__content {
