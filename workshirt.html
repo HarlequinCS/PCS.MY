@@ -1,23 +1,28 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <!-- Preconnect to CDNs for faster loading -->
-    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
-    <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
-    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
-    <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
-    
-    <!-- Google Fonts - Pinyon Script -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Pinyon+Script&display=swap" rel="stylesheet">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
     <meta name="robots" content="index, follow">
     <meta name="description" content="Japanese Drill Half-Zip Workshirt by Projek Cuti Sem. Premium heavyweight Japanese drill fabric, metal half-zip closure, relaxed workwear fit. Built for work, designed for everyday wear.">
     <title>Projek Cuti Sem (PCS) X WORKSHIRT COLLECTION</title>
     <link rel="canonical" href="https://projectcutisem.com/workshirt">
-    <link rel="stylesheet" href="css/workshirt.css?v=24">
+    
+    <!-- Resource Hints - Optimize third-party loading -->
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    
+    <!-- Preload critical CSS - Non-blocking load -->
+    <link rel="preload" href="css/workshirt.css?v=28" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="css/workshirt.css?v=28"></noscript>
+    
+    <!-- Google Fonts - Load with display=swap and font-display for better performance -->
+    <link href="https://fonts.googleapis.com/css2?family=Pinyon+Script&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Pinyon+Script&display=swap" rel="stylesheet"></noscript>
+    
+    <!-- Favicons -->
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
     <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico">
 </head>
@@ -28,7 +33,7 @@
       <!-- Left Side: Logo + Brand Name -->
       <div class="nav-brand">
         <figure class="nav-logo">
-          <img src="images/PCS logo.svg" alt="Projek Cuti Sem">
+          <img src="images/PCS logo.svg" alt="Projek Cuti Sem" width="40" height="40" fetchpriority="high">
         </figure>
         <span class="nav-brand-text">PROJEK CUTI SEM</span>
       </div>
@@ -37,7 +42,7 @@
       <div class="nav-actions" id="navActions">
         <button class="nav-btn nav-btn--primary js-buy-now-btn">BUY NOW</button>
         <a href="/behind-the-product" class="nav-btn nav-btn--secondary">OUR STORY</a>
-        <a href="mailto:info@projectcutisem.com" class="nav-btn nav-btn--secondary">CONTACT</a>
+        <a href="https://www.instagram.com/pcs.clthng" target="_blank" rel="noopener noreferrer" class="nav-btn nav-btn--secondary">CONTACT</a>
       </div>
       
       <!-- Hamburger Menu Button (Mobile) -->
@@ -53,7 +58,7 @@
       <div class="mobile-menu-content">
         <button class="nav-btn nav-btn--primary js-buy-now-btn">BUY NOW</button>
         <a href="/behind-the-product" class="nav-btn nav-btn--secondary">OUR STORY</a>
-        <a href="mailto:info@projectcutisem.com" class="nav-btn nav-btn--secondary">CONTACT</a>
+        <a href="https://www.instagram.com/pcs.clthng" target="_blank" rel="noopener noreferrer" class="nav-btn nav-btn--secondary">CONTACT</a>
       </div>
     </div>
   </nav>
@@ -66,10 +71,10 @@
     <div class="slide js-slide">
       <div class="slide__content">
         <figure class="slide__img js-slide__img">
-          <img src="images/hijaufront.svg" alt="Hijau Front">
+          <img src="images/hijaufront.svg" alt="Hijau Front" loading="eager" fetchpriority="high">
         </figure>
         <figure class="slide__img js-slide__img">
-          <img src="images/hijauback.svg" alt="Hijau Back">
+          <img src="images/hijauback.svg" alt="Hijau Back" loading="eager" fetchpriority="high">
         </figure>
       </div>
       
@@ -84,10 +89,10 @@
     <div class="slide js-slide">
       <div class="slide__content">
         <figure class="slide__img js-slide__img">
-          <img src="images/hitamdepan.svg" alt="Hitam Depan">
+          <img src="images/hitamdepan.svg" alt="Hitam Depan" loading="eager">
         </figure>
         <figure class="slide__img js-slide__img">
-          <img src="images/hitamback.svg" alt="Hitam Back">
+          <img src="images/hitamback.svg" alt="Hitam Back" loading="eager">
         </figure>
       </div>
       
@@ -102,10 +107,10 @@
     <div class="slide js-slide">
       <div class="slide__content">
         <figure class="slide__img js-slide__img">
-          <img src="images/merahdepan.svg" alt="Merah Depan">
+          <img src="images/merahdepan.svg" alt="Merah Depan" loading="eager">
         </figure>
         <figure class="slide__img js-slide__img">
-          <img src="images/merahback.svg" alt="Merah Back">
+          <img src="images/merahback.svg" alt="Merah Back" loading="eager">
         </figure>
       </div>
       
@@ -349,7 +354,7 @@
             <a href="/behind-the-product" class="story-link">Learn More</a>
           </div>
           <div class="story-image">
-            <img src="images/story.svg" alt="Craftsmanship Detail">
+            <img src="images/story.svg" alt="Craftsmanship Detail" loading="lazy" width="600" height="400">
           </div>
         </div>
 
@@ -421,11 +426,11 @@
     </svg>
   </button>
 
-  <!-- Three.js Library - Using jsDelivr CDN (faster) -->
-  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js" defer crossorigin="anonymous"></script>
+  <!-- Three.js Library - Using jsDelivr CDN with defer for non-blocking load -->
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js" defer crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   
-  <!-- GSAP Library (required for animations) - Using jsDelivr CDN (faster) -->
-  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js" defer crossorigin="anonymous"></script>
+  <!-- GSAP Library - Using jsDelivr CDN with defer for non-blocking load -->
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js" defer crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   
   <!-- Coming Soon Modal -->
   <div class="coming-soon-modal js-coming-soon-modal">

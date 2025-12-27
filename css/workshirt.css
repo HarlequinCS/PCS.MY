@@ -1515,9 +1515,17 @@ figure.logo img {
     gap: 4rem;
   }
   
-  .features-grid,
+  .features-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
   .details-grid {
     grid-template-columns: repeat(2, 1fr);
+    gap: 2rem;
+  }
+  
+  .detail-card {
+    padding: 2rem;
   }
 }
 
@@ -1546,29 +1554,29 @@ figure.logo img {
     touch-action: none; /* WebGL background shouldn't interfere with scrolling */
   }
   
-  /* Keep desktop flex layout (side by side images) - just scale down */
+  /* Keep desktop flex layout (side by side images) - make bigger for readability */
   .slide__content {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 1rem; /* Scaled from 2rem */
-    padding: 1rem 0.5rem; /* Scaled proportionally */
+    gap: 1.5rem; /* Increased for better spacing */
+    padding: 1.5rem 1rem; /* Increased padding */
     pointer-events: auto; /* Allow interaction with slide content and buttons */
   }
   
-  /* Scale images proportionally while maintaining desktop layout */
+  /* Make images bigger for better visibility */
   .slide__img {
-    width: 12.5vw; /* Scaled from 25vw - half size */
-    height: 35vh; /* Scaled from 70vh - half size */
-    min-width: 6.25rem; /* Scaled from 12.5rem */
+    width: 25vw; /* Increased for better visibility */
+    height: 60vh; /* Increased for better visibility */
+    min-width: 12rem; /* Increased */
   }
   
   .slide__img:first-child {
-    top: -0.75rem; /* Scaled from -1.5rem */
+    top: -1rem; /* Adjusted */
   }
   
   .slide__img:last-child {
-    bottom: -0.75rem; /* Scaled from -1.5rem */
+    bottom: -1rem; /* Adjusted */
   }
   
   .slide__img img {
@@ -1578,83 +1586,79 @@ figure.logo img {
     object-position: center;
   }
   
-  /* Scale text proportionally */
+  /* Position text at center bottom for mobile */
   .slider__text {
-    font-size: 12px; /* Scaled from ~24px - half size */
-    bottom: calc(0.5rem + 0.75vw); /* Scaled from calc(1rem + 1.5vw) */
-    left: calc(1rem + 1.5vw); /* Scaled from calc(2rem + 3vw) */
-    right: auto; /* Remove right positioning to maintain desktop layout */
-    text-align: left; /* Keep left alignment like desktop */
+    font-size: 24px; /* Increased for better readability */
+    bottom: 1rem; /* Position at bottom */
+    left: 50%; /* Center horizontally */
+    transform: translateX(-50%) rotate(-0.5deg); /* Center horizontally, keep rotation */
+    right: auto;
+    text-align: center; /* Center align text */
+    transform-origin: center bottom; /* Adjust transform origin for centering */
   }
   
-  /* Scale buttons proportionally */
+  /* Make buttons bigger for easier interaction */
   .slider-btn {
-    width: 25px; /* Scaled from 50px */
-    height: 25px;
+    width: 40px; /* Increased from 25px */
+    height: 40px;
   }
   
   .slider-btn svg {
-    width: 10px; /* Scaled from 20px */
-    height: 10px;
+    width: 18px; /* Increased from 10px */
+    height: 18px;
   }
   
   .slider-btn--prev {
-    left: 1rem; /* Scaled from 2rem */
+    left: 1rem;
   }
   
   .slider-btn--next {
-    right: 1rem; /* Scaled from 2rem */
+    right: 1rem;
   }
   
   .slider__nav {
-    right: 1rem; /* Scaled from 2rem */
-    margin-top: 40px; /* Scaled from 80px */
+    right: 1rem;
+    margin-top: 60px; /* Increased spacing */
   }
   
   .slider-bullet {
-    padding: 0.5rem 0; /* Scaled from 1rem */
+    padding: 0.75rem 0; /* Increased from 0.5rem */
   }
   
   .slider-bullet__text {
-    font-size: 0.325rem; /* Scaled from 0.65rem */
+    font-size: 0.5rem; /* Increased from 0.325rem for better readability */
   }
   
-  /* ===== SHOWCASE SECTION - Maintain Desktop Layout with Proportional Scaling ===== */
+  /* ===== SHOWCASE SECTION - Responsive Design ===== */
   .content-section--showcase .section-container {
-    padding: 3rem 1rem; /* Scaled from 6rem 2rem */
+    padding: 4rem 1.5rem;
   }
   
-  /* Keep desktop 2-column grid layout */
+  /* Responsive: Stack to single column on mobile */
   .showcase-item {
-    grid-template-columns: 1fr 1fr; /* Maintain desktop layout */
-    gap: 2.5rem; /* Scaled from 5rem */
-    margin-bottom: 4rem; /* Scaled from 8rem */
+    grid-template-columns: 1fr;
+    gap: 2.5rem;
+    margin-bottom: 4rem;
   }
   
-  /* Keep desktop order - no reordering */
-  .showcase-item--left .showcase-images {
-    order: 1;
-  }
-  
-  .showcase-item--left .showcase-content {
-    order: 2;
-  }
-  
+  /* Reorder: Images first, then content */
+  .showcase-item--left .showcase-images,
   .showcase-item--right .showcase-images {
-    order: 2;
-  }
-  
-  .showcase-item--right .showcase-content {
     order: 1;
   }
   
-  /* Keep desktop 2fr 1fr grid layout for images */
-  .showcase-images {
-    grid-template-columns: 2fr 1fr; /* Maintain desktop layout */
-    gap: 0.75rem; /* Scaled from 1.5rem */
+  .showcase-item--left .showcase-content,
+  .showcase-item--right .showcase-content {
+    order: 2;
   }
   
-  /* Maintain image sizing with proportional scaling */
+  /* Responsive: Stack images vertically on mobile */
+  .showcase-images {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  
+  /* Image sizing for mobile */
   .showcase-image-main,
   .showcase-image-support {
     width: 100%;
@@ -1662,24 +1666,29 @@ figure.logo img {
   
   .showcase-image-main img,
   .showcase-image-support img {
-    width: auto;
-    height: auto;
+    width: 100%;
     max-width: 100%;
-    max-height: 100%;
+    height: auto;
     object-fit: contain; /* Maintain aspect ratio and full resolution */
   }
   
   .showcase-image-support {
-    margin-top: 1rem; /* Scaled from 2rem */
+    margin-top: 0;
   }
   
-  /* Scale showcase text proportionally */
+  /* Responsive text sizing */
   .showcase-title {
-    font-size: 0.875rem; /* Scaled from ~1.75rem */
+    font-size: clamp(1.5rem, 5vw, 2rem);
+    margin-bottom: 1rem;
   }
   
   .showcase-text {
-    font-size: 0.5rem; /* Scaled from ~1rem */
+    font-size: clamp(0.95rem, 3vw, 1.05rem);
+    line-height: 1.7;
+  }
+  
+  .showcase-content {
+    gap: 1.5rem;
   }
   
   /* ===== OTHER SECTIONS - Keep Standard Responsive Behavior ===== */
@@ -1705,9 +1714,41 @@ figure.logo img {
   }
   
   .features-grid,
+  /* Product Details Section - Enhanced Mobile Styling */
   .details-grid {
     grid-template-columns: 1fr;
-    gap: 2rem;
+    gap: 1.5rem;
+  }
+  
+  .detail-card {
+    padding: 2rem 1.5rem;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 16px;
+    border-left: 4px solid rgba(255, 255, 255, 0.25);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+  }
+  
+  .detail-card:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-left-color: rgba(255, 255, 255, 0.4);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+    transform: translateY(-2px);
+  }
+  
+  .detail-card__label {
+    font-size: 0.875rem;
+    margin-bottom: 0.75rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.7);
+  }
+  
+  .detail-card__value {
+    font-size: 1rem;
+    line-height: 1.7;
+    color: rgba(255, 255, 255, 0.95);
   }
   
   .feature-card {
@@ -1799,29 +1840,29 @@ figure.logo img {
     touch-action: none; /* WebGL background shouldn't interfere with scrolling */
   }
   
-  /* Keep desktop flex layout - scale down more for smaller screens */
+  /* Keep desktop flex layout - make bigger for smaller screens too */
   .slide__content {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 0.5rem; /* Further scaled from 2rem */
-    padding: 0.5rem 0.25rem; /* Further scaled */
+    gap: 1rem; /* Increased for better spacing */
+    padding: 1rem 0.75rem; /* Increased padding */
     pointer-events: auto; /* Allow interaction with slide content and buttons */
   }
   
-  /* Scale images further while maintaining desktop layout */
+  /* Make images bigger for better visibility on small screens */
   .slide__img {
-    width: 10vw; /* Further scaled from 25vw */
-    height: 28vh; /* Further scaled from 70vh */
-    min-width: 5rem; /* Further scaled from 12.5rem */
+    width: 22vw; /* Increased for better visibility */
+    height: 55vh; /* Increased for better visibility */
+    min-width: 10rem; /* Increased */
   }
   
   .slide__img:first-child {
-    top: -0.6rem; /* Further scaled from -1.5rem */
+    top: -0.8rem; /* Adjusted */
   }
   
   .slide__img:last-child {
-    bottom: -0.6rem; /* Further scaled from -1.5rem */
+    bottom: -0.8rem; /* Adjusted */
   }
   
   .slide__img img {
@@ -1831,83 +1872,79 @@ figure.logo img {
     object-position: center;
   }
   
-  /* Scale text further */
+  /* Position text at center bottom for mobile */
   .slider__text {
-    font-size: 10px; /* Further scaled from ~24px */
-    bottom: calc(0.25rem + 0.6vw); /* Further scaled */
-    left: calc(0.5rem + 1.2vw); /* Further scaled */
+    font-size: 22px; /* Increased for better readability */
+    bottom: 0.75rem; /* Position at bottom */
+    left: 50%; /* Center horizontally */
+    transform: translateX(-50%) rotate(-0.5deg); /* Center horizontally, keep rotation */
     right: auto;
-    text-align: left;
+    text-align: center; /* Center align text */
+    transform-origin: center bottom; /* Adjust transform origin for centering */
   }
   
-  /* Scale buttons further */
+  /* Make buttons bigger for easier interaction */
   .slider-btn {
-    width: 20px; /* Further scaled from 50px */
-    height: 20px;
+    width: 36px; /* Increased from 20px */
+    height: 36px;
   }
   
   .slider-btn svg {
-    width: 8px; /* Further scaled from 20px */
-    height: 8px;
+    width: 16px; /* Increased from 8px */
+    height: 16px;
   }
   
   .slider-btn--prev {
-    left: 0.5rem; /* Further scaled from 2rem */
+    left: 0.75rem; /* Adjusted */
   }
   
   .slider-btn--next {
-    right: 0.5rem; /* Further scaled from 2rem */
+    right: 0.75rem; /* Adjusted */
   }
   
   .slider__nav {
-    right: 0.5rem; /* Further scaled from 2rem */
-    margin-top: 32px; /* Further scaled from 80px */
+    right: 0.75rem; /* Adjusted */
+    margin-top: 50px; /* Increased spacing */
   }
   
   .slider-bullet {
-    padding: 0.4rem 0; /* Further scaled from 1rem */
+    padding: 0.6rem 0; /* Increased from 0.4rem */
   }
   
   .slider-bullet__text {
-    font-size: 0.26rem; /* Further scaled from 0.65rem */
+    font-size: 0.4rem; /* Increased from 0.26rem for better readability */
   }
   
-  /* ===== SHOWCASE SECTION - Maintain Desktop Layout with Further Proportional Scaling ===== */
+  /* ===== SHOWCASE SECTION - Responsive Design for Smaller Screens ===== */
   .content-section--showcase .section-container {
-    padding: 2.4rem 0.8rem; /* Further scaled from 6rem 2rem */
+    padding: 3rem 1rem;
   }
   
-  /* Keep desktop 2-column grid layout */
+  /* Responsive: Stack to single column */
   .showcase-item {
-    grid-template-columns: 1fr 1fr; /* Maintain desktop layout */
-    gap: 2rem; /* Further scaled from 5rem */
-    margin-bottom: 3.2rem; /* Further scaled from 8rem */
+    grid-template-columns: 1fr;
+    gap: 2rem;
+    margin-bottom: 3rem;
   }
   
-  /* Keep desktop order - no reordering */
-  .showcase-item--left .showcase-images {
-    order: 1;
-  }
-  
-  .showcase-item--left .showcase-content {
-    order: 2;
-  }
-  
+  /* Reorder: Images first, then content */
+  .showcase-item--left .showcase-images,
   .showcase-item--right .showcase-images {
-    order: 2;
-  }
-  
-  .showcase-item--right .showcase-content {
     order: 1;
   }
   
-  /* Keep desktop 2fr 1fr grid layout for images */
-  .showcase-images {
-    grid-template-columns: 2fr 1fr; /* Maintain desktop layout */
-    gap: 0.6rem; /* Further scaled from 1.5rem */
+  .showcase-item--left .showcase-content,
+  .showcase-item--right .showcase-content {
+    order: 2;
   }
   
-  /* Maintain image sizing */
+  /* Responsive: Stack images vertically */
+  .showcase-images {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+  
+  /* Image sizing for mobile */
   .showcase-image-main,
   .showcase-image-support {
     width: 100%;
@@ -1915,28 +1952,29 @@ figure.logo img {
   
   .showcase-image-main img,
   .showcase-image-support img {
-    width: auto;
-    height: auto;
+    width: 100%;
     max-width: 100%;
-    max-height: 100%;
+    height: auto;
     object-fit: contain; /* Maintain aspect ratio and full resolution */
   }
   
   .showcase-image-support {
-    margin-top: 0.8rem; /* Further scaled from 2rem */
+    margin-top: 0;
   }
   
-  /* Scale showcase text further */
+  /* Responsive text sizing */
   .showcase-title {
-    font-size: 0.7rem; /* Further scaled from ~1.75rem */
+    font-size: clamp(1.25rem, 6vw, 1.75rem);
+    margin-bottom: 0.875rem;
   }
   
   .showcase-text {
-    font-size: 0.4rem; /* Further scaled from ~1rem */
+    font-size: clamp(0.9rem, 3.5vw, 1rem);
+    line-height: 1.7;
   }
   
   .showcase-content {
-    gap: 1rem; /* Scaled from 2rem */
+    gap: 1.25rem;
   }
   
   /* ===== OTHER SECTIONS - Keep Standard Responsive Behavior ===== */
@@ -1979,8 +2017,40 @@ figure.logo img {
     font-size: clamp(0.9rem, 3vw, 1rem);
   }
   
+  /* Product Details Section - Enhanced Mobile Styling for Smaller Screens */
+  .details-grid {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+  
   .detail-card {
-    padding: 1.5rem;
+    padding: 1.75rem 1.25rem;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 14px;
+    border-left: 4px solid rgba(255, 255, 255, 0.25);
+    box-shadow: 0 3px 15px rgba(0, 0, 0, 0.2);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+  
+  .detail-card:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-left-color: rgba(255, 255, 255, 0.4);
+    box-shadow: 0 6px 25px rgba(0, 0, 0, 0.3);
+    transform: translateY(-2px);
+  }
+  
+  .detail-card__label {
+    font-size: 0.8rem;
+    margin-bottom: 0.625rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.7);
+  }
+  
+  .detail-card__value {
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: rgba(255, 255, 255, 0.95);
   }
   
   .cta-title {
