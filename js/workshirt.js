@@ -22,6 +22,8 @@ class Slider {
   
       uniform vec2 size;
       uniform vec2 res;
+      uniform float isMobile;
+      uniform float isSlide1;
   
       vec2 backgroundCoverUv( vec2 screenSize, vec2 imageSize, vec2 uv ) {
         float screenRatio = screenSize.x / screenSize.y;
@@ -29,9 +31,14 @@ class Slider {
         vec2 newSize = screenRatio < imageRatio 
             ? vec2(imageSize.x * (screenSize.y / imageSize.y), screenSize.y)
             : vec2(screenSize.x, imageSize.y * (screenSize.x / imageSize.x));
+        // CROP POSITION ADJUSTMENT:
+        // Horizontal offset: 0.0 = left, 0.5 = center, 1.0 = right
+        // Vertical offset: 0.0 = top, 0.5 = center, 1.0 = bottom
+        float horizontalOffset = 0.2; // 0.0 = left crop (change to 0.5 for center, 1.0 for right)
+        float verticalOffset = 0.0;   // 0.0 = top crop (change to 0.5 for center, 1.0 for bottom)
         vec2 newOffset = (screenRatio < imageRatio 
-            ? vec2((newSize.x - screenSize.x) / 2.0, 0.0) 
-            : vec2(0.0, (newSize.y - screenSize.y) / 2.0)) / newSize;
+            ? vec2((newSize.x - screenSize.x) * horizontalOffset, 0.0) 
+            : vec2(0.0, (newSize.y - screenSize.y) * verticalOffset)) / newSize;
         return uv * screenSize / newSize + newOffset;
       }
   
@@ -44,7 +51,13 @@ class Slider {
         vec2 distPos1 = uv + (dispVec * intensity * dispPower);
         vec2 distPos2 = uv + (dispVec * -(intensity * (1.0 - dispPower)));
         
-        vec4 _texture1 = texture2D(texture1, distPos1);
+        // For slide 1 on mobile, use crop (cover) instead of shrink
+        vec2 finalUv1 = distPos1;
+        if (isMobile > 0.5 && isSlide1 > 0.5) {
+          finalUv1 = backgroundCoverUv(res, size, distPos1);
+        }
+        
+        vec4 _texture1 = texture2D(texture1, finalUv1);
         vec4 _texture2 = texture2D(texture2, distPos2);
         
         gl_FragColor = mix(_texture1, _texture2, dispPower);
@@ -335,7 +348,12 @@ class Slider {
         return
       }
       
-      this.mat = new THREE.ShaderMaterial( {
+      // Detect if mobile (viewport width <= 768px)
+      const isMobile = window.innerWidth <= 768 ? 1.0 : 0.0
+      // Check if current slide is slide 1 (index 0)
+      const isSlide1 = this.data.current === 0 ? 1.0 : 0.0
+      
+      this.mat = new THREE.ShaderMaterial( { 
         uniforms: {
           dispPower: { type: 'f', value: 0.0 },
           intensity: { type: 'f', value: 0.5 },
@@ -343,7 +361,9 @@ class Slider {
           size: { value: new THREE.Vector2(1, 1) },
           texture1: { type: 't', value: this.textures[0] },
           texture2: { type: 't', value: this.textures[1] || this.textures[0] },
-          disp: { type: 't', value: this.disp }
+          disp: { type: 't', value: this.disp },
+          isMobile: { type: 'f', value: isMobile },
+          isSlide1: { type: 'f', value: isSlide1 }
         },
         transparent: true,
         vertexShader: this.vert,
@@ -377,14 +397,18 @@ class Slider {
       
       // Update texture size in uniforms and resolution
       if (this.textures[0].image) {
-        this.mat.uniforms.size.value = [
+        this.mat.uniforms.size.value = new THREE.Vector2(
           this.textures[0].image.naturalWidth || this.textures[0].image.width,
           this.textures[0].image.naturalHeight || this.textures[0].image.height
-        ]
+        )
       }
       
       // Update resolution uniform for proper scaling
       this.mat.uniforms.res.value = new THREE.Vector2(screenWidth, screenHeight)
+      
+      // Update isMobile and isSlide1 uniforms
+      this.mat.uniforms.isMobile.value = isMobile
+      this.mat.uniforms.isSlide1.value = isSlide1
     }
     
     transitionNext() {
@@ -399,6 +423,9 @@ class Slider {
           this.mat.uniforms.texture2.value = this.textures[nextImageIndex]
         }
         
+        // Update isSlide1 uniform based on current slide (texture1)
+        this.mat.uniforms.isSlide1.value = this.data.current === 0 ? 1.0 : 0.0
+        
         gsap.to(this.mat.uniforms.dispPower, {
           value: 1,
           duration: 1.8,
@@ -412,6 +439,16 @@ class Slider {
             // Switch textures after morph completes
             this.mat.uniforms.texture1.value = this.textures[nextImageIndex]
             this.mat.uniforms.dispPower.value = 0.0
+            // Update isSlide1 uniform based on the actual texture index (nextImageIndex), not this.data.next
+            // because this.data.next may have been updated by nextSlide() already
+            this.mat.uniforms.isSlide1.value = nextImageIndex === 0 ? 1.0 : 0.0
+            // Update texture size uniform to match new texture
+            if (this.textures[nextImageIndex] && this.textures[nextImageIndex].image) {
+              this.mat.uniforms.size.value = new THREE.Vector2(
+                this.textures[nextImageIndex].image.naturalWidth || this.textures[nextImageIndex].image.width,
+                this.textures[nextImageIndex].image.naturalHeight || this.textures[nextImageIndex].image.height
+              )
+            }
             if (this.renderer && this.scene && this.camera) {
               this.renderer.render(this.scene, this.camera)
             }
@@ -582,6 +619,10 @@ class Slider {
       // Mark animation as complete when timeline finishes
       tl.eventCallback("onComplete", () => {
         this.state.animating = false
+        // Ensure isSlide1 is updated after transition completes
+        if (this.mat) {
+          this.mat.uniforms.isSlide1.value = this.data.current === 0 ? 1.0 : 0.0
+        }
       })
     }
     
@@ -596,6 +637,9 @@ class Slider {
           this.mat.uniforms.texture2.value = this.textures[nextImageIndex]
         }
         
+        // Update isSlide1 uniform based on current slide (texture1)
+        this.mat.uniforms.isSlide1.value = this.data.current === 0 ? 1.0 : 0.0
+        
         gsap.to(this.mat.uniforms.dispPower, {
           value: 1,
           duration: 1.8,
@@ -608,6 +652,16 @@ class Slider {
           onComplete: () => {
             this.mat.uniforms.texture1.value = this.textures[nextImageIndex]
             this.mat.uniforms.dispPower.value = 0.0
+            // Update isSlide1 uniform based on the actual texture index (nextImageIndex), not this.data.next
+            // because this.data.next may have been updated by prevSlide() already
+            this.mat.uniforms.isSlide1.value = nextImageIndex === 0 ? 1.0 : 0.0
+            // Update texture size uniform to match new texture
+            if (this.textures[nextImageIndex] && this.textures[nextImageIndex].image) {
+              this.mat.uniforms.size.value = new THREE.Vector2(
+                this.textures[nextImageIndex].image.naturalWidth || this.textures[nextImageIndex].image.width,
+                this.textures[nextImageIndex].image.naturalHeight || this.textures[nextImageIndex].image.height
+              )
+            }
             if (this.renderer && this.scene && this.camera) {
               this.renderer.render(this.scene, this.camera)
             }
@@ -755,6 +809,10 @@ class Slider {
       
       tl.eventCallback("onComplete", () => {
         this.state.animating = false
+        // Ensure isSlide1 is updated after transition completes (for transitionPrev)
+        if (this.mat) {
+          this.mat.uniforms.isSlide1.value = this.data.current === 0 ? 1.0 : 0.0
+        }
       })
     }
     
@@ -777,6 +835,8 @@ class Slider {
       // Loop through exactly 3 slides (0, 1, 2)
       this.data.next = this.data.current
       this.data.current = this.data.current <= 0 ? 2 : this.data.current - 1
+      // Note: isSlide1 uniform is updated in the onComplete callback of transitionPrev()
+      // after texture1 actually changes to the new slide
       
       this.transitionPrev()
     }
@@ -803,11 +863,15 @@ class Slider {
       this.data.current = this.data.next
       // Loop through exactly 3 slides (0, 1, 2)
       this.data.next = (this.data.current + 1) % 3
+      // Note: isSlide1 uniform is updated in the onComplete callback of transitionNext()
+      // after texture1 actually changes to the new slide
     }
     
     changeTexture() {
       this.mat.uniforms.texture1.value = this.textures[this.data.current]
       this.mat.uniforms.texture2.value = this.textures[this.data.next]
+      // Update isSlide1 uniform based on current slide
+      this.mat.uniforms.isSlide1.value = this.data.current === 0 ? 1.0 : 0.0
     }
    
     listeners() {
@@ -931,9 +995,15 @@ class Slider {
       
       // Handle window resize
       window.addEventListener('resize', () => {
-        if (this.renderer && this.camera) {
+        if (this.renderer && this.camera && this.mat) {
           this.renderer.setSize(window.innerWidth, window.innerHeight)
           this.cameraSetup()
+          // Update mobile detection and resolution
+          const isMobile = window.innerWidth <= 768 ? 1.0 : 0.0
+          this.mat.uniforms.isMobile.value = isMobile
+          this.mat.uniforms.res.value = new THREE.Vector2(window.innerWidth, window.innerHeight)
+          // Update isSlide1 based on current slide
+          this.mat.uniforms.isSlide1.value = this.data.current === 0 ? 1.0 : 0.0
           this.render()
         }
       })
