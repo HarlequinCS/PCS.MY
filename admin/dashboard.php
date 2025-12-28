@@ -39,13 +39,17 @@ $pdo = getDBConnection();
     <aside class="sidebar" id="sidebar">
         <div class="sidebar-header">
             <h2>PCS Admin</h2>
-            <p>Comment Moderation</p>
+            <p>Admin Panel</p>
         </div>
         
         <nav class="sidebar-nav">
             <a href="/admin/dashboard.php" class="nav-item active">
                 <span class="nav-icon">📝</span>
                 <span>Comments</span>
+            </a>
+            <a href="/admin/emails.php" class="nav-item">
+                <span class="nav-icon">📧</span>
+                <span>Email Monitoring</span>
             </a>
             <a href="/admin/dashboard.php?logout=1" class="nav-item">
                 <span class="nav-icon">🚪</span>
