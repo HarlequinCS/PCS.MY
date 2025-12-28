@@ -25,7 +25,7 @@ $pdo = getDBConnection();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard - Projek Cuti Sem</title>
-    <link rel="stylesheet" href="/admin/css/admin.css">
+    <link rel="stylesheet" href="/admin/css/admin.css?v=30">
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
 </head>
 <body class="admin-dashboard">
