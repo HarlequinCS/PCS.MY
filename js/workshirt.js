@@ -24,24 +24,21 @@ class Slider {
       uniform vec2 res;
       uniform float isMobile;
       uniform float isSlide1;
-  
-      vec2 backgroundCoverUv( vec2 screenSize, vec2 imageSize, vec2 uv ) {
+      uniform float cropHorizontal; // 0.0 = left, 0.5 = center, 1.0 = right
+      uniform float cropVertical;   // 0.0 = top, 0.5 = center, 1.0 = bottom
+
+      vec2 backgroundCoverUv( vec2 screenSize, vec2 imageSize, vec2 uv, float horizontalOffset, float verticalOffset ) {
         float screenRatio = screenSize.x / screenSize.y;
         float imageRatio = imageSize.x / imageSize.y;
         vec2 newSize = screenRatio < imageRatio 
             ? vec2(imageSize.x * (screenSize.y / imageSize.y), screenSize.y)
             : vec2(screenSize.x, imageSize.y * (screenSize.x / imageSize.x));
-        // CROP POSITION ADJUSTMENT:
-        // Horizontal offset: 0.0 = left, 0.5 = center, 1.0 = right
-        // Vertical offset: 0.0 = top, 0.5 = center, 1.0 = bottom
-        float horizontalOffset = 0.2; // 0.0 = left crop (change to 0.5 for center, 1.0 for right)
-        float verticalOffset = 0.0;   // 0.0 = top crop (change to 0.5 for center, 1.0 for bottom)
         vec2 newOffset = (screenRatio < imageRatio 
             ? vec2((newSize.x - screenSize.x) * horizontalOffset, 0.0) 
             : vec2(0.0, (newSize.y - screenSize.y) * verticalOffset)) / newSize;
         return uv * screenSize / newSize + newOffset;
       }
-  
+
       void main() {
         vec2 uv = vUv;
         
@@ -51,11 +48,8 @@ class Slider {
         vec2 distPos1 = uv + (dispVec * intensity * dispPower);
         vec2 distPos2 = uv + (dispVec * -(intensity * (1.0 - dispPower)));
         
-        // For slide 1 on mobile, use crop (cover) instead of shrink
-        vec2 finalUv1 = distPos1;
-        if (isMobile > 0.5 && isSlide1 > 0.5) {
-          finalUv1 = backgroundCoverUv(res, size, distPos1);
-        }
+        // Use crop (cover) instead of shrink on all devices for all slides
+        vec2 finalUv1 = backgroundCoverUv(res, size, distPos1, cropHorizontal, cropVertical);
         
         vec4 _texture1 = texture2D(texture1, finalUv1);
         vec4 _texture2 = texture2D(texture2, distPos2);
@@ -123,6 +117,15 @@ class Slider {
         total: 2, // Exactly 3 slides (indices 0, 1, 2)
         delta: 0
       }
+      
+      // Crop position configuration for each slide
+      // horizontal: 0.0 = left, 0.5 = center, 1.0 = right
+      // vertical: 0.0 = top, 0.5 = center, 1.0 = bottom
+      this.cropSettings = [
+        { horizontal: 0.2, vertical: 0.0 }, // Slide 1
+        { horizontal: 0.7, vertical: 0.0 }, // Slide 2
+        { horizontal: 0.5, vertical: 0.5 }    // Slide 3
+      ]
       
       this.state = {
         animating: false,
@@ -353,6 +356,9 @@ class Slider {
       // Check if current slide is slide 1 (index 0)
       const isSlide1 = this.data.current === 0 ? 1.0 : 0.0
       
+      // Get current slide's crop settings
+      const currentCrop = this.cropSettings[this.data.current] || { horizontal: 0.5, vertical: 0.5 }
+      
       this.mat = new THREE.ShaderMaterial( { 
         uniforms: {
           dispPower: { type: 'f', value: 0.0 },
@@ -363,7 +369,9 @@ class Slider {
           texture2: { type: 't', value: this.textures[1] || this.textures[0] },
           disp: { type: 't', value: this.disp },
           isMobile: { type: 'f', value: isMobile },
-          isSlide1: { type: 'f', value: isSlide1 }
+          isSlide1: { type: 'f', value: isSlide1 },
+          cropHorizontal: { type: 'f', value: currentCrop.horizontal },
+          cropVertical: { type: 'f', value: currentCrop.vertical }
         },
         transparent: true,
         vertexShader: this.vert,
@@ -442,6 +450,10 @@ class Slider {
             // Update isSlide1 uniform based on the actual texture index (nextImageIndex), not this.data.next
             // because this.data.next may have been updated by nextSlide() already
             this.mat.uniforms.isSlide1.value = nextImageIndex === 0 ? 1.0 : 0.0
+            // Update crop settings for the new slide
+            const newCrop = this.cropSettings[nextImageIndex] || { horizontal: 0.5, vertical: 0.5 }
+            this.mat.uniforms.cropHorizontal.value = newCrop.horizontal
+            this.mat.uniforms.cropVertical.value = newCrop.vertical
             // Update texture size uniform to match new texture
             if (this.textures[nextImageIndex] && this.textures[nextImageIndex].image) {
               this.mat.uniforms.size.value = new THREE.Vector2(
@@ -655,6 +667,10 @@ class Slider {
             // Update isSlide1 uniform based on the actual texture index (nextImageIndex), not this.data.next
             // because this.data.next may have been updated by prevSlide() already
             this.mat.uniforms.isSlide1.value = nextImageIndex === 0 ? 1.0 : 0.0
+            // Update crop settings for the new slide
+            const newCrop = this.cropSettings[nextImageIndex] || { horizontal: 0.5, vertical: 0.5 }
+            this.mat.uniforms.cropHorizontal.value = newCrop.horizontal
+            this.mat.uniforms.cropVertical.value = newCrop.vertical
             // Update texture size uniform to match new texture
             if (this.textures[nextImageIndex] && this.textures[nextImageIndex].image) {
               this.mat.uniforms.size.value = new THREE.Vector2(
@@ -872,6 +888,10 @@ class Slider {
       this.mat.uniforms.texture2.value = this.textures[this.data.next]
       // Update isSlide1 uniform based on current slide
       this.mat.uniforms.isSlide1.value = this.data.current === 0 ? 1.0 : 0.0
+      // Update crop settings for current slide
+      const currentCrop = this.cropSettings[this.data.current] || { horizontal: 0.5, vertical: 0.5 }
+      this.mat.uniforms.cropHorizontal.value = currentCrop.horizontal
+      this.mat.uniforms.cropVertical.value = currentCrop.vertical
     }
    
     listeners() {
@@ -1004,6 +1024,10 @@ class Slider {
           this.mat.uniforms.res.value = new THREE.Vector2(window.innerWidth, window.innerHeight)
           // Update isSlide1 based on current slide
           this.mat.uniforms.isSlide1.value = this.data.current === 0 ? 1.0 : 0.0
+          // Update crop settings for current slide
+          const currentCrop = this.cropSettings[this.data.current] || { horizontal: 0.5, vertical: 0.5 }
+          this.mat.uniforms.cropHorizontal.value = currentCrop.horizontal
+          this.mat.uniforms.cropVertical.value = currentCrop.vertical
           this.render()
         }
       })
