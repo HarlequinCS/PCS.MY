@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS `orders` (
     `name` VARCHAR(255) NOT NULL COMMENT 'Nama user (billTo)',
     `email` VARCHAR(255) NOT NULL COMMENT 'Email user (billEmail)',
     `phone` VARCHAR(50) NOT NULL COMMENT 'Phone user (billPhone)',
-    `variant` VARCHAR(50) NOT NULL COMMENT 'Variant: hitamdepan, hijaufront, hijaudepan',
+    `variant` VARCHAR(50) NOT NULL COMMENT 'Variant: hitamdepan, hijaufront, merahdepan',
     `size` VARCHAR(10) NOT NULL COMMENT 'Size: S, M, L, XL, XXL',
     `quantity` INT(11) NOT NULL DEFAULT 1 COMMENT 'Quantity ordered',
     `amount` DECIMAL(10,2) NOT NULL COMMENT 'Total amount in RM',

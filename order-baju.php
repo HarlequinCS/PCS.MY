@@ -15,6 +15,51 @@ if (!defined('DB_CONFIG_LOADED')) {
 // Include database connection
 require_once __DIR__ . '/includes/db.php';
 
+// ============================================
+// Auto-create orders table if not exists
+// ============================================
+function createOrdersTableIfNotExists() {
+    try {
+        $pdo = getDBConnection();
+        
+        // Check if table exists
+        $stmt = $pdo->query("SHOW TABLES LIKE 'orders'");
+        if ($stmt->rowCount() > 0) {
+            return true; // Table already exists
+        }
+        
+        // Create table
+        $sql = "CREATE TABLE IF NOT EXISTS `orders` (
+            `id` INT(11) NOT NULL AUTO_INCREMENT,
+            `name` VARCHAR(255) NOT NULL COMMENT 'Nama user (billTo)',
+            `email` VARCHAR(255) NOT NULL COMMENT 'Email user (billEmail)',
+            `phone` VARCHAR(50) NOT NULL COMMENT 'Phone user (billPhone)',
+            `variant` VARCHAR(50) NOT NULL COMMENT 'Variant: hitamdepan, hijaufront, merahdepan',
+            `size` VARCHAR(10) NOT NULL COMMENT 'Size: S, M, L, XL, XXL',
+            `quantity` INT(11) NOT NULL DEFAULT 1 COMMENT 'Quantity ordered',
+            `amount` DECIMAL(10,2) NOT NULL COMMENT 'Total amount in RM',
+            `billExternalReferenceNo` VARCHAR(255) NOT NULL COMMENT 'Unique reference number untuk ToyyibPay',
+            `status` VARCHAR(50) NOT NULL DEFAULT 'pending' COMMENT 'Order status: pending, paid, failed',
+            `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'Order creation timestamp',
+            PRIMARY KEY (`id`),
+            INDEX `idx_billExternalReferenceNo` (`billExternalReferenceNo`),
+            INDEX `idx_status` (`status`),
+            INDEX `idx_created_at` (`created_at`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Orders table for ToyyibPay staging payment'";
+        
+        $pdo->exec($sql);
+        error_log('Orders table created successfully');
+        return true;
+        
+    } catch (PDOException $e) {
+        error_log('Error creating orders table: ' . $e->getMessage());
+        return false;
+    }
+}
+
+// Auto-create table on page load
+createOrdersTableIfNotExists();
+
 // ToyyibPay Staging Credentials
 define('STAGING_SECRET_KEY', 'dh1kldj2-j8db-ofm0-qauv-e037egz4oiui');
 define('STAGING_CATEGORY_CODE', 'g3ii2ms2');
