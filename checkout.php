@@ -36,6 +36,9 @@ $baseUrl = 'https://projectcutisem.com';
 // Product Configuration
 define('PRICE_PER_SHIRT', 50.00); // RM50 per baju
 
+// Debug mode: Set to false in production
+define('DEBUG_MODE', true);
+
 // Variant names for display
 $variantNames = [
     'hitamdepan' => 'Hitam Depan',
@@ -340,10 +343,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             // ============================================
             // STEP 8: Prepare Bill Data for ToyyibPay
             // ============================================
+            // Validate final amount
+            if ($finalAmount <= 0) {
+                throw new Exception('Invalid order amount. Final amount must be greater than 0.');
+            }
+            
             // Convert RM to sen (RM50.00 = 5000 sen)
             $billAmount = (int)($finalAmount * 100);
             
-            // Build description with order details
+            // Validate bill amount
+            if ($billAmount <= 0) {
+                throw new Exception('Invalid bill amount. Amount must be greater than 0.');
+            }
+            
+            // Build description with order details (limit length to avoid issues)
             $itemDescriptions = [];
             foreach ($cart as $item) {
                 $itemDescriptions[] = sprintf(
@@ -358,6 +371,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                 $billDescription .= " | Discount: RM " . number_format($discountAmount, 2);
             }
             
+            // Limit description length (ToyyibPay may have limits)
+            if (strlen($billDescription) > 500) {
+                $billDescription = substr($billDescription, 0, 497) . '...';
+            }
+            
+            // Prepare bill data (matching sandbox-test.php structure exactly)
             $billData = [
                 // Required: ToyyibPay credentials
                 'userSecretKey' => STAGING_SECRET_KEY,
@@ -367,19 +386,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                 'billName' => 'Baju Premium Order',
                 'billDescription' => $billDescription,
                 
-                // Price setting: 1 = Fixed amount
+                // Price setting: 1 = Fixed amount, 2 = Multiple options
                 'billPriceSetting' => 1,
                 
-                // Collect payer info: 1 = Yes (name, email, phone)
+                // Collect payer info: 1 = Yes (name, email, phone), 0 = No
                 'billPayorInfo' => 1,
                 
-                // Bill amount in sen
+                // Bill amount in sen (RM1.00 = 100 sen)
                 'billAmount' => $billAmount,
                 
                 // Unique reference number untuk tracking
                 'billExternalReferenceNo' => $billExternalReferenceNo,
                 
-                // Payer information
+                // Payer information (required even if billPayorInfo = 1)
+                // User boleh override nilai ini di payment page
                 'billTo' => $fullname,
                 'billEmail' => $email,
                 'billPhone' => $phone,
@@ -404,8 +424,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             // ============================================
             // STEP 9: Call ToyyibPay API to Create Bill
             // ============================================
+            // Initialize cURL untuk API call
             $ch = curl_init('https://dev.toyyibpay.com/index.php/api/createBill');
             
+            // Set cURL options
             curl_setopt($ch, CURLOPT_POST, true);
             curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($billData));
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -422,42 +444,77 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             // ============================================
             // STEP 10: Handle API Response & Error Handling
             // ============================================
+            // Check for cURL errors
             if ($curlError) {
                 error_log('cURL Error: ' . $curlError);
+                error_log('Full Response: ' . $response);
                 throw new Exception('cURL request failed: ' . $curlError);
             }
             
+            // Check HTTP status code
             if ($httpCode !== 200) {
                 error_log('HTTP Error: Status ' . $httpCode . ', Response: ' . $response);
-                throw new Exception('HTTP request failed with status code ' . $httpCode);
+                throw new Exception('HTTP request failed with status code ' . $httpCode . '. Response: ' . htmlspecialchars($response));
             }
             
-            // Decode JSON response
+            // Decode JSON response safely
             $result = json_decode($response, true);
             
+            // Check if JSON decode was successful
             if (json_last_error() !== JSON_ERROR_NONE) {
                 error_log('JSON Decode Error: ' . json_last_error_msg() . ', Response: ' . $response);
-                throw new Exception('Invalid JSON response: ' . json_last_error_msg());
+                throw new Exception('Invalid JSON response: ' . json_last_error_msg() . '. Response: ' . htmlspecialchars($response));
             }
             
-            // Check for API error response
-            if (isset($result[0]['status']) && $result[0]['status'] === 'error') {
-                $errorMsg = isset($result[0]['msg']) ? $result[0]['msg'] : 'Unknown error';
+            // Log full response for debugging
+            error_log('ToyyibPay API Response: ' . json_encode($result, JSON_PRETTY_PRINT));
+            
+            // Check if result is empty or not an array
+            if (empty($result) || !is_array($result)) {
+                error_log('Empty or invalid response structure. Response: ' . $response);
+                throw new Exception('Invalid response structure from ToyyibPay API. Response: ' . htmlspecialchars($response));
+            }
+            
+            // Check for API error response (check both 'status' and 'Status' keys)
+            if (isset($result[0]['status']) && ($result[0]['status'] === 'error' || $result[0]['status'] === 'Error')) {
+                $errorMsg = isset($result[0]['msg']) ? $result[0]['msg'] : (isset($result[0]['Message']) ? $result[0]['Message'] : 'Unknown error');
                 error_log('ToyyibPay API Error: ' . $errorMsg . ', Full Response: ' . json_encode($result));
                 throw new Exception('ToyyibPay API Error: ' . $errorMsg);
             }
             
-            // Check if response contains BillCode
-            if (!isset($result[0]['BillCode']) || empty($result[0]['BillCode'])) {
-                error_log('BillCode Missing: Full Response: ' . json_encode($result));
-                throw new Exception('BillCode not returned in response');
+            // Check if response contains BillCode (check both 'BillCode' and 'billcode' keys)
+            if (!isset($result[0]['BillCode']) && !isset($result[0]['billcode'])) {
+                error_log('BillCode Missing: Full Response: ' . json_encode($result, JSON_PRETTY_PRINT));
+                error_log('Response structure: ' . print_r($result, true));
+                error_log('Raw Response: ' . $response);
+                
+                // Show detailed error in debug mode
+                $errorMsg = 'BillCode not returned in response.';
+                if (DEBUG_MODE) {
+                    $errorMsg .= ' Response: ' . htmlspecialchars($response);
+                    $errorMsg .= ' | Decoded: ' . json_encode($result, JSON_PRETTY_PRINT);
+                }
+                throw new Exception($errorMsg);
+            }
+            
+            // Get BillCode (try both cases)
+            $billCode = isset($result[0]['BillCode']) ? $result[0]['BillCode'] : $result[0]['billcode'];
+            
+            // Validate BillCode is not empty
+            if (empty($billCode)) {
+                error_log('BillCode is empty: Full Response: ' . json_encode($result));
+                error_log('Raw Response: ' . $response);
+                
+                $errorMsg = 'BillCode is empty in response.';
+                if (DEBUG_MODE) {
+                    $errorMsg .= ' Response: ' . htmlspecialchars($response);
+                }
+                throw new Exception($errorMsg);
             }
             
             // ============================================
             // STEP 11: Redirect User to Payment Page
             // ============================================
-            $billCode = $result[0]['BillCode'];
-            
             // Log success
             error_log('Bill created successfully: BillCode = ' . $billCode);
             
@@ -471,8 +528,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             error_log('Checkout processing error: ' . $errorMessage);
             error_log('Stack trace: ' . $e->getTraceAsString());
             
-            // Show error message
-            $errors[] = 'Ralat semasa memproses checkout: ' . htmlspecialchars($errorMessage);
+            // Show error message based on debug mode
+            if (DEBUG_MODE) {
+                // Show detailed error in development
+                $errors[] = 'Ralat semasa memproses checkout: ' . htmlspecialchars($errorMessage);
+            } else {
+                // Show generic error in production
+                $errors[] = 'Ralat semasa memproses checkout. Sila cuba lagi atau hubungi kami.';
+            }
         }
     }
 }
