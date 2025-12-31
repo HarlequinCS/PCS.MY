@@ -20,7 +20,7 @@ define('STAGING_SECRET_KEY', 'dh1kldj2-j8db-ofm0-qauv-e037egz4oiui');
 define('STAGING_CATEGORY_CODE', 'g3ii2ms2');
 
 // Base URL untuk staging environment (gantikan dengan domain sebenar)
-$baseUrl = 'https://staging.yourdomain.com'; // GANTIKAN dengan domain staging sebenar
+$baseUrl = 'https://projectcutisem.com'; // Same as sandbox-test.php
 
 // Product Configuration
 define('PRODUCT_NAME', 'Baju Premium');
@@ -37,8 +37,8 @@ $variants = [
         'image' => 'images/hijaufront.svg'
     ],
     'hijaudepan' => [
-        'name' => 'Hijau Depan',
-        'image' => 'images/hijaufront.svg' // Using hijaufront as fallback if hijaudepan doesn't exist
+        'name' => 'Merah Depan',
+        'image' => 'images/merahdepan.svg' // Using hijaufront as fallback if hijaudepan doesn't exist
     ]
 ];
 
@@ -48,6 +48,9 @@ $sizes = ['S', 'M', 'L', 'XL', 'XXL'];
 // ============================================
 // STEP 2: Handle Form Submission
 // ============================================
+// Development mode: Set to false in production
+define('DEBUG_MODE', true);
+
 $errors = [];
 $success = false;
 
@@ -138,6 +141,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $quantity
             );
             
+            // Prepare bill data (matching sandbox-test.php structure)
             $billData = [
                 // Required: ToyyibPay credentials
                 'userSecretKey' => STAGING_SECRET_KEY,
@@ -147,19 +151,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'billName' => PRODUCT_NAME,
                 'billDescription' => $billDescription,
                 
-                // Price setting: 1 = Fixed amount
+                // Price setting: 1 = Fixed amount, 2 = Multiple options
                 'billPriceSetting' => 1,
                 
-                // Collect payer info: 1 = Yes (name, email, phone)
+                // Collect payer info: 1 = Yes (name, email, phone), 0 = No
                 'billPayorInfo' => 1,
                 
-                // Bill amount in sen
+                // Bill amount in sen (RM1.00 = 100 sen)
                 'billAmount' => $billAmount,
                 
                 // Unique reference number untuk tracking
                 'billExternalReferenceNo' => $billExternalReferenceNo,
                 
-                // Payer information
+                // Payer information (required even if billPayorInfo = 1)
+                // User boleh override nilai ini di payment page
                 'billTo' => $name,
                 'billEmail' => $email,
                 'billPhone' => $phone,
@@ -178,11 +183,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'billChargeToCustomer' => 0
             ];
             
+            // Log bill data for debugging (remove in production)
+            error_log('ToyyibPay Bill Data: ' . json_encode($billData, JSON_PRETTY_PRINT));
+            
             // ============================================
             // STEP 7: Call ToyyibPay API to Create Bill
             // ============================================
+            // Initialize cURL untuk API call
             $ch = curl_init('https://dev.toyyibpay.com/index.php/api/createBill');
             
+            // Set cURL options
             curl_setopt($ch, CURLOPT_POST, true);
             curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($billData));
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -199,43 +209,67 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // ============================================
             // STEP 8: Handle API Response & Error Handling
             // ============================================
+            // Check for cURL errors
             if ($curlError) {
+                error_log('cURL Error: ' . $curlError);
                 throw new Exception('cURL request failed: ' . $curlError);
             }
             
+            // Check HTTP status code
             if ($httpCode !== 200) {
-                throw new Exception('HTTP request failed with status code ' . $httpCode);
+                error_log('HTTP Error: Status ' . $httpCode . ', Response: ' . $response);
+                throw new Exception('HTTP request failed with status code ' . $httpCode . '. Response: ' . htmlspecialchars($response));
             }
             
-            // Decode JSON response
+            // Decode JSON response safely
             $result = json_decode($response, true);
             
+            // Check if JSON decode was successful
             if (json_last_error() !== JSON_ERROR_NONE) {
-                throw new Exception('Invalid JSON response: ' . json_last_error_msg());
+                error_log('JSON Decode Error: ' . json_last_error_msg() . ', Response: ' . $response);
+                throw new Exception('Invalid JSON response: ' . json_last_error_msg() . '. Response: ' . htmlspecialchars($response));
             }
             
             // Check for API error response
             if (isset($result[0]['status']) && $result[0]['status'] === 'error') {
                 $errorMsg = isset($result[0]['msg']) ? $result[0]['msg'] : 'Unknown error';
+                error_log('ToyyibPay API Error: ' . $errorMsg . ', Full Response: ' . json_encode($result));
                 throw new Exception('ToyyibPay API Error: ' . $errorMsg);
             }
             
             // Check if response contains BillCode
             if (!isset($result[0]['BillCode']) || empty($result[0]['BillCode'])) {
-                throw new Exception('BillCode not returned in response');
+                error_log('BillCode Missing: Full Response: ' . json_encode($result));
+                throw new Exception('BillCode not returned in response. Response: ' . htmlspecialchars($response));
             }
             
             // ============================================
             // STEP 9: Redirect User to Payment Page
             // ============================================
+            // Get BillCode from response
             $billCode = $result[0]['BillCode'];
+            
+            // Log success
+            error_log('Bill created successfully: BillCode = ' . $billCode);
+            
+            // Redirect user to ToyyibPay payment page
             header('Location: https://dev.toyyibpay.com/' . $billCode);
             exit;
             
         } catch (Exception $e) {
-            // Log error for debugging
-            error_log('Order processing error: ' . $e->getMessage());
-            $errors[] = 'Ralat semasa memproses pesanan. Sila cuba lagi atau hubungi kami.';
+            // Log detailed error for debugging
+            $errorMessage = $e->getMessage();
+            error_log('Order processing error: ' . $errorMessage);
+            error_log('Stack trace: ' . $e->getTraceAsString());
+            
+            // Show error message based on debug mode
+            if (DEBUG_MODE) {
+                // Show detailed error in development
+                $errors[] = 'Ralat semasa memproses pesanan: ' . htmlspecialchars($errorMessage);
+            } else {
+                // Show generic error in production
+                $errors[] = 'Ralat semasa memproses pesanan. Sila cuba lagi atau hubungi kami.';
+            }
         }
     }
 }
