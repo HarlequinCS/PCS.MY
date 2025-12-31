@@ -83,6 +83,9 @@ $finalAmount = $cartSubtotal;
 $promoError = '';
 $promoSuccess = '';
 
+// Note: $discountAmount and $promoCode will be updated when form is submitted
+// or when promo code is validated via AJAX
+
 // ============================================
 // STEP 4: Handle Promotion Code Validation (AJAX)
 // ============================================
@@ -185,7 +188,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     $state = trim($_POST['state'] ?? '');
     $district = trim($_POST['district'] ?? '');
     $postcode = trim($_POST['postcode'] ?? '');
-    $promoCodeInput = strtoupper(trim($_POST['promo_code'] ?? ''));
+    
+    // Get promo code from hidden field (set by AJAX validation) or from input field
+    $promoCodeInput = strtoupper(trim($_POST['promo_code_applied'] ?? $_POST['promo_code'] ?? ''));
+    $promoDiscountFromForm = floatval($_POST['promo_discount'] ?? 0);
     
     // Validation
     if (empty($fullname)) {
@@ -220,54 +226,98 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     
     // Validate promotion code if provided
     if (!empty($promoCodeInput)) {
-        try {
-            $pdo = getDBConnection();
-            $stmt = $pdo->prepare("
-                SELECT * FROM promotions 
-                WHERE code = :code 
-                AND active = 1
-                AND (valid_from IS NULL OR valid_from <= NOW())
-                AND (valid_until IS NULL OR valid_until >= NOW())
-            ");
+        // If discount was already calculated via AJAX, use it (faster and more reliable)
+        if ($promoDiscountFromForm > 0) {
+            // Use the discount from AJAX validation
+            $discountAmount = $promoDiscountFromForm;
+            $promoCode = $promoCodeInput;
             
-            $stmt->execute([':code' => $promoCodeInput]);
-            $promotion = $stmt->fetch();
-            
-            if ($promotion) {
-                // Check minimum purchase
-                if ($promotion['min_purchase'] > 0 && $cartSubtotal < $promotion['min_purchase']) {
-                    $errors[] = 'Kod promosi memerlukan pembelian minimum RM ' . number_format($promotion['min_purchase'], 2);
+            // Still validate the code exists and is valid (security check)
+            try {
+                $pdo = getDBConnection();
+                $stmt = $pdo->prepare("
+                    SELECT * FROM promotions 
+                    WHERE code = :code 
+                    AND active = 1
+                    AND (valid_from IS NULL OR valid_from <= NOW())
+                    AND (valid_until IS NULL OR valid_until >= NOW())
+                ");
+                
+                $stmt->execute([':code' => $promoCodeInput]);
+                $promotion = $stmt->fetch();
+                
+                if (!$promotion) {
+                    $errors[] = 'Kod promosi tidak sah atau telah tamat tempoh';
+                    $discountAmount = 0;
+                    $promoCode = '';
                 } elseif ($promotion['usage_limit'] !== null && $promotion['used_count'] >= $promotion['usage_limit']) {
                     $errors[] = 'Kod promosi telah mencapai had penggunaan';
-                } else {
-                    // Calculate discount
-                    if ($promotion['type'] === 'percentage') {
-                        $discountAmount = ($cartSubtotal * $promotion['value']) / 100;
-                        if ($promotion['max_discount'] !== null && $discountAmount > $promotion['max_discount']) {
-                            $discountAmount = $promotion['max_discount'];
-                        }
-                    } else { // fixed
-                        $discountAmount = $promotion['value'];
-                        if ($discountAmount > $cartSubtotal) {
-                            $discountAmount = $cartSubtotal;
-                        }
-                    }
-                    $promoCode = $promoCodeInput;
+                    $discountAmount = 0;
+                    $promoCode = '';
                 }
-            } else {
-                $errors[] = 'Kod promosi tidak sah atau telah tamat tempoh';
+            } catch (PDOException $e) {
+                error_log('Promotion validation error: ' . $e->getMessage());
+                $errors[] = 'Ralat semasa mengesahkan kod promosi';
+                $discountAmount = 0;
+                $promoCode = '';
             }
-        } catch (PDOException $e) {
-            error_log('Promotion validation error: ' . $e->getMessage());
-            $errors[] = 'Ralat semasa mengesahkan kod promosi';
+        } else {
+            // If no discount from form, validate and calculate (fallback)
+            try {
+                $pdo = getDBConnection();
+                $stmt = $pdo->prepare("
+                    SELECT * FROM promotions 
+                    WHERE code = :code 
+                    AND active = 1
+                    AND (valid_from IS NULL OR valid_from <= NOW())
+                    AND (valid_until IS NULL OR valid_until >= NOW())
+                ");
+                
+                $stmt->execute([':code' => $promoCodeInput]);
+                $promotion = $stmt->fetch();
+                
+                if ($promotion) {
+                    // Check minimum purchase
+                    if ($promotion['min_purchase'] > 0 && $cartSubtotal < $promotion['min_purchase']) {
+                        $errors[] = 'Kod promosi memerlukan pembelian minimum RM ' . number_format($promotion['min_purchase'], 2);
+                    } elseif ($promotion['usage_limit'] !== null && $promotion['used_count'] >= $promotion['usage_limit']) {
+                        $errors[] = 'Kod promosi telah mencapai had penggunaan';
+                    } else {
+                        // Calculate discount
+                        if ($promotion['type'] === 'percentage') {
+                            $discountAmount = ($cartSubtotal * $promotion['value']) / 100;
+                            if ($promotion['max_discount'] !== null && $discountAmount > $promotion['max_discount']) {
+                                $discountAmount = $promotion['max_discount'];
+                            }
+                        } else { // fixed
+                            $discountAmount = $promotion['value'];
+                            if ($discountAmount > $cartSubtotal) {
+                                $discountAmount = $cartSubtotal;
+                            }
+                        }
+                        $promoCode = $promoCodeInput;
+                    }
+                } else {
+                    $errors[] = 'Kod promosi tidak sah atau telah tamat tempoh';
+                }
+            } catch (PDOException $e) {
+                error_log('Promotion validation error: ' . $e->getMessage());
+                $errors[] = 'Ralat semasa mengesahkan kod promosi';
+            }
         }
     }
     
-    // Calculate final amount
+    // Calculate final amount (use discount from form if available, otherwise calculated discount)
     $finalAmount = $cartSubtotal - $discountAmount;
     if ($finalAmount < 0) {
         $finalAmount = 0;
     }
+    
+    // Log discount calculation for debugging
+    error_log('Checkout - Cart Subtotal: ' . $cartSubtotal);
+    error_log('Checkout - Discount Amount: ' . $discountAmount);
+    error_log('Checkout - Final Amount: ' . $finalAmount);
+    error_log('Checkout - Promo Code: ' . ($promoCode ?? 'none'));
     
     // If no errors, process checkout
     if (empty($errors)) {
@@ -349,11 +399,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             }
             
             // Convert RM to sen (RM50.00 = 5000 sen)
-            $billAmount = (int)($finalAmount * 100);
+            // IMPORTANT: Use finalAmount which includes discount
+            $billAmount = (int)round($finalAmount * 100);
+            
+            // Log bill amount for debugging
+            error_log('=== CHECKOUT PAYMENT CALCULATION ===');
+            error_log('Cart Subtotal: RM ' . number_format($cartSubtotal, 2));
+            error_log('Discount Amount: RM ' . number_format($discountAmount, 2));
+            error_log('Final Amount (after discount): RM ' . number_format($finalAmount, 2));
+            error_log('Bill Amount (sen): ' . $billAmount);
+            error_log('Promo Code: ' . ($promoCode ?: 'none'));
+            error_log('====================================');
             
             // Validate bill amount
             if ($billAmount <= 0) {
-                throw new Exception('Invalid bill amount. Amount must be greater than 0.');
+                throw new Exception('Invalid bill amount. Amount must be greater than 0. Final amount: ' . $finalAmount);
+            }
+            
+            // Double-check: Ensure billAmount matches finalAmount
+            $expectedBillAmount = (int)round($finalAmount * 100);
+            if ($billAmount !== $expectedBillAmount) {
+                error_log('WARNING: Bill amount mismatch! Calculated: ' . $billAmount . ', Expected: ' . $expectedBillAmount);
+                $billAmount = $expectedBillAmount; // Use correct value
             }
             
             // Build description with order details
@@ -1070,6 +1137,18 @@ if ($finalAmount < 0) {
                     document.getElementById('promoCodeApplied').value = data.code;
                     document.getElementById('promoDiscount').value = data.discount;
                     
+                    // Log for debugging
+                    console.log('✅ Promo code applied:', {
+                        code: data.code,
+                        discount: data.discount,
+                        subtotal: data.subtotal,
+                        final: data.final
+                    });
+                    console.log('Hidden fields updated:', {
+                        promoCodeApplied: document.getElementById('promoCodeApplied').value,
+                        promoDiscount: document.getElementById('promoDiscount').value
+                    });
+                    
                     // Update display
                     updateOrderTotal(data.subtotal, data.discount, data.final);
                     
@@ -1082,6 +1161,7 @@ if ($finalAmount < 0) {
                     // Clear discount
                     document.getElementById('promoCodeApplied').value = '';
                     document.getElementById('promoDiscount').value = '0';
+                    console.log('❌ Promo code failed, cleared hidden fields');
                     updateOrderTotal(data.subtotal || <?php echo $cartSubtotal; ?>, 0, data.subtotal || <?php echo $cartSubtotal; ?>);
                 }
                 
@@ -1137,6 +1217,16 @@ if ($finalAmount < 0) {
         
         // Form validation
         document.getElementById('checkoutForm').addEventListener('submit', function(e) {
+            // Log promo code values before submit
+            const promoCodeApplied = document.getElementById('promoCodeApplied').value;
+            const promoDiscount = document.getElementById('promoDiscount').value;
+            console.log('📤 Form submitting with:', {
+                promoCode: promoCodeApplied,
+                discount: promoDiscount,
+                subtotal: <?php echo $cartSubtotal; ?>,
+                final: <?php echo $cartSubtotal; ?> - parseFloat(promoDiscount || 0)
+            });
+            
             const fullname = document.getElementById('fullname').value.trim();
             const email = document.getElementById('email').value.trim();
             const phone = document.getElementById('phone').value.trim();
