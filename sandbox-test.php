@@ -12,7 +12,7 @@ define('STAGING_SECRET_KEY', 'dh1kldj2-j8db-ofm0-qauv-e037egz4oiui');
 define('STAGING_CATEGORY_CODE', 'g3ii2ms2');
 
 // Base URL untuk staging environment (gantikan dengan domain sebenar)
-$baseUrl = 'https://staging.yourdomain.com';
+$baseUrl = 'https://projectcutisem.com';
 
 // ============================================
 // STEP 2: Generate Unique Bill Reference
