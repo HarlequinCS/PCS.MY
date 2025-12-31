@@ -359,6 +359,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // JavaScript: Variant Image Preview
         // ============================================
         document.addEventListener('DOMContentLoaded', function() {
+            console.log('✅ Order page loaded successfully');
+            
             const variantRadios = document.querySelectorAll('input[name="variant"]');
             const previewImage = document.getElementById('previewImage');
             const previewImg = document.getElementById('previewImg');
@@ -366,15 +368,49 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             const quantityInput = document.getElementById('quantity');
             const totalAmountSpan = document.getElementById('totalAmount');
             const pricePerShirt = <?php echo PRICE_PER_SHIRT; ?>;
+            const orderForm = document.getElementById('orderForm');
+            
+            // Log initial values
+            console.log('📊 Initial Configuration:', {
+                pricePerShirt: pricePerShirt,
+                variantCount: variantRadios.length,
+                quantity: quantityInput.value
+            });
+            
+            // Validate required elements
+            if (!previewImage || !previewImg || !previewText || !quantityInput || !totalAmountSpan) {
+                console.error('❌ Error: Required DOM elements not found');
+                return;
+            }
             
             // Handle variant selection
-            variantRadios.forEach(radio => {
+            variantRadios.forEach((radio, index) => {
                 radio.addEventListener('change', function() {
                     if (this.checked) {
                         const imageSrc = this.getAttribute('data-image');
+                        const variantName = this.closest('.variant-option').querySelector('.variant-name').textContent;
+                        
+                        console.log('🎨 Variant selected:', {
+                            variant: this.value,
+                            variantName: variantName,
+                            imageSrc: imageSrc,
+                            index: index
+                        });
+                        
+                        // Update preview
                         previewImg.src = imageSrc;
                         previewImage.classList.add('active');
-                        previewText.textContent = 'Preview: ' + this.closest('.variant-option').querySelector('.variant-name').textContent;
+                        previewText.textContent = 'Preview: ' + variantName;
+                        
+                        // Log image load attempt
+                        previewImg.onload = function() {
+                            console.log('✅ Preview image loaded successfully:', imageSrc);
+                        };
+                        
+                        previewImg.onerror = function() {
+                            console.error('❌ Failed to load preview image:', imageSrc);
+                            previewText.textContent = '⚠️ Gagal memuatkan preview gambar';
+                        };
                     }
                 });
             });
@@ -383,20 +419,103 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             const checkedVariant = document.querySelector('input[name="variant"]:checked');
             if (checkedVariant) {
                 const imageSrc = checkedVariant.getAttribute('data-image');
+                const variantName = checkedVariant.closest('.variant-option').querySelector('.variant-name').textContent;
+                
+                console.log('🔄 Restoring selected variant:', {
+                    variant: checkedVariant.value,
+                    variantName: variantName,
+                    imageSrc: imageSrc
+                });
+                
                 previewImg.src = imageSrc;
                 previewImage.classList.add('active');
-                previewText.textContent = 'Preview: ' + checkedVariant.closest('.variant-option').querySelector('.variant-name').textContent;
+                previewText.textContent = 'Preview: ' + variantName;
             }
             
             // Calculate total amount
             function updateTotal() {
                 const quantity = parseInt(quantityInput.value) || 1;
                 const total = pricePerShirt * quantity;
-                totalAmountSpan.textContent = total.toFixed(2);
+                
+                if (totalAmountSpan) {
+                    totalAmountSpan.textContent = total.toFixed(2);
+                    console.log('💰 Total updated:', {
+                        quantity: quantity,
+                        pricePerShirt: pricePerShirt,
+                        total: total.toFixed(2)
+                    });
+                } else {
+                    console.error('❌ Error: totalAmountSpan element not found');
+                }
             }
             
-            quantityInput.addEventListener('input', updateTotal);
+            quantityInput.addEventListener('input', function() {
+                const quantity = parseInt(this.value) || 1;
+                console.log('📝 Quantity changed:', quantity);
+                updateTotal();
+            });
+            
+            // Initial total calculation
             updateTotal();
+            
+            // Form submission handler
+            if (orderForm) {
+                orderForm.addEventListener('submit', function(e) {
+                    console.log('📤 Form submission started');
+                    
+                    // Get form values
+                    const formData = {
+                        variant: document.querySelector('input[name="variant"]:checked')?.value || 'none',
+                        size: document.getElementById('size').value,
+                        quantity: document.getElementById('quantity').value,
+                        name: document.getElementById('name').value,
+                        email: document.getElementById('email').value,
+                        phone: document.getElementById('phone').value
+                    };
+                    
+                    console.log('📋 Form data:', formData);
+                    
+                    // Validate before submit
+                    if (!formData.variant || formData.variant === 'none') {
+                        console.error('❌ Validation error: Variant not selected');
+                    }
+                    if (!formData.size) {
+                        console.error('❌ Validation error: Size not selected');
+                    }
+                    if (!formData.name) {
+                        console.error('❌ Validation error: Name is required');
+                    }
+                    if (!formData.email) {
+                        console.error('❌ Validation error: Email is required');
+                    }
+                    if (!formData.phone) {
+                        console.error('❌ Validation error: Phone is required');
+                    }
+                    
+                    // Calculate final amount
+                    const finalQuantity = parseInt(formData.quantity) || 1;
+                    const finalAmount = pricePerShirt * finalQuantity;
+                    console.log('💵 Final order amount:', {
+                        quantity: finalQuantity,
+                        amount: finalAmount.toFixed(2)
+                    });
+                });
+            } else {
+                console.error('❌ Error: Order form not found');
+            }
+            
+            // Log any JavaScript errors
+            window.addEventListener('error', function(e) {
+                console.error('❌ JavaScript Error:', {
+                    message: e.message,
+                    filename: e.filename,
+                    lineno: e.lineno,
+                    colno: e.colno,
+                    error: e.error
+                });
+            });
+            
+            console.log('✅ All event listeners attached successfully');
         });
     </script>
 </body>
