@@ -15,9 +15,7 @@ ADD COLUMN IF NOT EXISTS `address3` VARCHAR(255) NULL COMMENT 'Address Line 3 (o
 ADD COLUMN IF NOT EXISTS `state` VARCHAR(100) NULL COMMENT 'State in Malaysia' AFTER `address3`,
 ADD COLUMN IF NOT EXISTS `district` VARCHAR(100) NULL COMMENT 'District/City' AFTER `state`,
 ADD COLUMN IF NOT EXISTS `postcode` VARCHAR(10) NULL COMMENT 'Postcode (5 digits)' AFTER `district`,
-ADD COLUMN IF NOT EXISTS `delivery_notes` TEXT NULL COMMENT 'Delivery instructions' AFTER `postcode`,
-ADD COLUMN IF NOT EXISTS `company_name` VARCHAR(255) NULL COMMENT 'Company name (optional)' AFTER `delivery_notes`,
-ADD COLUMN IF NOT EXISTS `promo_code` VARCHAR(50) NULL COMMENT 'Promotion code applied' AFTER `company_name`,
+ADD COLUMN IF NOT EXISTS `promo_code` VARCHAR(50) NULL COMMENT 'Promotion code applied' AFTER `postcode`,
 ADD COLUMN IF NOT EXISTS `discount_amount` DECIMAL(10,2) NULL DEFAULT 0.00 COMMENT 'Discount amount applied' AFTER `promo_code`;
 
 -- ============================================

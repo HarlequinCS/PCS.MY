@@ -32,8 +32,6 @@ function updateOrdersTable($pdo) {
         'state' => "VARCHAR(100) NULL COMMENT 'State in Malaysia'",
         'district' => "VARCHAR(100) NULL COMMENT 'District/City'",
         'postcode' => "VARCHAR(10) NULL COMMENT 'Postcode (5 digits)'",
-        'delivery_notes' => "TEXT NULL COMMENT 'Delivery instructions'",
-        'company_name' => "VARCHAR(255) NULL COMMENT 'Company name (optional)'",
         'promo_code' => "VARCHAR(50) NULL COMMENT 'Promotion code applied'",
         'discount_amount' => "DECIMAL(10,2) NULL DEFAULT 0.00 COMMENT 'Discount amount applied'"
     ];
@@ -55,9 +53,7 @@ function updateOrdersTable($pdo) {
         'state' => ['after' => 'address3'],
         'district' => ['after' => 'state'],
         'postcode' => ['after' => 'district'],
-        'delivery_notes' => ['after' => 'postcode'],
-        'company_name' => ['after' => 'delivery_notes'],
-        'promo_code' => ['after' => 'company_name'],
+        'promo_code' => ['after' => 'postcode'],
         'discount_amount' => ['after' => 'promo_code']
     ];
     

@@ -47,8 +47,6 @@ function createOrdersTableIfNotExists() {
             `state` VARCHAR(100) NULL COMMENT 'State in Malaysia',
             `district` VARCHAR(100) NULL COMMENT 'District/City',
             `postcode` VARCHAR(10) NULL COMMENT 'Postcode (5 digits)',
-            `delivery_notes` TEXT NULL COMMENT 'Delivery instructions',
-            `company_name` VARCHAR(255) NULL COMMENT 'Company name (optional)',
             `variant` VARCHAR(50) NOT NULL COMMENT 'Variant: hitamdepan, hijaufront, merahdepan',
             `size` VARCHAR(10) NOT NULL COMMENT 'Size: S, M, L, XL, XXL',
             `quantity` INT(11) NOT NULL DEFAULT 1 COMMENT 'Quantity ordered',

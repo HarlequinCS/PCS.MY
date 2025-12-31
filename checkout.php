@@ -182,8 +182,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     $state = trim($_POST['state'] ?? '');
     $district = trim($_POST['district'] ?? '');
     $postcode = trim($_POST['postcode'] ?? '');
-    $deliveryNotes = trim($_POST['delivery_notes'] ?? '');
-    $companyName = trim($_POST['company_name'] ?? '');
     $promoCodeInput = strtoupper(trim($_POST['promo_code'] ?? ''));
     
     // Validation
@@ -286,14 +284,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                 INSERT INTO orders (
                     name, fullname, email, phone, 
                     address1, address2, address3, state, district, postcode,
-                    delivery_notes, company_name,
                     variant, size, quantity, 
                     amount, promo_code, discount_amount,
                     billExternalReferenceNo, status, created_at
                 ) VALUES (
                     :name, :fullname, :email, :phone,
                     :address1, :address2, :address3, :state, :district, :postcode,
-                    :delivery_notes, :company_name,
                     :variant, :size, :quantity,
                     :amount, :promo_code, :discount_amount,
                     :billExternalReferenceNo, 'pending', NOW()
@@ -321,8 +317,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                     ':state' => $state,
                     ':district' => $district,
                     ':postcode' => $postcode,
-                    ':delivery_notes' => $deliveryNotes ?: null,
-                    ':company_name' => $companyName ?: null,
                     ':variant' => $item['variant'],
                     ':size' => $item['size'],
                     ':quantity' => $item['quantity'],
@@ -764,7 +758,19 @@ if ($finalAmount < 0) {
     <div class="checkout-container">
         <a href="order-baju.php" class="back-link">← Kembali ke Order</a>
         
-        <h1 style="text-align: center; margin-bottom: 30px; color: #1a202c;">Checkout</h1>
+        <h1 style="text-align: center; margin-bottom: 20px; color: #1a202c;">Checkout</h1>
+        
+        <!-- Pre-Order Notice Banner -->
+        <div style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border: 2px solid #fbbf24; border-radius: 12px; padding: 20px; margin-bottom: 30px; text-align: center;">
+            <div style="display: inline-flex; align-items: center; gap: 12px; margin-bottom: 10px;">
+                <div style="font-size: 32px;">📦</div>
+                <h2 style="margin: 0; color: #92400e; font-size: 20px; font-weight: 700;">PRE-ORDER</h2>
+            </div>
+            <p style="margin: 0; color: #78350f; font-size: 15px; line-height: 1.6; max-width: 800px; margin: 0 auto;">
+                <strong>Ini adalah pre-order.</strong> Kami akan menghantar kemaskini kemajuan pesanan anda melalui email pada setiap peringkat proses. 
+                Sila pastikan alamat email anda betul dan aktif untuk menerima notifikasi.
+            </p>
+        </div>
         
         <?php if (!empty($errors)): ?>
             <div class="errors">
@@ -785,6 +791,19 @@ if ($finalAmount < 0) {
                 <!-- Order Summary -->
                 <div class="checkout-section">
                     <h2>Order Summary</h2>
+                    
+                    <!-- Pre-Order Notice -->
+                    <div style="background: #fef3c7; border: 2px solid #fbbf24; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
+                        <div style="display: flex; align-items: start; gap: 10px;">
+                            <div style="font-size: 20px;">📦</div>
+                            <div>
+                                <strong style="color: #92400e; font-size: 14px;">Pre-Order</strong>
+                                <p style="margin: 5px 0 0 0; color: #78350f; font-size: 12px; line-height: 1.5;">
+                                    Kami akan menghantar kemaskini kemajuan pesanan melalui email pada setiap peringkat.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
                     
                     <div class="cart-items-summary">
                         <?php foreach ($cart as $item): ?>
@@ -862,12 +881,6 @@ if ($finalAmount < 0) {
                         </div>
                     </div>
                     
-                    <div class="form-group">
-                        <label for="company_name">Nama Syarikat (Pilihan)</label>
-                        <input type="text" name="company_name" id="company_name" 
-                               value="<?php echo isset($_POST['company_name']) ? htmlspecialchars($_POST['company_name']) : ''; ?>">
-                    </div>
-                    
                     <h3 style="margin-top: 30px; margin-bottom: 15px; font-size: 18px; color: #1a202c;">Alamat Penghantaran</h3>
                     
                     <div class="form-group required">
@@ -921,10 +934,18 @@ if ($finalAmount < 0) {
                         <small style="color: #6b7280; font-size: 12px;">5 digit nombor sahaja</small>
                     </div>
                     
-                    <div class="form-group">
-                        <label for="delivery_notes">Nota Penghantaran (Pilihan)</label>
-                        <textarea name="delivery_notes" id="delivery_notes" 
-                                  placeholder="Contoh: Tinggalkan di depan pintu, hubungi sebelum hantar, dll."><?php echo isset($_POST['delivery_notes']) ? htmlspecialchars($_POST['delivery_notes']) : ''; ?></textarea>
+                    <!-- Pre-Order Notice -->
+                    <div style="background: #fef3c7; border: 2px solid #fbbf24; border-radius: 8px; padding: 20px; margin-top: 20px; margin-bottom: 20px;">
+                        <div style="display: flex; align-items: start; gap: 12px;">
+                            <div style="font-size: 24px;">📦</div>
+                            <div>
+                                <h4 style="margin: 0 0 8px 0; color: #92400e; font-size: 16px; font-weight: 600;">Pre-Order Notice</h4>
+                                <p style="margin: 0; color: #78350f; font-size: 14px; line-height: 1.6;">
+                                    Ini adalah <strong>pre-order</strong>. Kami akan menghantar kemaskini kemajuan pesanan anda melalui email pada setiap peringkat proses. 
+                                    Sila pastikan alamat email anda betul dan aktif.
+                                </p>
+                            </div>
+                        </div>
                     </div>
                     
                     <button type="submit" class="submit-btn">Proceed to Payment</button>
