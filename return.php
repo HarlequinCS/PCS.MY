@@ -416,17 +416,78 @@ switch ($statusId) {
         console.log('Status ID:', <?php echo $statusId; ?>);
         console.log('Status:', '<?php echo $statusClass; ?>');
         
-        // Auto-trigger button animation on page load for success status
-        <?php if ($statusId == 1): ?>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Wait a bit before triggering animation for better UX
-            setTimeout(function() {
-                const orderButton = document.querySelector('.order');
-                if (orderButton) {
-                    console.log('🚚 Triggering order button animation');
-                    orderButton.click();
+        // Homepage URL (adjust as needed)
+        const homepageUrl = '/';
+        let countdownStarted = false;
+        let countdownInterval = null;
+        
+        // Countdown and redirect function
+        function startCountdownAndRedirect(seconds) {
+            if (countdownStarted) {
+                return; // Prevent multiple countdowns
+            }
+            
+            countdownStarted = true;
+            const orderButton = document.querySelector('.order');
+            const defaultText = orderButton.querySelector('.default');
+            let countdown = seconds;
+            
+            // Update button text with countdown
+            countdownInterval = setInterval(function() {
+                if (countdown > 0) {
+                    if (defaultText) {
+                        defaultText.textContent = `Redirecting in ${countdown}s...`;
+                    }
+                    console.log('⏱️ Countdown:', countdown);
+                    countdown--;
+                } else {
+                    clearInterval(countdownInterval);
+                    console.log('🏠 Redirecting to homepage');
+                    // Redirect to homepage
+                    window.location.href = homepageUrl;
                 }
             }, 1000);
+        }
+        
+        <?php if ($statusId == 1): ?>
+        // Handle button click (both manual and auto-trigger)
+        document.addEventListener('DOMContentLoaded', function() {
+            const orderButton = document.querySelector('.order');
+            
+            if (orderButton) {
+                // Listen for button click events (from orderbutton.js)
+                // The orderbutton.js will add 'animate' class on click
+                // We'll watch for that class change to trigger countdown
+                const observer = new MutationObserver(function(mutations) {
+                    mutations.forEach(function(mutation) {
+                        if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+                            if (orderButton.classList.contains('animate') && !countdownStarted) {
+                                console.log('🚚 Order button animation started');
+                                
+                                // Start countdown after animation completes (10 seconds)
+                                setTimeout(function() {
+                                    if (!countdownStarted) {
+                                        console.log('⏱️ Starting 3 second countdown before redirect');
+                                        startCountdownAndRedirect(3);
+                                    }
+                                }, 10000); // Wait for animation to complete (10 seconds)
+                            }
+                        }
+                    });
+                });
+                
+                // Observe the button for class changes
+                observer.observe(orderButton, {
+                    attributes: true,
+                    attributeFilter: ['class']
+                });
+                
+                // Auto-trigger button animation on page load
+                setTimeout(function() {
+                    console.log('🚚 Auto-triggering order button animation');
+                    orderButton.click();
+                }, 1000);
+            }
         });
         <?php endif; ?>
     </script>
