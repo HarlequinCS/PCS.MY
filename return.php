@@ -9,10 +9,24 @@
  */
 
 // ============================================
-// STEP 1: Get Payment Status from GET Parameter
+// STEP 1: Start Session
+// ============================================
+session_start();
+
+// ============================================
+// STEP 2: Get Payment Status from GET Parameter
 // ============================================
 // ToyyibPay akan redirect user ke sini dengan status_id
 $statusId = isset($_GET['status_id']) ? (int)$_GET['status_id'] : 0;
+
+// ============================================
+// STEP 3: Clear Cart if Payment Successful
+// ============================================
+// Clear cart session after successful payment
+if ($statusId == 1 && isset($_SESSION['cart'])) {
+    unset($_SESSION['cart']);
+    $_SESSION['cart'] = [];
+}
 
 // Get additional parameters if available
 $billCode = isset($_GET['billcode']) ? htmlspecialchars($_GET['billcode']) : '';
