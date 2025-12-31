@@ -44,6 +44,12 @@ $billData = [
     // Unique reference number untuk tracking
     'billExternalReferenceNo' => $billExternalReferenceNo,
     
+    // Payer information (required even if billPayorInfo = 1)
+    // User boleh override nilai ini di payment page
+    'billTo' => 'Test User',
+    'billEmail' => 'test@example.com',
+    'billPhone' => '60123456789',
+    
     // Return URL: User akan di-redirect ke sini selepas payment
     'billReturnUrl' => $baseUrl . '/return.php',
     
@@ -97,6 +103,12 @@ $result = json_decode($response, true);
 // Check if JSON decode was successful
 if (json_last_error() !== JSON_ERROR_NONE) {
     die('Error: Invalid JSON response - ' . json_last_error_msg() . '<br>Response: ' . htmlspecialchars($response));
+}
+
+// Check for API error response
+if (isset($result[0]['status']) && $result[0]['status'] === 'error') {
+    $errorMsg = isset($result[0]['msg']) ? $result[0]['msg'] : 'Unknown error';
+    die('Error: ' . htmlspecialchars($errorMsg) . '<br>Response: ' . htmlspecialchars($response));
 }
 
 // Check if response contains BillCode
