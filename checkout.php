@@ -356,24 +356,45 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                 throw new Exception('Invalid bill amount. Amount must be greater than 0.');
             }
             
-            // Build description with order details (limit length to avoid issues)
-            $itemDescriptions = [];
+            // Build description with order details
+            // IMPORTANT: ToyyibPay limit is 100 characters for billDescription
+            $totalItems = 0;
+            $totalQuantity = 0;
             foreach ($cart as $item) {
-                $itemDescriptions[] = sprintf(
-                    "%s (Size: %s, Qty: %d)",
+                $totalItems++;
+                $totalQuantity += $item['quantity'];
+            }
+            
+            // Create short description within 100 character limit
+            if ($totalItems == 1) {
+                // Single item: "Baju Premium - Hitam Depan, Size M, Qty 2"
+                $item = $cart[0];
+                $billDescription = sprintf(
+                    "Baju Premium - %s, Size %s, Qty %d",
                     $item['variant_name'],
                     $item['size'],
                     $item['quantity']
                 );
-            }
-            $billDescription = "Baju Premium - " . implode(", ", $itemDescriptions);
-            if ($discountAmount > 0) {
-                $billDescription .= " | Discount: RM " . number_format($discountAmount, 2);
+            } else {
+                // Multiple items: "Baju Premium - 3 items, Total Qty 5"
+                $billDescription = sprintf(
+                    "Baju Premium - %d items, Total Qty %d",
+                    $totalItems,
+                    $totalQuantity
+                );
             }
             
-            // Limit description length (ToyyibPay may have limits)
-            if (strlen($billDescription) > 500) {
-                $billDescription = substr($billDescription, 0, 497) . '...';
+            // Add discount info if applicable (keep within 100 char limit)
+            if ($discountAmount > 0) {
+                $discountText = " | Disc: RM" . number_format($discountAmount, 0);
+                if (strlen($billDescription . $discountText) <= 100) {
+                    $billDescription .= $discountText;
+                }
+            }
+            
+            // Final check: Ensure description is within 100 character limit
+            if (strlen($billDescription) > 100) {
+                $billDescription = substr($billDescription, 0, 97) . '...';
             }
             
             // Prepare bill data (matching sandbox-test.php structure exactly)
