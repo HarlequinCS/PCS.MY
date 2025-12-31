@@ -1,7 +1,7 @@
 <?php
 /**
- * Checkout Page with ToyyibPay Integration
- * Displays cart items, collects user information, and processes payment
+ * Enhanced Checkout Page with Full Address Form and Promotion Code
+ * Displays cart items, collects complete user information, applies discounts, and processes payment
  */
 
 // ============================================
@@ -43,32 +43,152 @@ $variantNames = [
     'hijaudepan' => 'Merah Depan'
 ];
 
+// Malaysia States
+$malaysiaStates = [
+    'Johor',
+    'Kedah',
+    'Kelantan',
+    'Kuala Lumpur',
+    'Labuan',
+    'Malacca',
+    'Negeri Sembilan',
+    'Pahang',
+    'Penang',
+    'Perak',
+    'Perlis',
+    'Putrajaya',
+    'Sabah',
+    'Sarawak',
+    'Selangor',
+    'Terengganu'
+];
+
 // ============================================
 // STEP 3: Calculate Cart Totals
 // ============================================
 $cart = $_SESSION['cart'];
 $cartCount = count($cart);
-$cartTotal = 0;
+$cartSubtotal = 0;
 foreach ($cart as $item) {
-    $cartTotal += $item['subtotal'];
+    $cartSubtotal += $item['subtotal'];
+}
+
+// Initialize discount variables
+$promoCode = '';
+$discountAmount = 0.00;
+$finalAmount = $cartSubtotal;
+$promoError = '';
+$promoSuccess = '';
+
+// ============================================
+// STEP 4: Handle Promotion Code Validation (AJAX)
+// ============================================
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'validate_promo') {
+    $promoCodeInput = strtoupper(trim($_POST['promo_code'] ?? ''));
+    
+    if (empty($promoCodeInput)) {
+        header('Content-Type: application/json');
+        echo json_encode(['success' => false, 'error' => 'Promotion code is required']);
+        exit;
+    }
+    
+    try {
+        $pdo = getDBConnection();
+        
+        // Check promotion code
+        $stmt = $pdo->prepare("
+            SELECT * FROM promotions 
+            WHERE code = :code 
+            AND active = 1
+            AND (valid_from IS NULL OR valid_from <= NOW())
+            AND (valid_until IS NULL OR valid_until >= NOW())
+        ");
+        
+        $stmt->execute([':code' => $promoCodeInput]);
+        $promotion = $stmt->fetch();
+        
+        if (!$promotion) {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'error' => 'Invalid or expired promotion code']);
+            exit;
+        }
+        
+        // Check minimum purchase
+        if ($promotion['min_purchase'] > 0 && $cartSubtotal < $promotion['min_purchase']) {
+            header('Content-Type: application/json');
+            echo json_encode([
+                'success' => false, 
+                'error' => 'Minimum purchase of RM ' . number_format($promotion['min_purchase'], 2) . ' required'
+            ]);
+            exit;
+        }
+        
+        // Check usage limit
+        if ($promotion['usage_limit'] !== null && $promotion['used_count'] >= $promotion['usage_limit']) {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'error' => 'Promotion code has reached usage limit']);
+            exit;
+        }
+        
+        // Calculate discount
+        $discount = 0;
+        if ($promotion['type'] === 'percentage') {
+            $discount = ($cartSubtotal * $promotion['value']) / 100;
+            // Apply max discount if set
+            if ($promotion['max_discount'] !== null && $discount > $promotion['max_discount']) {
+                $discount = $promotion['max_discount'];
+            }
+        } else { // fixed
+            $discount = $promotion['value'];
+            // Don't allow discount more than subtotal
+            if ($discount > $cartSubtotal) {
+                $discount = $cartSubtotal;
+            }
+        }
+        
+        header('Content-Type: application/json');
+        echo json_encode([
+            'success' => true,
+            'code' => $promotion['code'],
+            'type' => $promotion['type'],
+            'value' => $promotion['value'],
+            'discount' => round($discount, 2),
+            'subtotal' => $cartSubtotal,
+            'final' => round($cartSubtotal - $discount, 2)
+        ]);
+        exit;
+        
+    } catch (PDOException $e) {
+        error_log('Promotion validation error: ' . $e->getMessage());
+        header('Content-Type: application/json');
+        echo json_encode(['success' => false, 'error' => 'Error validating promotion code']);
+        exit;
+    }
 }
 
 // ============================================
-// STEP 4: Handle Form Submission
+// STEP 5: Handle Form Submission
 // ============================================
 $errors = [];
-$success = false;
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Validate required fields
-    $name = trim($_POST['name'] ?? '');
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'checkout') {
+    // Validate and collect all form fields
+    $fullname = trim($_POST['fullname'] ?? '');
     $email = trim($_POST['email'] ?? '');
     $phone = trim($_POST['phone'] ?? '');
-    $address = trim($_POST['address'] ?? '');
+    $address1 = trim($_POST['address1'] ?? '');
+    $address2 = trim($_POST['address2'] ?? '');
+    $address3 = trim($_POST['address3'] ?? '');
+    $state = trim($_POST['state'] ?? '');
+    $district = trim($_POST['district'] ?? '');
+    $postcode = trim($_POST['postcode'] ?? '');
+    $deliveryNotes = trim($_POST['delivery_notes'] ?? '');
+    $companyName = trim($_POST['company_name'] ?? '');
+    $promoCodeInput = strtoupper(trim($_POST['promo_code'] ?? ''));
     
     // Validation
-    if (empty($name)) {
-        $errors[] = 'Nama diperlukan';
+    if (empty($fullname)) {
+        $errors[] = 'Nama penuh diperlukan';
     }
     
     if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
@@ -79,53 +199,155 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errors[] = 'Nombor telefon diperlukan';
     }
     
-    if (empty($address)) {
-        $errors[] = 'Alamat diperlukan';
+    if (empty($address1)) {
+        $errors[] = 'Alamat Baris 1 diperlukan';
+    }
+    
+    if (empty($state) || !in_array($state, $malaysiaStates)) {
+        $errors[] = 'Negeri yang sah diperlukan';
+    }
+    
+    if (empty($district)) {
+        $errors[] = 'Daerah/Bandar diperlukan';
+    }
+    
+    if (empty($postcode)) {
+        $errors[] = 'Poskod diperlukan';
+    } elseif (!preg_match('/^\d{5}$/', $postcode)) {
+        $errors[] = 'Poskod mestilah 5 digit nombor';
+    }
+    
+    // Validate promotion code if provided
+    if (!empty($promoCodeInput)) {
+        try {
+            $pdo = getDBConnection();
+            $stmt = $pdo->prepare("
+                SELECT * FROM promotions 
+                WHERE code = :code 
+                AND active = 1
+                AND (valid_from IS NULL OR valid_from <= NOW())
+                AND (valid_until IS NULL OR valid_until >= NOW())
+            ");
+            
+            $stmt->execute([':code' => $promoCodeInput]);
+            $promotion = $stmt->fetch();
+            
+            if ($promotion) {
+                // Check minimum purchase
+                if ($promotion['min_purchase'] > 0 && $cartSubtotal < $promotion['min_purchase']) {
+                    $errors[] = 'Kod promosi memerlukan pembelian minimum RM ' . number_format($promotion['min_purchase'], 2);
+                } elseif ($promotion['usage_limit'] !== null && $promotion['used_count'] >= $promotion['usage_limit']) {
+                    $errors[] = 'Kod promosi telah mencapai had penggunaan';
+                } else {
+                    // Calculate discount
+                    if ($promotion['type'] === 'percentage') {
+                        $discountAmount = ($cartSubtotal * $promotion['value']) / 100;
+                        if ($promotion['max_discount'] !== null && $discountAmount > $promotion['max_discount']) {
+                            $discountAmount = $promotion['max_discount'];
+                        }
+                    } else { // fixed
+                        $discountAmount = $promotion['value'];
+                        if ($discountAmount > $cartSubtotal) {
+                            $discountAmount = $cartSubtotal;
+                        }
+                    }
+                    $promoCode = $promoCodeInput;
+                }
+            } else {
+                $errors[] = 'Kod promosi tidak sah atau telah tamat tempoh';
+            }
+        } catch (PDOException $e) {
+            error_log('Promotion validation error: ' . $e->getMessage());
+            $errors[] = 'Ralat semasa mengesahkan kod promosi';
+        }
+    }
+    
+    // Calculate final amount
+    $finalAmount = $cartSubtotal - $discountAmount;
+    if ($finalAmount < 0) {
+        $finalAmount = 0;
     }
     
     // If no errors, process checkout
     if (empty($errors)) {
         try {
             // ============================================
-            // STEP 5: Generate Unique Bill Reference
+            // STEP 6: Generate Unique Bill Reference
             // ============================================
             $billExternalReferenceNo = 'BILL-' . time() . '-' . uniqid();
             
             // ============================================
-            // STEP 6: Save All Cart Items to Database
+            // STEP 7: Save All Cart Items to Database
             // ============================================
             $pdo = getDBConnection();
             
-            // Prepare insert statement
+            // Prepare insert statement with all new fields
             $stmt = $pdo->prepare("
                 INSERT INTO orders (
-                    name, email, phone, variant, size, quantity, 
-                    amount, billExternalReferenceNo, status, created_at
+                    name, fullname, email, phone, 
+                    address1, address2, address3, state, district, postcode,
+                    delivery_notes, company_name,
+                    variant, size, quantity, 
+                    amount, promo_code, discount_amount,
+                    billExternalReferenceNo, status, created_at
                 ) VALUES (
-                    :name, :email, :phone, :variant, :size, :quantity,
-                    :amount, :billExternalReferenceNo, 'pending', NOW()
+                    :name, :fullname, :email, :phone,
+                    :address1, :address2, :address3, :state, :district, :postcode,
+                    :delivery_notes, :company_name,
+                    :variant, :size, :quantity,
+                    :amount, :promo_code, :discount_amount,
+                    :billExternalReferenceNo, 'pending', NOW()
                 )
             ");
             
             // Insert each cart item as a separate order record
             foreach ($cart as $item) {
+                // Calculate item amount (proportional discount if applicable)
+                $itemAmount = $item['subtotal'];
+                if ($discountAmount > 0) {
+                    // Apply proportional discount to each item
+                    $itemDiscount = ($item['subtotal'] / $cartSubtotal) * $discountAmount;
+                    $itemAmount = $item['subtotal'] - $itemDiscount;
+                }
+                
                 $stmt->execute([
-                    ':name' => $name,
+                    ':name' => $fullname, // Keep for backward compatibility
+                    ':fullname' => $fullname,
                     ':email' => $email,
                     ':phone' => $phone,
+                    ':address1' => $address1,
+                    ':address2' => $address2 ?: null,
+                    ':address3' => $address3 ?: null,
+                    ':state' => $state,
+                    ':district' => $district,
+                    ':postcode' => $postcode,
+                    ':delivery_notes' => $deliveryNotes ?: null,
+                    ':company_name' => $companyName ?: null,
                     ':variant' => $item['variant'],
                     ':size' => $item['size'],
                     ':quantity' => $item['quantity'],
-                    ':amount' => $item['subtotal'],
+                    ':amount' => $itemAmount,
+                    ':promo_code' => $promoCode ?: null,
+                    ':discount_amount' => $discountAmount > 0 ? ($itemAmount - $item['subtotal']) : 0,
                     ':billExternalReferenceNo' => $billExternalReferenceNo
                 ]);
             }
             
+            // Update promotion usage count if code was used
+            if (!empty($promoCode)) {
+                $updateStmt = $pdo->prepare("
+                    UPDATE promotions 
+                    SET used_count = used_count + 1 
+                    WHERE code = :code
+                ");
+                $updateStmt->execute([':code' => $promoCode]);
+            }
+            
             // ============================================
-            // STEP 7: Prepare Bill Data for ToyyibPay
+            // STEP 8: Prepare Bill Data for ToyyibPay
             // ============================================
             // Convert RM to sen (RM50.00 = 5000 sen)
-            $billAmount = (int)($cartTotal * 100);
+            $billAmount = (int)($finalAmount * 100);
             
             // Build description with order details
             $itemDescriptions = [];
@@ -138,6 +360,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 );
             }
             $billDescription = "Baju Premium - " . implode(", ", $itemDescriptions);
+            if ($discountAmount > 0) {
+                $billDescription .= " | Discount: RM " . number_format($discountAmount, 2);
+            }
             
             $billData = [
                 // Required: ToyyibPay credentials
@@ -161,7 +386,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'billExternalReferenceNo' => $billExternalReferenceNo,
                 
                 // Payer information
-                'billTo' => $name,
+                'billTo' => $fullname,
                 'billEmail' => $email,
                 'billPhone' => $phone,
                 
@@ -183,7 +408,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             error_log('ToyyibPay Bill Data: ' . json_encode($billData, JSON_PRETTY_PRINT));
             
             // ============================================
-            // STEP 8: Call ToyyibPay API to Create Bill
+            // STEP 9: Call ToyyibPay API to Create Bill
             // ============================================
             $ch = curl_init('https://dev.toyyibpay.com/index.php/api/createBill');
             
@@ -201,7 +426,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             curl_close($ch);
             
             // ============================================
-            // STEP 9: Handle API Response & Error Handling
+            // STEP 10: Handle API Response & Error Handling
             // ============================================
             if ($curlError) {
                 error_log('cURL Error: ' . $curlError);
@@ -235,7 +460,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             
             // ============================================
-            // STEP 10: Redirect User to Payment Page
+            // STEP 11: Redirect User to Payment Page
             // ============================================
             $billCode = $result[0]['BillCode'];
             
@@ -257,6 +482,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 }
+
+// Calculate display totals (for initial page load or after promo validation)
+if (isset($_POST['promo_discount'])) {
+    $discountAmount = floatval($_POST['promo_discount']);
+    $promoCode = $_POST['promo_code_applied'] ?? '';
+}
+$finalAmount = $cartSubtotal - $discountAmount;
+if ($finalAmount < 0) {
+    $finalAmount = 0;
+}
 ?>
 <!DOCTYPE html>
 <html lang="ms">
@@ -267,18 +502,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <link rel="stylesheet" href="css/order-baju.css">
     <style>
         .checkout-container {
-            max-width: 1000px;
+            max-width: 1200px;
             margin: 0 auto;
             padding: 20px;
         }
         
         .checkout-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: 1fr 1.2fr;
             gap: 30px;
         }
         
-        @media (max-width: 768px) {
+        @media (max-width: 968px) {
             .checkout-grid {
                 grid-template-columns: 1fr;
             }
@@ -296,6 +531,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             margin-bottom: 20px;
             color: #1a202c;
             font-size: 24px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e5e7eb;
         }
         
         .cart-summary-item {
@@ -348,15 +585,71 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             display: flex;
             justify-content: space-between;
             margin-bottom: 10px;
+            font-size: 14px;
         }
         
-        .order-total-row:last-child {
+        .order-total-row.discount {
+            color: #10b981;
+        }
+        
+        .order-total-row.final {
             font-size: 24px;
             font-weight: 700;
             color: #1a202c;
             margin-top: 10px;
             padding-top: 10px;
             border-top: 2px solid #e5e7eb;
+        }
+        
+        .promo-section {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f9fafb;
+            border-radius: 8px;
+        }
+        
+        .promo-input-group {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .promo-input-group input {
+            flex: 1;
+            padding: 10px;
+            border: 2px solid #e5e7eb;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        
+        .promo-input-group button {
+            padding: 10px 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        
+        .promo-input-group button:hover {
+            background: #5568d3;
+        }
+        
+        .promo-message {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 13px;
+        }
+        
+        .promo-message.success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        
+        .promo-message.error {
+            background: #fee2e2;
+            color: #991b1b;
         }
         
         .form-group {
@@ -376,6 +669,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         
         .form-group input,
+        .form-group select,
         .form-group textarea {
             width: 100%;
             padding: 12px;
@@ -387,6 +681,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         
         .form-group input:focus,
+        .form-group select:focus,
         .form-group textarea:focus {
             outline: none;
             border-color: #667eea;
@@ -394,7 +689,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         .form-group textarea {
             resize: vertical;
-            min-height: 100px;
+            min-height: 80px;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
         }
         
         .errors {
@@ -434,6 +741,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
         }
         
+        .submit-btn:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
         .back-link {
             display: inline-block;
             margin-bottom: 20px;
@@ -464,6 +777,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <?php endif; ?>
         
         <form method="POST" action="" id="checkoutForm">
+            <input type="hidden" name="action" value="checkout">
+            <input type="hidden" name="promo_code_applied" id="promoCodeApplied" value="<?php echo htmlspecialchars($promoCode); ?>">
+            <input type="hidden" name="promo_discount" id="promoDiscount" value="<?php echo $discountAmount; ?>">
+            
             <div class="checkout-grid">
                 <!-- Order Summary -->
                 <div class="checkout-section">
@@ -486,14 +803,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <?php endforeach; ?>
                     </div>
                     
+                    <!-- Promotion Code Section -->
+                    <div class="promo-section">
+                        <label style="margin-bottom: 10px; display: block; font-weight: 600;">Promotion Code</label>
+                        <div class="promo-input-group">
+                            <input type="text" 
+                                   id="promoCodeInput" 
+                                   placeholder="Enter code" 
+                                   value="<?php echo htmlspecialchars($promoCode); ?>"
+                                   style="text-transform: uppercase;">
+                            <button type="button" id="applyPromoBtn">Apply</button>
+                        </div>
+                        <div id="promoMessage"></div>
+                    </div>
+                    
                     <div class="order-total">
                         <div class="order-total-row">
-                            <span>Jumlah Item:</span>
-                            <span><?php echo $cartCount; ?> item(s)</span>
+                            <span>Subtotal:</span>
+                            <span>RM <?php echo number_format($cartSubtotal, 2); ?></span>
                         </div>
-                        <div class="order-total-row">
-                            <span>Jumlah Keseluruhan:</span>
-                            <span>RM <?php echo number_format($cartTotal, 2); ?></span>
+                        <?php if ($discountAmount > 0): ?>
+                            <div class="order-total-row discount">
+                                <span>Discount (<?php echo htmlspecialchars($promoCode); ?>):</span>
+                                <span>- RM <?php echo number_format($discountAmount, 2); ?></span>
+                            </div>
+                        <?php endif; ?>
+                        <div class="order-total-row final">
+                            <span>Total:</span>
+                            <span>RM <?php echo number_format($finalAmount, 2); ?></span>
                         </div>
                     </div>
                 </div>
@@ -503,30 +840,91 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <h2>Maklumat Pelanggan</h2>
                     
                     <div class="form-group required">
-                        <label for="name">Nama Penuh</label>
-                        <input type="text" name="name" id="name" 
-                               value="<?php echo isset($_POST['name']) ? htmlspecialchars($_POST['name']) : ''; ?>" 
+                        <label for="fullname">Nama Penuh</label>
+                        <input type="text" name="fullname" id="fullname" 
+                               value="<?php echo isset($_POST['fullname']) ? htmlspecialchars($_POST['fullname']) : ''; ?>" 
                                required>
                     </div>
                     
+                    <div class="form-row">
+                        <div class="form-group required">
+                            <label for="email">Email</label>
+                            <input type="email" name="email" id="email" 
+                                   value="<?php echo isset($_POST['email']) ? htmlspecialchars($_POST['email']) : ''; ?>" 
+                                   required>
+                        </div>
+                        
+                        <div class="form-group required">
+                            <label for="phone">Nombor Telefon</label>
+                            <input type="tel" name="phone" id="phone" 
+                                   value="<?php echo isset($_POST['phone']) ? htmlspecialchars($_POST['phone']) : ''; ?>" 
+                                   required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="company_name">Nama Syarikat (Pilihan)</label>
+                        <input type="text" name="company_name" id="company_name" 
+                               value="<?php echo isset($_POST['company_name']) ? htmlspecialchars($_POST['company_name']) : ''; ?>">
+                    </div>
+                    
+                    <h3 style="margin-top: 30px; margin-bottom: 15px; font-size: 18px; color: #1a202c;">Alamat Penghantaran</h3>
+                    
                     <div class="form-group required">
-                        <label for="email">Email</label>
-                        <input type="email" name="email" id="email" 
-                               value="<?php echo isset($_POST['email']) ? htmlspecialchars($_POST['email']) : ''; ?>" 
+                        <label for="address1">Alamat Baris 1</label>
+                        <input type="text" name="address1" id="address1" 
+                               value="<?php echo isset($_POST['address1']) ? htmlspecialchars($_POST['address1']) : ''; ?>" 
                                required>
                     </div>
                     
-                    <div class="form-group required">
-                        <label for="phone">Nombor Telefon</label>
-                        <input type="tel" name="phone" id="phone" 
-                               value="<?php echo isset($_POST['phone']) ? htmlspecialchars($_POST['phone']) : ''; ?>" 
-                               required>
+                    <div class="form-group">
+                        <label for="address2">Alamat Baris 2 (Pilihan)</label>
+                        <input type="text" name="address2" id="address2" 
+                               value="<?php echo isset($_POST['address2']) ? htmlspecialchars($_POST['address2']) : ''; ?>">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="address3">Alamat Baris 3 (Pilihan)</label>
+                        <input type="text" name="address3" id="address3" 
+                               value="<?php echo isset($_POST['address3']) ? htmlspecialchars($_POST['address3']) : ''; ?>">
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group required">
+                            <label for="state">Negeri</label>
+                            <select name="state" id="state" required>
+                                <option value="">-- Pilih Negeri --</option>
+                                <?php foreach ($malaysiaStates as $stateOption): ?>
+                                    <option value="<?php echo htmlspecialchars($stateOption); ?>"
+                                            <?php echo (isset($_POST['state']) && $_POST['state'] === $stateOption) ? 'selected' : ''; ?>>
+                                        <?php echo htmlspecialchars($stateOption); ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group required">
+                            <label for="district">Daerah/Bandar</label>
+                            <input type="text" name="district" id="district" 
+                                   value="<?php echo isset($_POST['district']) ? htmlspecialchars($_POST['district']) : ''; ?>" 
+                                   required>
+                        </div>
                     </div>
                     
                     <div class="form-group required">
-                        <label for="address">Alamat</label>
-                        <textarea name="address" id="address" 
-                                  required><?php echo isset($_POST['address']) ? htmlspecialchars($_POST['address']) : ''; ?></textarea>
+                        <label for="postcode">Poskod</label>
+                        <input type="text" name="postcode" id="postcode" 
+                               pattern="[0-9]{5}" 
+                               maxlength="5"
+                               value="<?php echo isset($_POST['postcode']) ? htmlspecialchars($_POST['postcode']) : ''; ?>" 
+                               required>
+                        <small style="color: #6b7280; font-size: 12px;">5 digit nombor sahaja</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="delivery_notes">Nota Penghantaran (Pilihan)</label>
+                        <textarea name="delivery_notes" id="delivery_notes" 
+                                  placeholder="Contoh: Tinggalkan di depan pintu, hubungi sebelum hantar, dll."><?php echo isset($_POST['delivery_notes']) ? htmlspecialchars($_POST['delivery_notes']) : ''; ?></textarea>
                     </div>
                     
                     <button type="submit" class="submit-btn">Proceed to Payment</button>
@@ -536,14 +934,113 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </div>
     
     <script>
+        // ============================================
+        // Promotion Code Validation (AJAX)
+        // ============================================
+        document.getElementById('applyPromoBtn').addEventListener('click', function() {
+            const promoCode = document.getElementById('promoCodeInput').value.trim().toUpperCase();
+            const promoMessage = document.getElementById('promoMessage');
+            
+            if (!promoCode) {
+                promoMessage.innerHTML = '<div class="promo-message error">Sila masukkan kod promosi</div>';
+                return;
+            }
+            
+            // Disable button during request
+            this.disabled = true;
+            this.textContent = 'Validating...';
+            
+            const formData = new FormData();
+            formData.append('action', 'validate_promo');
+            formData.append('promo_code', promoCode);
+            
+            fetch('checkout.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Update hidden fields
+                    document.getElementById('promoCodeApplied').value = data.code;
+                    document.getElementById('promoDiscount').value = data.discount;
+                    
+                    // Update display
+                    updateOrderTotal(data.subtotal, data.discount, data.final);
+                    
+                    // Show success message
+                    promoMessage.innerHTML = '<div class="promo-message success">Kod promosi berjaya digunakan! Diskaun: RM ' + data.discount.toFixed(2) + '</div>';
+                } else {
+                    // Show error message
+                    promoMessage.innerHTML = '<div class="promo-message error">' + data.error + '</div>';
+                    
+                    // Clear discount
+                    document.getElementById('promoCodeApplied').value = '';
+                    document.getElementById('promoDiscount').value = '0';
+                    updateOrderTotal(data.subtotal || <?php echo $cartSubtotal; ?>, 0, data.subtotal || <?php echo $cartSubtotal; ?>);
+                }
+                
+                // Re-enable button
+                this.disabled = false;
+                this.textContent = 'Apply';
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                promoMessage.innerHTML = '<div class="promo-message error">Ralat semasa mengesahkan kod promosi</div>';
+                this.disabled = false;
+                this.textContent = 'Apply';
+            });
+        });
+        
+        // Update order total display
+        function updateOrderTotal(subtotal, discount, final) {
+            const subtotalRow = document.querySelector('.order-total-row:first-child span:last-child');
+            const finalRow = document.querySelector('.order-total-row.final span:last-child');
+            
+            if (subtotalRow) {
+                subtotalRow.textContent = 'RM ' + subtotal.toFixed(2);
+            }
+            
+            // Update or create discount row
+            let discountRow = document.querySelector('.order-total-row.discount');
+            if (discount > 0) {
+                if (!discountRow) {
+                    const orderTotal = document.querySelector('.order-total');
+                    const finalRowElement = document.querySelector('.order-total-row.final');
+                    discountRow = document.createElement('div');
+                    discountRow.className = 'order-total-row discount';
+                    orderTotal.insertBefore(discountRow, finalRowElement);
+                }
+                discountRow.innerHTML = '<span>Discount:</span><span>- RM ' + discount.toFixed(2) + '</span>';
+                discountRow.style.display = 'flex';
+            } else if (discountRow) {
+                discountRow.style.display = 'none';
+            }
+            
+            if (finalRow) {
+                finalRow.textContent = 'RM ' + final.toFixed(2);
+            }
+        }
+        
+        // Allow Enter key to apply promo code
+        document.getElementById('promoCodeInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                document.getElementById('applyPromoBtn').click();
+            }
+        });
+        
         // Form validation
         document.getElementById('checkoutForm').addEventListener('submit', function(e) {
-            const name = document.getElementById('name').value.trim();
+            const fullname = document.getElementById('fullname').value.trim();
             const email = document.getElementById('email').value.trim();
             const phone = document.getElementById('phone').value.trim();
-            const address = document.getElementById('address').value.trim();
+            const address1 = document.getElementById('address1').value.trim();
+            const state = document.getElementById('state').value;
+            const district = document.getElementById('district').value.trim();
+            const postcode = document.getElementById('postcode').value.trim();
             
-            if (!name || !email || !phone || !address) {
+            if (!fullname || !email || !phone || !address1 || !state || !district || !postcode) {
                 e.preventDefault();
                 alert('Sila isi semua medan yang diperlukan.');
                 return false;
@@ -557,6 +1054,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 return false;
             }
             
+            // Postcode validation
+            if (!/^\d{5}$/.test(postcode)) {
+                e.preventDefault();
+                alert('Poskod mestilah 5 digit nombor.');
+                return false;
+            }
+            
             // Show loading state
             const submitBtn = document.querySelector('.submit-btn');
             submitBtn.disabled = true;
@@ -565,4 +1069,3 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </script>
 </body>
 </html>
-
