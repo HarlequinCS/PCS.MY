@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
     <meta name="robots" content="index, follow">
     <meta name="description" content="Japanese Drill Half-Zip Workshirt by Projek Cuti Sem. Premium heavyweight Japanese drill fabric, metal half-zip closure, relaxed workwear fit. Built for work, designed for everyday wear.">
     <title>Projek Cuti Sem (PCS) X WORKSHIRT COLLECTION</title>
-    <link rel="canonical" href="https://projectcutisem.com/">
-    
+  <link rel="canonical" href="https://projectcutisem.com/">
+  
     <!-- Resource Hints - Optimize third-party loading -->
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
     <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
@@ -359,41 +359,41 @@
           </div>
         </div>
 
-        <!-- Visitor Counter -->
+      <!-- Visitor Counter -->
         <div class="visitor-counter-section">
           <div class="visitor-counter-box">
             <span class="visitor-counter-label">Total Visitors</span>
-            <span class="visitor-count" id="visitorCount">0</span>
+        <span class="visitor-count" id="visitorCount">0</span>
           </div>
-        </div>
-
-        <!-- Comments Section -->
-        <div class="comments-section">
-          <h3 class="comments-title">Leave Your Encouragement</h3>
-          
-          <form class="comment-form" id="commentForm">
-            <div class="comment-input-wrapper">
-              <textarea 
-                class="comment-input" 
-                id="commentInput" 
-                placeholder="Share your thoughts, encouragement, or feedback..."
-                required
-                maxlength="1000"
-              ></textarea>
-            </div>
-            <button type="submit" class="comment-submit-btn" id="submitBtn">
-              Submit Comment
-            </button>
-            <div class="comment-message" id="commentMessage"></div>
-          </form>
-
-          <div class="comments-list-wrapper">
-            <div class="comments-list" id="commentsList">
-              <div class="no-comments">Loading comments...</div>
-            </div>
-          </div>
-        </div>
       </div>
+
+      <!-- Comments Section -->
+      <div class="comments-section">
+          <h3 class="comments-title">Leave Your Encouragement</h3>
+        
+        <form class="comment-form" id="commentForm">
+          <div class="comment-input-wrapper">
+            <textarea 
+              class="comment-input" 
+              id="commentInput" 
+              placeholder="Share your thoughts, encouragement, or feedback..."
+              required
+              maxlength="1000"
+            ></textarea>
+        </div>
+          <button type="submit" class="comment-submit-btn" id="submitBtn">
+            Submit Comment
+          </button>
+          <div class="comment-message" id="commentMessage"></div>
+            </form>
+
+        <div class="comments-list-wrapper">
+          <div class="comments-list" id="commentsList">
+            <div class="no-comments">Loading comments...</div>
+          </div>
+        </div>
+            </div>
+            </div>
     </section>
   </main>
 
@@ -414,7 +414,7 @@
             </svg>
             <span>Contact</span>
           </a>
-        </div>
+          </div>
         <p class="footer-text">
           <span class="footer-brand">PCS (Projek Cuti Sem)</span> <span class="footer-year">© 2025</span>
           <span class="footer-separator">•</span>
@@ -649,68 +649,68 @@
 
     // Initialize when DOM is ready
     document.addEventListener('DOMContentLoaded', function() {
-      // Handle comment submission
+    // Handle comment submission
       const commentForm = document.getElementById('commentForm');
       if (commentForm) {
         commentForm.addEventListener('submit', async (e) => {
-          e.preventDefault();
-          
-          const input = document.getElementById('commentInput');
-          const submitBtn = document.getElementById('submitBtn');
-          const messageDiv = document.getElementById('commentMessage');
+      e.preventDefault();
+      
+      const input = document.getElementById('commentInput');
+      const submitBtn = document.getElementById('submitBtn');
+      const messageDiv = document.getElementById('commentMessage');
           if (!input || !submitBtn || !messageDiv) return;
           
-          const comment = input.value.trim();
+      const comment = input.value.trim();
 
-          if (!comment) {
-            showMessage('Please enter a comment', 'error');
-            return;
-          }
+      if (!comment) {
+        showMessage('Please enter a comment', 'error');
+        return;
+      }
 
-          submitBtn.disabled = true;
-          submitBtn.textContent = 'Submitting...';
-          messageDiv.className = 'comment-message';
-          messageDiv.style.display = 'none';
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Submitting...';
+      messageDiv.className = 'comment-message';
+      messageDiv.style.display = 'none';
 
-          try {
+      try {
             const response = await fetch('api/comments.php', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json'
-              },
-              body: JSON.stringify({ comment: comment })
-            });
-
-            if (!response.ok) {
-              const errorData = await response.json().catch(() => ({ error: 'Unknown error occurred' }));
-              showMessage(errorData.error || 'Failed to submit comment', 'error');
-              return;
-            }
-
-            const data = await response.json();
-
-            if (data.success) {
-              showMessage(data.message || 'Thank you for your comment!', 'success');
-              input.value = '';
-              setTimeout(() => {
-                loadComments();
-              }, 500);
-            } else {
-              if (response.status === 429) {
-                const retryAfter = data.retry_after || 60;
-                showMessage(data.error || `Please wait ${retryAfter} seconds before posting again.`, 'error');
-              } else {
-                showMessage(data.error || 'Failed to submit comment. Please try again.', 'error');
-              }
-            }
-          } catch (error) {
-            console.error('Comment submission error:', error);
-            showMessage('Network error. Please check your connection and try again.', 'error');
-          } finally {
-            submitBtn.disabled = false;
-            submitBtn.textContent = 'Submit Comment';
-          }
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ comment: comment })
         });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({ error: 'Unknown error occurred' }));
+              showMessage(errorData.error || 'Failed to submit comment', 'error');
+          return;
+        }
+
+        const data = await response.json();
+
+        if (data.success) {
+          showMessage(data.message || 'Thank you for your comment!', 'success');
+          input.value = '';
+          setTimeout(() => {
+            loadComments();
+          }, 500);
+        } else {
+          if (response.status === 429) {
+            const retryAfter = data.retry_after || 60;
+            showMessage(data.error || `Please wait ${retryAfter} seconds before posting again.`, 'error');
+          } else {
+            showMessage(data.error || 'Failed to submit comment. Please try again.', 'error');
+          }
+        }
+      } catch (error) {
+        console.error('Comment submission error:', error);
+        showMessage('Network error. Please check your connection and try again.', 'error');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Submit Comment';
+      }
+    });
       }
 
       // Load initial data

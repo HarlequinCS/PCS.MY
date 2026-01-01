@@ -34,16 +34,17 @@ define('STAGING_CATEGORY_CODE', 'g3ii2ms2');
 $baseUrl = 'https://projectcutisem.com';
 
 // Product Configuration
+define('PRODUCT_NAME', 'Japanese Drill Half-Zip Workshirt');
 define('PRICE_PER_SHIRT', 50.00); // RM50 per baju
 
 // Debug mode: Set to false in production
-define('DEBUG_MODE', true);
+define('DEBUG_MODE', false);
 
 // Variant names for display
 $variantNames = [
-    'hitamdepan' => 'Hitam Depan',
-    'hijaufront' => 'Hijau Front',
-    'hijaudepan' => 'Merah Depan'
+    'hitamdepan' => 'Hitam',
+    'hijaufront' => 'Hijau',
+    'merahdepan' => 'Merah'
 ];
 
 // Malaysia States
@@ -642,296 +643,54 @@ if ($finalAmount < 0) {
 <html lang="ms">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Checkout - Baju Premium</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <title>Checkout - <?php echo htmlspecialchars(PRODUCT_NAME); ?> | Projek Cuti Sem</title>
+    <link rel="icon" type="image/x-icon" href="https://projectcutisem.com/favicon.ico">
+    <link rel="shortcut icon" type="image/x-icon" href="https://projectcutisem.com/favicon.ico">
+    <link rel="apple-touch-icon" href="https://projectcutisem.com/apple-touch-icon.png">
     <link rel="stylesheet" href="css/order-baju.css">
-    <style>
-        .checkout-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        
-        .checkout-grid {
-            display: grid;
-            grid-template-columns: 1fr 1.2fr;
-            gap: 30px;
-        }
-        
-        @media (max-width: 968px) {
-            .checkout-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-        
-        .checkout-section {
-            background: white;
-            border-radius: 12px;
-            padding: 30px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        }
-        
-        .checkout-section h2 {
-            margin-top: 0;
-            margin-bottom: 20px;
-            color: #1a202c;
-            font-size: 24px;
-            padding-bottom: 15px;
-            border-bottom: 2px solid #e5e7eb;
-        }
-        
-        .cart-summary-item {
-            display: flex;
-            align-items: center;
-            padding: 15px;
-            border-bottom: 1px solid #e5e7eb;
-        }
-        
-        .cart-summary-item:last-child {
-            border-bottom: none;
-        }
-        
-        .cart-summary-item-image {
-            width: 50px;
-            height: 50px;
-            object-fit: contain;
-            margin-right: 15px;
-            border-radius: 4px;
-        }
-        
-        .cart-summary-item-details {
-            flex: 1;
-        }
-        
-        .cart-summary-item-details h4 {
-            margin: 0 0 5px 0;
-            font-size: 14px;
-            color: #1a202c;
-        }
-        
-        .cart-summary-item-details p {
-            margin: 0;
-            font-size: 12px;
-            color: #6b7280;
-        }
-        
-        .cart-summary-item-price {
-            font-weight: 600;
-            color: #1a202c;
-        }
-        
-        .order-total {
-            margin-top: 20px;
-            padding-top: 20px;
-            border-top: 2px solid #e5e7eb;
-        }
-        
-        .order-total-row {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 10px;
-            font-size: 14px;
-        }
-        
-        .order-total-row.discount {
-            color: #10b981;
-        }
-        
-        .order-total-row.final {
-            font-size: 24px;
-            font-weight: 700;
-            color: #1a202c;
-            margin-top: 10px;
-            padding-top: 10px;
-            border-top: 2px solid #e5e7eb;
-        }
-        
-        .promo-section {
-            margin-top: 20px;
-            padding: 15px;
-            background: #f9fafb;
-            border-radius: 8px;
-        }
-        
-        .promo-input-group {
-            display: flex;
-            gap: 10px;
-        }
-        
-        .promo-input-group input {
-            flex: 1;
-            padding: 10px;
-            border: 2px solid #e5e7eb;
-            border-radius: 6px;
-            font-size: 14px;
-        }
-        
-        .promo-input-group button {
-            padding: 10px 20px;
-            background: #667eea;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: 600;
-        }
-        
-        .promo-input-group button:hover {
-            background: #5568d3;
-        }
-        
-        .promo-message {
-            margin-top: 10px;
-            padding: 10px;
-            border-radius: 6px;
-            font-size: 13px;
-        }
-        
-        .promo-message.success {
-            background: #d1fae5;
-            color: #065f46;
-        }
-        
-        .promo-message.error {
-            background: #fee2e2;
-            color: #991b1b;
-        }
-        
-        .form-group {
-            margin-bottom: 20px;
-        }
-        
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-            color: #333;
-        }
-        
-        .form-group.required label::after {
-            content: ' *';
-            color: #ef4444;
-        }
-        
-        .form-group input,
-        .form-group select,
-        .form-group textarea {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #e5e7eb;
-            border-radius: 8px;
-            font-size: 16px;
-            transition: border-color 0.3s;
-            font-family: inherit;
-        }
-        
-        .form-group input:focus,
-        .form-group select:focus,
-        .form-group textarea:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-        
-        .form-group textarea {
-            resize: vertical;
-            min-height: 80px;
-        }
-        
-        .form-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-        }
-        
-        @media (max-width: 768px) {
-            .form-row {
-                grid-template-columns: 1fr;
-            }
-        }
-        
-        .errors {
-            background: #fee2e2;
-            border: 1px solid #fca5a5;
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 20px;
-            color: #991b1b;
-        }
-        
-        .errors ul {
-            list-style: none;
-            padding-left: 0;
-        }
-        
-        .errors li {
-            margin-bottom: 5px;
-        }
-        
-        .submit-btn {
-            width: 100%;
-            padding: 16px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 18px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
-            margin-top: 20px;
-        }
-        
-        .submit-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
-        }
-        
-        .submit-btn:disabled {
-            background: #9ca3af;
-            cursor: not-allowed;
-            transform: none;
-        }
-        
-        .back-link {
-            display: inline-block;
-            margin-bottom: 20px;
-            color: #667eea;
-            text-decoration: none;
-            font-weight: 500;
-        }
-        
-        .back-link:hover {
-            text-decoration: underline;
-        }
-    </style>
+    <link rel="stylesheet" href="css/checkout.css">
 </head>
 <body>
-    <div class="checkout-container">
-        <a href="order-baju.php" class="back-link">← Kembali ke Order</a>
-        
-        <h1 style="text-align: center; margin-bottom: 20px; color: #1a202c;">Checkout</h1>
-        
-        <!-- Pre-Order Notice Banner -->
-        <div style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border: 2px solid #fbbf24; border-radius: 12px; padding: 20px; margin-bottom: 30px; text-align: center;">
-            <div style="display: inline-flex; align-items: center; gap: 12px; margin-bottom: 10px;">
-                <div style="font-size: 32px;">📦</div>
-                <h2 style="margin: 0; color: #92400e; font-size: 20px; font-weight: 700;">PRE-ORDER</h2>
-            </div>
-            <p style="margin: 0; color: #78350f; font-size: 15px; line-height: 1.6; max-width: 800px; margin: 0 auto;">
-                <strong>Ini adalah pre-order.</strong> Kami akan menghantar kemaskini kemajuan pesanan anda melalui email pada setiap peringkat proses. 
-                Sila pastikan alamat email anda betul dan aktif untuk menerima notifikasi.
-            </p>
+    <!-- Navigation Bar -->
+    <nav class="order-nav">
+        <div class="nav-container">
+            <a href="/" class="nav-logo-link">
+                <figure class="nav-logo">
+                    <img src="images/PCS logo.svg" alt="Projek Cuti Sem" width="40" height="40" fetchpriority="high">
+                </figure>
+                <span class="nav-brand-text">PROJEK CUTI SEM</span>
+            </a>
+            <a href="order-baju.php" class="nav-back-link">← Back to Order</a>
         </div>
-        
-        <?php if (!empty($errors)): ?>
-            <div class="errors">
-                <ul>
-                    <?php foreach ($errors as $error): ?>
-                        <li><?php echo htmlspecialchars($error); ?></li>
-                    <?php endforeach; ?>
-                </ul>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="checkout-main">
+        <div class="checkout-container">
+            <h1 class="checkout-page-title">Checkout</h1>
+            
+            <!-- Pre-Order Notice Banner -->
+            <div class="pre-order-banner">
+                <div style="display: inline-flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
+                    <div style="font-size: 2rem;">📦</div>
+                    <strong>PRE-ORDER</strong>
+                </div>
+                <p>
+                    <strong>Ini adalah pre-order.</strong> Kami akan menghantar kemaskini kemajuan pesanan anda melalui email pada setiap peringkat proses. 
+                    Sila pastikan alamat email anda betul dan aktif untuk menerima notifikasi.
+                </p>
             </div>
-        <?php endif; ?>
+            
+            <?php if (!empty($errors)): ?>
+                <div class="checkout-errors">
+                    <ul>
+                        <?php foreach ($errors as $error): ?>
+                            <li><?php echo htmlspecialchars($error); ?></li>
+                        <?php endforeach; ?>
+                    </ul>
+                </div>
+            <?php endif; ?>
         
         <form method="POST" action="" id="checkoutForm">
             <input type="hidden" name="action" value="checkout">
@@ -944,12 +703,12 @@ if ($finalAmount < 0) {
                     <h2>Order Summary</h2>
                     
                     <!-- Pre-Order Notice -->
-                    <div style="background: #fef3c7; border: 2px solid #fbbf24; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
-                        <div style="display: flex; align-items: start; gap: 10px;">
-                            <div style="font-size: 20px;">📦</div>
+                    <div class="pre-order-banner-inline">
+                        <div style="display: flex; align-items: start; gap: 0.75rem;">
+                            <div style="font-size: 1.25rem;">📦</div>
                             <div>
-                                <strong style="color: #92400e; font-size: 14px;">Pre-Order</strong>
-                                <p style="margin: 5px 0 0 0; color: #78350f; font-size: 12px; line-height: 1.5;">
+                                <strong>Pre-Order</strong>
+                                <p>
                                     Kami akan menghantar kemaskini kemajuan pesanan melalui email pada setiap peringkat.
                                 </p>
                             </div>
@@ -975,14 +734,13 @@ if ($finalAmount < 0) {
                     
                     <!-- Promotion Code Section -->
                     <div class="promo-section">
-                        <label style="margin-bottom: 10px; display: block; font-weight: 600;">Promotion Code</label>
+                        <label>Promotion Code</label>
                         <div class="promo-input-group">
                             <input type="text" 
                                    id="promoCodeInput" 
                                    placeholder="Enter code" 
-                                   value="<?php echo htmlspecialchars($promoCode); ?>"
-                                   style="text-transform: uppercase;">
-                            <button type="button" id="applyPromoBtn">Apply</button>
+                                   value="<?php echo htmlspecialchars($promoCode); ?>">
+                            <button type="button" id="applyPromoBtn"><span>Apply</span></button>
                         </div>
                         <div id="promoMessage"></div>
                     </div>
@@ -1032,7 +790,7 @@ if ($finalAmount < 0) {
                         </div>
                     </div>
                     
-                    <h3 style="margin-top: 30px; margin-bottom: 15px; font-size: 18px; color: #1a202c;">Alamat Penghantaran</h3>
+                    <h3>Alamat Penghantaran</h3>
                     
                     <div class="form-group required">
                         <label for="address1">Alamat Baris 1</label>
@@ -1082,16 +840,16 @@ if ($finalAmount < 0) {
                                maxlength="5"
                                value="<?php echo isset($_POST['postcode']) ? htmlspecialchars($_POST['postcode']) : ''; ?>" 
                                required>
-                        <small style="color: #6b7280; font-size: 12px;">5 digit nombor sahaja</small>
+                        <small>5 digit nombor sahaja</small>
                     </div>
                     
                     <!-- Pre-Order Notice -->
-                    <div style="background: #fef3c7; border: 2px solid #fbbf24; border-radius: 8px; padding: 20px; margin-top: 20px; margin-bottom: 20px;">
-                        <div style="display: flex; align-items: start; gap: 12px;">
-                            <div style="font-size: 24px;">📦</div>
+                    <div class="pre-order-banner-inline" style="margin-top: 1.5rem;">
+                        <div style="display: flex; align-items: start; gap: 0.75rem;">
+                            <div style="font-size: 1.5rem;">📦</div>
                             <div>
-                                <h4 style="margin: 0 0 8px 0; color: #92400e; font-size: 16px; font-weight: 600;">Pre-Order Notice</h4>
-                                <p style="margin: 0; color: #78350f; font-size: 14px; line-height: 1.6;">
+                                <strong>Pre-Order Notice</strong>
+                                <p>
                                     Ini adalah <strong>pre-order</strong>. Kami akan menghantar kemaskini kemajuan pesanan anda melalui email pada setiap peringkat proses. 
                                     Sila pastikan alamat email anda betul dan aktif.
                                 </p>
@@ -1099,11 +857,12 @@ if ($finalAmount < 0) {
                         </div>
                     </div>
                     
-                    <button type="submit" class="submit-btn">Proceed to Payment</button>
+                    <button type="submit" class="submit-btn"><span>Proceed to Payment</span></button>
                 </div>
             </div>
         </form>
-    </div>
+        </div>
+    </main>
     
     <script>
         // ============================================

@@ -73,19 +73,14 @@ switch ($statusId) {
 // ============================================
 ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ms">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Payment Status - Order Confirmation</title>
-    
-    <!-- Meyer Reset CSS -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/meyer-reset/2.0/reset.min.css">
-    
-    <!-- Google Fonts: Roboto -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <title>Payment Status - <?php echo htmlspecialchars($statusMessage); ?> | Projek Cuti Sem</title>
+    <link rel="icon" type="image/x-icon" href="https://projectcutisem.com/favicon.ico">
+    <link rel="shortcut icon" type="image/x-icon" href="https://projectcutisem.com/favicon.ico">
+    <link rel="apple-touch-icon" href="https://projectcutisem.com/apple-touch-icon.png">
     
     <!-- Custom CSS: Order Baju Styles -->
     <link rel="stylesheet" href="css/order-baju.css">
@@ -93,252 +88,27 @@ switch ($statusId) {
     <!-- Custom CSS: Order Button Animation -->
     <link rel="stylesheet" href="css/orderbutton.css">
     
-    <!-- Additional Styles for Return Page -->
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-            position: relative;
-            overflow-x: hidden;
-        }
-        
-        /* Animated Background Elements */
-        body::before,
-        body::after {
-            content: '';
-            position: absolute;
-            width: 300px;
-            height: 300px;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.1);
-            animation: float 20s infinite ease-in-out;
-        }
-        
-        body::before {
-            top: -150px;
-            left: -150px;
-            animation-delay: 0s;
-        }
-        
-        body::after {
-            bottom: -150px;
-            right: -150px;
-            animation-delay: 10s;
-        }
-        
-        @keyframes float {
-            0%, 100% {
-                transform: translate(0, 0) scale(1);
-            }
-            50% {
-                transform: translate(50px, 50px) scale(1.1);
-            }
-        }
-        
-        /* Success Card Container */
-        .success-card {
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            padding: 50px 40px;
-            max-width: 600px;
-            width: 100%;
-            text-align: center;
-            position: relative;
-            z-index: 1;
-            animation: slideUp 0.6s ease-out;
-        }
-        
-        @keyframes slideUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        
-        /* Status Icon */
-        .status-icon {
-            font-size: 80px;
-            margin-bottom: 20px;
-            display: block;
-            animation: scaleIn 0.5s ease-out 0.2s both;
-        }
-        
-        @keyframes scaleIn {
-            from {
-                transform: scale(0);
-            }
-            to {
-                transform: scale(1);
-            }
-        }
-        
-        /* Status Message */
-        .status-message {
-            font-size: 32px;
-            font-weight: 700;
-            margin-bottom: 15px;
-            color: #1a202c;
-            animation: fadeIn 0.6s ease-out 0.3s both;
-        }
-        
-        .status-message.success {
-            color: #10b981;
-        }
-        
-        .status-message.pending {
-            color: #f59e0b;
-        }
-        
-        .status-message.failed {
-            color: #ef4444;
-        }
-        
-        .status-message.unknown {
-            color: #6b7280;
-        }
-        
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-            }
-            to {
-                opacity: 1;
-            }
-        }
-        
-        /* Status Description */
-        .status-description {
-            font-size: 16px;
-            color: #6b7280;
-            line-height: 1.6;
-            margin-bottom: 40px;
-            animation: fadeIn 0.6s ease-out 0.4s both;
-        }
-        
-        /* Order Details Section */
-        .order-details {
-            background: #f9fafb;
-            border-radius: 12px;
-            padding: 25px;
-            margin-bottom: 40px;
-            text-align: left;
-            animation: fadeIn 0.6s ease-out 0.5s both;
-        }
-        
-        .order-details h3 {
-            font-size: 18px;
-            font-weight: 600;
-            color: #1a202c;
-            margin-bottom: 15px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #e5e7eb;
-        }
-        
-        .detail-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 10px 0;
-            border-bottom: 1px solid #e5e7eb;
-        }
-        
-        .detail-row:last-child {
-            border-bottom: none;
-        }
-        
-        .detail-label {
-            font-weight: 500;
-            color: #6b7280;
-            font-size: 14px;
-        }
-        
-        .detail-value {
-            font-weight: 600;
-            color: #1a202c;
-            font-size: 14px;
-        }
-        
-        /* Button Container */
-        .button-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin-top: 30px;
-            animation: fadeIn 0.6s ease-out 0.6s both;
-        }
-        
-        /* Info Message */
-        .info-message {
-            margin-top: 30px;
-            padding-top: 25px;
-            border-top: 1px solid #e5e7eb;
-            font-size: 14px;
-            color: #6b7280;
-            line-height: 1.6;
-            animation: fadeIn 0.6s ease-out 0.7s both;
-        }
-        
-        .info-message strong {
-            color: #1a202c;
-        }
-        
-        /* Responsive Design */
-        @media (max-width: 768px) {
-            .success-card {
-                padding: 40px 30px;
-                margin: 10px;
-            }
-            
-            .status-icon {
-                font-size: 60px;
-            }
-            
-            .status-message {
-                font-size: 24px;
-            }
-            
-            .status-description {
-                font-size: 14px;
-            }
-            
-            .order-details {
-                padding: 20px;
-            }
-            
-            .detail-row {
-                flex-direction: column;
-                gap: 5px;
-            }
-        }
-        
-        @media (max-width: 480px) {
-            .success-card {
-                padding: 30px 20px;
-            }
-            
-            .status-message {
-                font-size: 20px;
-            }
-        }
-    </style>
+    <!-- Return Page Specific Styles -->
+    <link rel="stylesheet" href="css/return.css">
+    
 </head>
 <body>
-    <div class="success-card">
+    <!-- Navigation Bar -->
+    <nav class="order-nav">
+        <div class="nav-container">
+            <a href="/" class="nav-logo-link">
+                <figure class="nav-logo">
+                    <img src="images/PCS logo.svg" alt="Projek Cuti Sem" width="40" height="40" fetchpriority="high">
+                </figure>
+                <span class="nav-brand-text">PROJEK CUTI SEM</span>
+            </a>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="return-main">
+        <div class="return-container">
+            <div class="status-card">
         <!-- Status Icon -->
         <div class="status-icon"><?php echo $statusIcon; ?></div>
         
@@ -447,8 +217,9 @@ switch ($statusId) {
                 <strong>Contact Support</strong><br>
                 If you have any questions about your order, please contact our support team with your order details.
             <?php endif; ?>
+            </div>
         </div>
-    </div>
+    </main>
     
     <!-- jQuery (must be loaded before orderbutton.js) -->
     <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>

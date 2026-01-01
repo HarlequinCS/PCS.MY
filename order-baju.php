@@ -74,22 +74,25 @@ function createOrdersTableIfNotExists() {
 createOrdersTableIfNotExists();
 
 // Product Configuration
-define('PRODUCT_NAME', 'Baju Premium');
+define('PRODUCT_NAME', 'Japanese Drill Half-Zip Workshirt');
 define('PRICE_PER_SHIRT', 50.00); // RM50 per baju
 
 // Variant Configuration
 $variants = [
     'hitamdepan' => [
-        'name' => 'Hitam Depan',
-        'image' => 'images/hitamdepan.svg'
+        'name' => 'Hitam',
+        'image' => 'images/hitamdepan.svg',
+        'color' => '#1a1a1a'
     ],
     'hijaufront' => [
-        'name' => 'Hijau Front',
-        'image' => 'images/hijaufront.svg'
+        'name' => 'Hijau',
+        'image' => 'images/hijaufront.svg',
+        'color' => '#2d5016'
     ],
-    'hijaudepan' => [
-        'name' => 'Merah Depan',
-        'image' => 'images/merahdepan.svg'
+    'merahdepan' => [
+        'name' => 'Merah',
+        'image' => 'images/merahdepan.svg',
+        'color' => '#8b0000'
     ]
 ];
 
@@ -174,448 +177,456 @@ foreach ($_SESSION['cart'] as $item) {
 <html lang="ms">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Order Baju Premium</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <title>Order - <?php echo htmlspecialchars(PRODUCT_NAME); ?> | Projek Cuti Sem</title>
+    <link rel="icon" type="image/x-icon" href="https://projectcutisem.com/favicon.ico">
+    <link rel="shortcut icon" type="image/x-icon" href="https://projectcutisem.com/favicon.ico">
+    <link rel="apple-touch-icon" href="https://projectcutisem.com/apple-touch-icon.png">
     <link rel="stylesheet" href="css/order-baju.css">
-    <style>
-        /* Cart Button Styles */
-        .cart-button {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            width: 60px;
-            height: 60px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 20px;
-            font-weight: bold;
-            cursor: pointer;
-            box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4);
-            z-index: 1000;
-            transition: transform 0.3s, box-shadow 0.3s;
-        }
-        
-        .cart-button:hover {
-            transform: scale(1.1);
-            box-shadow: 0 6px 25px rgba(102, 126, 234, 0.6);
-        }
-        
-        .cart-button .badge {
-            position: absolute;
-            top: -5px;
-            right: -5px;
-            background: #ef4444;
-            color: white;
-            border-radius: 50%;
-            width: 24px;
-            height: 24px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 12px;
-            font-weight: bold;
-        }
-        
-        /* Cart Popup Styles */
-        .cart-popup {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            z-index: 2000;
-            justify-content: center;
-            align-items: center;
-        }
-        
-        .cart-popup.active {
-            display: flex;
-        }
-        
-        .cart-popup-content {
-            background: white;
-            border-radius: 12px;
-            width: 90%;
-            max-width: 600px;
-            max-height: 80vh;
-            overflow-y: auto;
-            padding: 30px;
-            position: relative;
-            animation: slideUp 0.3s ease-out;
-        }
-        
-        @keyframes slideUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        
-        .cart-popup-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            padding-bottom: 15px;
-            border-bottom: 2px solid #e5e7eb;
-        }
-        
-        .cart-popup-header h2 {
-            margin: 0;
-            color: #1a202c;
-        }
-        
-        .close-cart {
-            background: none;
-            border: none;
-            font-size: 24px;
-            cursor: pointer;
-            color: #6b7280;
-            padding: 0;
-            width: 30px;
-            height: 30px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .close-cart:hover {
-            color: #1a202c;
-        }
-        
-        .cart-items {
-            margin-bottom: 20px;
-        }
-        
-        .cart-item {
-            display: flex;
-            align-items: center;
-            padding: 15px;
-            border: 1px solid #e5e7eb;
-            border-radius: 8px;
-            margin-bottom: 10px;
-        }
-        
-        .cart-item-image {
-            width: 60px;
-            height: 60px;
-            object-fit: contain;
-            margin-right: 15px;
-            border-radius: 4px;
-        }
-        
-        .cart-item-details {
-            flex: 1;
-        }
-        
-        .cart-item-details h4 {
-            margin: 0 0 5px 0;
-            font-size: 16px;
-            color: #1a202c;
-        }
-        
-        .cart-item-details p {
-            margin: 0;
-            font-size: 14px;
-            color: #6b7280;
-        }
-        
-        .cart-item-price {
-            font-weight: 600;
-            color: #1a202c;
-            margin-right: 15px;
-        }
-        
-        .remove-item {
-            background: #ef4444;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            padding: 5px 10px;
-            cursor: pointer;
-            font-size: 12px;
-        }
-        
-        .remove-item:hover {
-            background: #dc2626;
-        }
-        
-        .cart-total {
-            padding: 20px;
-            background: #f9fafb;
-            border-radius: 8px;
-            margin-bottom: 20px;
-        }
-        
-        .cart-total-row {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 10px;
-        }
-        
-        .cart-total-row:last-child {
-            margin-bottom: 0;
-            font-size: 20px;
-            font-weight: 700;
-            color: #1a202c;
-            padding-top: 10px;
-            border-top: 2px solid #e5e7eb;
-        }
-        
-        .checkout-btn {
-            width: 100%;
-            padding: 16px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 18px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-        
-        .checkout-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
-        }
-        
-        .checkout-btn:disabled {
-            background: #9ca3af;
-            cursor: not-allowed;
-            transform: none;
-        }
-        
-        .empty-cart {
-            text-align: center;
-            padding: 40px 20px;
-            color: #6b7280;
-        }
-        
-        .message {
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-        }
-        
-        .message.success {
-            background: #d1fae5;
-            color: #065f46;
-            border: 1px solid #10b981;
-        }
-        
-        .message.error {
-            background: #fee2e2;
-            color: #991b1b;
-            border: 1px solid #ef4444;
-        }
-    </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1><?php echo htmlspecialchars(PRODUCT_NAME); ?></h1>
-            <div class="price">RM <?php echo number_format(PRICE_PER_SHIRT, 2); ?> sehelai</div>
+    <!-- Navigation Bar -->
+    <nav class="order-nav">
+        <div class="nav-container">
+            <a href="/" class="nav-logo-link">
+                <figure class="nav-logo">
+                    <img src="images/PCS logo.svg" alt="Projek Cuti Sem" width="40" height="40" fetchpriority="high">
+                </figure>
+                <span class="nav-brand-text">PROJEK CUTI SEM</span>
+            </a>
+            <a href="/" class="nav-back-link">← Back to Home</a>
         </div>
-        
-        <div class="form-container">
-            <?php if ($message): ?>
-                <div class="message <?php echo $messageType; ?>">
-                    <?php echo htmlspecialchars($message); ?>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="order-main">
+        <div class="order-container">
+            <!-- Two Column Layout -->
+            <div class="order-layout">
+                <!-- Left Column: Product Visual -->
+                <div class="product-visual-column">
+                    <div class="product-preview">
+                        <div class="product-image-wrapper" id="productImageWrapper">
+                            <img src="" alt="Product Preview" id="mainProductImage" class="main-product-image">
+                            <div class="image-placeholder" id="imagePlaceholder">
+                                <span>Pilih variant untuk melihat preview</span>
+                            </div>
+                        </div>
+                        <div class="product-zoom-hint" id="zoomHint" style="display: none;">
+                            <span>Click untuk zoom</span>
+                        </div>
+                    </div>
                 </div>
-            <?php endif; ?>
-            
-            <form method="POST" action="" id="orderForm">
-                <input type="hidden" name="action" value="add_to_cart">
-                
-                <!-- Variant Selection -->
-                <div class="form-group required">
-                    <label>Pilih Variant</label>
-                    <div class="variant-options">
-                        <?php foreach ($variants as $key => $variant): ?>
-                            <label class="variant-option">
-                                <input type="radio" name="variant" value="<?php echo htmlspecialchars($key); ?>" 
-                                       data-image="<?php echo htmlspecialchars($variant['image']); ?>"
-                                       required>
-                                <div class="variant-content">
-                                    <div class="variant-image-container">
-                                        <img src="<?php echo htmlspecialchars($variant['image']); ?>" 
-                                             alt="<?php echo htmlspecialchars($variant['name']); ?>"
-                                             class="variant-image">
-                                    </div>
-                                    <div class="variant-name"><?php echo htmlspecialchars($variant['name']); ?></div>
+
+                <!-- Right Column: Order Options -->
+                <div class="order-options-column">
+                    <div class="order-content">
+                        <!-- Product Title & Price -->
+                        <div class="product-header">
+                            <h1 class="product-title"><?php echo htmlspecialchars(PRODUCT_NAME); ?></h1>
+                            <div class="product-price">RM <?php echo number_format(PRICE_PER_SHIRT, 2); ?></div>
+                        </div>
+
+                        <!-- Message Display -->
+                        <?php if ($message): ?>
+                            <div class="order-message order-message--<?php echo $messageType; ?>" id="orderMessage">
+                                <?php echo htmlspecialchars($message); ?>
+                            </div>
+                        <?php endif; ?>
+
+                        <!-- Order Form -->
+                        <form method="POST" action="" id="orderForm" class="order-form">
+                            <input type="hidden" name="action" value="add_to_cart">
+                            
+                            <!-- Variant Selection -->
+                            <div class="form-section">
+                                <label class="form-label">
+                                    Pilih Warna
+                                    <span class="required-asterisk">*</span>
+                                </label>
+                                <div class="variant-selector" id="variantSelector">
+                                    <?php foreach ($variants as $key => $variant): ?>
+                                        <label class="variant-card" data-variant="<?php echo htmlspecialchars($key); ?>">
+                                            <input type="radio" name="variant" value="<?php echo htmlspecialchars($key); ?>" 
+                                                   data-image="<?php echo htmlspecialchars($variant['image']); ?>"
+                                                   required>
+                                            <div class="variant-card-content">
+                                                <div class="variant-thumbnail">
+                                                    <img src="<?php echo htmlspecialchars($variant['image']); ?>" 
+                                                         alt="<?php echo htmlspecialchars($variant['name']); ?>"
+                                                         loading="lazy">
+                                                </div>
+                                                <div class="variant-label">
+                                                    <?php echo htmlspecialchars($variant['name']); ?>
+                                                </div>
+                                                <div class="variant-check">
+                                                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                                                        <path d="M16.667 5L7.5 14.167 3.333 10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                                    </svg>
+                                                </div>
+                                            </div>
+                                        </label>
+                                    <?php endforeach; ?>
                                 </div>
-                            </label>
-                        <?php endforeach; ?>
+                            </div>
+
+                            <!-- Size Selection -->
+                            <div class="form-section">
+                                <div class="form-label-row">
+                                    <label class="form-label">
+                                        Saiz
+                                        <span class="required-asterisk">*</span>
+                                    </label>
+                                    <button type="button" class="size-chart-link" id="sizeChartBtn">Size Chart</button>
+                                </div>
+                                <div class="size-selector" id="sizeSelector">
+                                    <?php foreach ($sizes as $size): ?>
+                                        <label class="size-option">
+                                            <input type="radio" name="size" value="<?php echo htmlspecialchars($size); ?>" required>
+                                            <span class="size-label"><?php echo htmlspecialchars($size); ?></span>
+                                        </label>
+                                    <?php endforeach; ?>
+                                </div>
+                            </div>
+
+                            <!-- Quantity Selection -->
+                            <div class="form-section">
+                                <label class="form-label">
+                                    Kuantiti
+                                    <span class="required-asterisk">*</span>
+                                </label>
+                                <div class="quantity-selector">
+                                    <button type="button" class="quantity-btn quantity-btn--decrease" id="quantityDecrease">−</button>
+                                    <input type="number" name="quantity" id="quantityInput" value="1" min="1" max="10" required readonly>
+                                    <button type="button" class="quantity-btn quantity-btn--increase" id="quantityIncrease">+</button>
+                                </div>
+                            </div>
+
+                            <!-- Total Price Display -->
+                            <div class="price-summary">
+                                <div class="price-row">
+                                    <span>Harga Seunit:</span>
+                                    <span>RM <?php echo number_format(PRICE_PER_SHIRT, 2); ?></span>
+                                </div>
+                                <div class="price-row price-row--total">
+                                    <span>Jumlah:</span>
+                                    <span class="total-price">RM <span id="totalPriceDisplay"><?php echo number_format(PRICE_PER_SHIRT, 2); ?></span></span>
+                                </div>
+                            </div>
+
+                            <!-- Add to Cart Button -->
+                            <button type="submit" class="add-to-cart-btn" id="addToCartBtn">
+                                <span class="btn-text">Add to Cart</span>
+                                <span class="btn-loader" style="display: none;">
+                                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                                        <circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="2" stroke-dasharray="31.416" stroke-dashoffset="31.416">
+                                            <animate attributeName="stroke-dasharray" dur="2s" values="0 31.416;15.708 15.708;0 31.416;0 31.416" repeatCount="indefinite"/>
+                                            <animate attributeName="stroke-dashoffset" dur="2s" values="0;-15.708;-31.416;-31.416" repeatCount="indefinite"/>
+                                        </circle>
+                                    </svg>
+                                </span>
+                            </button>
+                        </form>
+
+                        <!-- Product Details -->
+                        <div class="product-details">
+                            <div class="detail-item">
+                                <strong>Fabric:</strong> Heavyweight Japanese Drill
+                            </div>
+                            <div class="detail-item">
+                                <strong>Fit:</strong> Relaxed Workwear Fit
+                            </div>
+                            <div class="detail-item">
+                                <strong>Made in:</strong> Malaysia
+                            </div>
+                        </div>
                     </div>
                 </div>
-                
-                <!-- Preview Section -->
-                <div class="preview-section">
-                    <div class="preview-image" id="previewImage">
-                        <img src="" alt="Preview" id="previewImg">
-                    </div>
-                    <div id="previewText">Pilih variant untuk melihat preview</div>
-                </div>
-                
-                <!-- Size Selection -->
-                <div class="form-group required">
-                    <label for="size">Saiz</label>
-                    <select name="size" id="size" required>
-                        <option value="">-- Pilih Saiz --</option>
-                        <?php foreach ($sizes as $s): ?>
-                            <option value="<?php echo htmlspecialchars($s); ?>">
-                                <?php echo htmlspecialchars($s); ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-                
-                <!-- Quantity -->
-                <div class="form-group required">
-                    <label for="quantity">Kuantiti</label>
-                    <input type="number" name="quantity" id="quantity" 
-                           min="1" value="1" required>
-                </div>
-                
-                <!-- Total Amount Display -->
-                <div class="form-group">
-                    <div style="background: #f0f4ff; padding: 15px; border-radius: 8px; text-align: center;">
-                        <strong style="font-size: 18px;">Harga: RM <span id="totalAmount"><?php echo number_format(PRICE_PER_SHIRT, 2); ?></span></strong>
-                    </div>
-                </div>
-                
-                <!-- Add to Cart Button -->
-                <button type="submit" class="submit-btn">Tambah ke Cart</button>
-            </form>
+            </div>
+        </div>
+    </main>
+
+    <!-- Size Chart Modal -->
+    <div class="size-chart-modal" id="sizeChartModal">
+        <div class="size-chart-overlay"></div>
+        <div class="size-chart-content">
+            <div class="size-chart-header">
+                <h2>Size Chart</h2>
+                <button class="size-chart-close" id="sizeChartClose">&times;</button>
+            </div>
+            <div class="size-chart-table-wrapper">
+                <table class="size-chart-table">
+                    <thead>
+                        <tr>
+                            <th>Size</th>
+                            <th>Chest (cm)</th>
+                            <th>Length (cm)</th>
+                            <th>Shoulder (cm)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>S</strong></td>
+                            <td>98-102</td>
+                            <td>68</td>
+                            <td>45</td>
+                        </tr>
+                        <tr>
+                            <td><strong>M</strong></td>
+                            <td>106-110</td>
+                            <td>70</td>
+                            <td>47</td>
+                        </tr>
+                        <tr>
+                            <td><strong>L</strong></td>
+                            <td>114-118</td>
+                            <td>72</td>
+                            <td>49</td>
+                        </tr>
+                        <tr>
+                            <td><strong>XL</strong></td>
+                            <td>122-126</td>
+                            <td>74</td>
+                            <td>51</td>
+                        </tr>
+                        <tr>
+                            <td><strong>XXL</strong></td>
+                            <td>130-134</td>
+                            <td>76</td>
+                            <td>53</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="size-chart-note">
+                <p><strong>Note:</strong> Measurements are in centimeters. For best fit, measure your chest at the fullest point and compare with the chart above.</p>
+            </div>
         </div>
     </div>
-    
+
+    <!-- Image Zoom Modal -->
+    <div class="image-zoom-modal" id="imageZoomModal">
+        <div class="image-zoom-overlay"></div>
+        <div class="image-zoom-content">
+            <button class="image-zoom-close" id="imageZoomClose">&times;</button>
+            <img src="" alt="Zoomed Product Image" id="zoomedImage" class="zoomed-image">
+        </div>
+    </div>
+
     <!-- Floating Cart Button -->
-    <div class="cart-button" id="cartButton">
-        🛒
+    <div class="cart-fab" id="cartFab">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M9 2L7 6M17 2l2 4M3 10h18l-2 8H5l-2-8zM10 18a1 1 0 11-2 0 1 1 0 012 0zM20 18a1 1 0 11-2 0 1 1 0 012 0z"/>
+        </svg>
         <?php if ($cartCount > 0): ?>
-            <span class="badge" id="cartBadge"><?php echo $cartCount; ?></span>
+            <span class="cart-fab-badge" id="cartFabBadge"><?php echo $cartCount; ?></span>
         <?php endif; ?>
     </div>
-    
+
     <!-- Cart Popup -->
     <div class="cart-popup" id="cartPopup">
+        <div class="cart-popup-overlay"></div>
         <div class="cart-popup-content">
             <div class="cart-popup-header">
                 <h2>Shopping Cart</h2>
-                <button class="close-cart" id="closeCart">&times;</button>
+                <button class="cart-popup-close" id="cartPopupClose">&times;</button>
             </div>
             
             <?php if (empty($_SESSION['cart'])): ?>
-                <div class="empty-cart">
+                <div class="cart-empty">
+                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.3">
+                        <path d="M9 2L7 6M17 2l2 4M3 10h18l-2 8H5l-2-8zM10 18a1 1 0 11-2 0 1 1 0 012 0zM20 18a1 1 0 11-2 0 1 1 0 012 0z"/>
+                    </svg>
                     <p>Cart anda kosong</p>
                 </div>
             <?php else: ?>
-                <div class="cart-items" id="cartItems">
+                <div class="cart-items-list" id="cartItemsList">
                     <?php foreach ($_SESSION['cart'] as $item): ?>
-                        <div class="cart-item" data-item-id="<?php echo htmlspecialchars($item['id']); ?>">
-                            <img src="<?php echo htmlspecialchars($item['variant_image']); ?>" 
-                                 alt="<?php echo htmlspecialchars($item['variant_name']); ?>"
-                                 class="cart-item-image">
-                            <div class="cart-item-details">
-                                <h4><?php echo htmlspecialchars($item['variant_name']); ?></h4>
-                                <p>Saiz: <?php echo htmlspecialchars($item['size']); ?> | Kuantiti: <?php echo $item['quantity']; ?></p>
+                        <div class="cart-item-card" data-item-id="<?php echo htmlspecialchars($item['id']); ?>">
+                            <div class="cart-item-image-wrapper">
+                                <img src="<?php echo htmlspecialchars($item['variant_image']); ?>" 
+                                     alt="<?php echo htmlspecialchars($item['variant_name']); ?>"
+                                     class="cart-item-image">
                             </div>
-                            <div class="cart-item-price">
-                                RM <?php echo number_format($item['subtotal'], 2); ?>
+                            <div class="cart-item-info">
+                                <h4 class="cart-item-title"><?php echo htmlspecialchars($item['variant_name']); ?></h4>
+                                <p class="cart-item-meta">Saiz: <?php echo htmlspecialchars($item['size']); ?> • Qty: <?php echo $item['quantity']; ?></p>
+                                <div class="cart-item-price">RM <?php echo number_format($item['subtotal'], 2); ?></div>
                             </div>
-                            <button class="remove-item" onclick="removeFromCart('<?php echo htmlspecialchars($item['id']); ?>')">Remove</button>
+                            <button class="cart-item-remove" onclick="removeFromCart('<?php echo htmlspecialchars($item['id']); ?>')" aria-label="Remove item">
+                                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                                    <path d="M15 5L5 15M5 5l10 10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                                </svg>
+                            </button>
                         </div>
                     <?php endforeach; ?>
                 </div>
                 
-                <div class="cart-total">
-                    <div class="cart-total-row">
+                <div class="cart-summary">
+                    <div class="cart-summary-row">
                         <span>Jumlah Item:</span>
                         <span><?php echo $cartCount; ?> item(s)</span>
                     </div>
-                    <div class="cart-total-row">
+                    <div class="cart-summary-row cart-summary-total">
                         <span>Jumlah Keseluruhan:</span>
-                        <span>RM <?php echo number_format($cartTotal, 2); ?></span>
+                        <span class="cart-total-amount">RM <?php echo number_format($cartTotal, 2); ?></span>
                     </div>
                 </div>
                 
-                <a href="checkout.php" class="checkout-btn">Go to Checkout</a>
+                <a href="checkout.php" class="cart-checkout-btn">Go to Checkout</a>
             <?php endif; ?>
         </div>
     </div>
-    
+
     <script>
-        // ============================================
-        // JavaScript: Variant Image Preview
-        // ============================================
-        document.addEventListener('DOMContentLoaded', function() {
-            const variantRadios = document.querySelectorAll('input[name="variant"]');
-            const previewImage = document.getElementById('previewImage');
-            const previewImg = document.getElementById('previewImg');
-            const previewText = document.getElementById('previewText');
-            const quantityInput = document.getElementById('quantity');
-            const totalAmountSpan = document.getElementById('totalAmount');
-            const pricePerShirt = <?php echo PRICE_PER_SHIRT; ?>;
-            
-            // Handle variant selection
-            variantRadios.forEach(radio => {
-                radio.addEventListener('change', function() {
-                    if (this.checked) {
-                        const imageSrc = this.getAttribute('data-image');
-                        previewImg.src = imageSrc;
-                        previewImage.classList.add('active');
-                        previewText.textContent = 'Preview: ' + this.closest('.variant-option').querySelector('.variant-name').textContent;
-                    }
-                });
-            });
-            
-            // Calculate total amount
-            function updateTotal() {
-                const quantity = parseInt(quantityInput.value) || 1;
-                const total = pricePerShirt * quantity;
-                totalAmountSpan.textContent = total.toFixed(2);
+        // Constants
+        const PRICE_PER_SHIRT = <?php echo PRICE_PER_SHIRT; ?>;
+        
+        // DOM Elements
+        const orderForm = document.getElementById('orderForm');
+        const quantityInput = document.getElementById('quantityInput');
+        const quantityDecrease = document.getElementById('quantityDecrease');
+        const quantityIncrease = document.getElementById('quantityIncrease');
+        const totalPriceDisplay = document.getElementById('totalPriceDisplay');
+        const variantRadios = document.querySelectorAll('input[name="variant"]');
+        const mainProductImage = document.getElementById('mainProductImage');
+        const imagePlaceholder = document.getElementById('imagePlaceholder');
+        const productImageWrapper = document.getElementById('productImageWrapper');
+        const addToCartBtn = document.getElementById('addToCartBtn');
+        const btnText = addToCartBtn.querySelector('.btn-text');
+        const btnLoader = addToCartBtn.querySelector('.btn-loader');
+        
+        // Cart Elements
+        const cartFab = document.getElementById('cartFab');
+        const cartPopup = document.getElementById('cartPopup');
+        const cartPopupClose = document.getElementById('cartPopupClose');
+        const cartFabBadge = document.getElementById('cartFabBadge');
+        
+        // Size Chart Modal
+        const sizeChartBtn = document.getElementById('sizeChartBtn');
+        const sizeChartModal = document.getElementById('sizeChartModal');
+        const sizeChartClose = document.getElementById('sizeChartClose');
+        
+        // Image Zoom Modal
+        const imageZoomModal = document.getElementById('imageZoomModal');
+        const imageZoomClose = document.getElementById('imageZoomClose');
+        const zoomedImage = document.getElementById('zoomedImage');
+        const zoomHint = document.getElementById('zoomHint');
+
+        // Update Total Price
+        function updateTotalPrice() {
+            const quantity = parseInt(quantityInput.value) || 1;
+            const total = PRICE_PER_SHIRT * quantity;
+            totalPriceDisplay.textContent = total.toFixed(2);
+        }
+
+        // Quantity Controls
+        quantityDecrease.addEventListener('click', () => {
+            const current = parseInt(quantityInput.value) || 1;
+            if (current > 1) {
+                quantityInput.value = current - 1;
+                updateTotalPrice();
             }
-            
-            quantityInput.addEventListener('input', updateTotal);
-            updateTotal();
-            
-            // ============================================
-            // Cart Popup Functionality
-            // ============================================
-            const cartButton = document.getElementById('cartButton');
-            const cartPopup = document.getElementById('cartPopup');
-            const closeCart = document.getElementById('closeCart');
-            
-            cartButton.addEventListener('click', function() {
-                cartPopup.classList.add('active');
-            });
-            
-            closeCart.addEventListener('click', function() {
-                cartPopup.classList.remove('active');
-            });
-            
-            cartPopup.addEventListener('click', function(e) {
-                if (e.target === cartPopup) {
-                    cartPopup.classList.remove('active');
+        });
+
+        quantityIncrease.addEventListener('click', () => {
+            const current = parseInt(quantityInput.value) || 1;
+            if (current < 10) {
+                quantityInput.value = current + 1;
+                updateTotalPrice();
+            }
+        });
+
+        // Variant Selection
+        variantRadios.forEach(radio => {
+            radio.addEventListener('change', function() {
+                if (this.checked) {
+                    const imageSrc = this.getAttribute('data-image');
+                    
+                    // Update main image
+                    mainProductImage.src = imageSrc;
+                    imagePlaceholder.style.display = 'none';
+                    mainProductImage.style.display = 'block';
+                    zoomHint.style.display = 'block';
+                    
+                    // Update variant card active state
+                    document.querySelectorAll('.variant-card').forEach(card => {
+                        card.classList.remove('variant-card--active');
+                    });
+                    this.closest('.variant-card').classList.add('variant-card--active');
                 }
             });
         });
-        
-        // ============================================
-        // Remove Item from Cart (AJAX)
-        // ============================================
+
+        // Image Zoom
+        productImageWrapper.addEventListener('click', function() {
+            if (mainProductImage.src) {
+                zoomedImage.src = mainProductImage.src;
+                imageZoomModal.classList.add('image-zoom-modal--active');
+                document.body.style.overflow = 'hidden';
+            }
+        });
+
+        imageZoomClose.addEventListener('click', () => {
+            imageZoomModal.classList.remove('image-zoom-modal--active');
+            document.body.style.overflow = '';
+        });
+
+        imageZoomModal.querySelector('.image-zoom-overlay').addEventListener('click', () => {
+            imageZoomModal.classList.remove('image-zoom-modal--active');
+            document.body.style.overflow = '';
+        });
+
+        // Size Chart Modal
+        sizeChartBtn.addEventListener('click', () => {
+            sizeChartModal.classList.add('size-chart-modal--active');
+            document.body.style.overflow = 'hidden';
+        });
+
+        sizeChartClose.addEventListener('click', () => {
+            sizeChartModal.classList.remove('size-chart-modal--active');
+            document.body.style.overflow = '';
+        });
+
+        sizeChartModal.querySelector('.size-chart-overlay').addEventListener('click', () => {
+            sizeChartModal.classList.remove('size-chart-modal--active');
+            document.body.style.overflow = '';
+        });
+
+        // Cart Popup
+        cartFab.addEventListener('click', () => {
+            cartPopup.classList.add('cart-popup--active');
+            document.body.style.overflow = 'hidden';
+        });
+
+        cartPopupClose.addEventListener('click', () => {
+            cartPopup.classList.remove('cart-popup--active');
+            document.body.style.overflow = '';
+        });
+
+        cartPopup.querySelector('.cart-popup-overlay').addEventListener('click', () => {
+            cartPopup.classList.remove('cart-popup--active');
+            document.body.style.overflow = '';
+        });
+
+        // Form Submission with Loading State
+        orderForm.addEventListener('submit', function(e) {
+            // Basic validation
+            const variantSelected = document.querySelector('input[name="variant"]:checked');
+            const sizeSelected = document.querySelector('input[name="size"]:checked');
+            
+            if (!variantSelected || !sizeSelected) {
+                e.preventDefault();
+                return;
+            }
+
+            // Show loading state
+            addToCartBtn.disabled = true;
+            btnText.style.display = 'none';
+            btnLoader.style.display = 'inline-block';
+        });
+
+        // Remove from Cart (AJAX)
         function removeFromCart(itemId) {
             if (!confirm('Adakah anda pasti mahu membuang item ini?')) {
                 return;
@@ -635,26 +646,27 @@ foreach ($_SESSION['cart'] as $item) {
                     // Remove item from DOM
                     const itemElement = document.querySelector(`[data-item-id="${itemId}"]`);
                     if (itemElement) {
-                        itemElement.remove();
-                    }
-                    
-                    // Update cart badge
-                    const badge = document.getElementById('cartBadge');
-                    if (data.cart_count > 0) {
-                        if (badge) {
-                            badge.textContent = data.cart_count;
-                        } else {
-                            const cartButton = document.getElementById('cartButton');
-                            const newBadge = document.createElement('span');
-                            newBadge.className = 'badge';
-                            newBadge.id = 'cartBadge';
-                            newBadge.textContent = data.cart_count;
-                            cartButton.appendChild(newBadge);
-                        }
-                    } else {
-                        if (badge) badge.remove();
-                        // Reload page to show empty cart message
-                        location.reload();
+                        itemElement.style.animation = 'fadeOut 0.3s ease-out';
+                        setTimeout(() => {
+                            itemElement.remove();
+                            
+                            // Update badge
+                            if (data.cart_count > 0) {
+                                if (cartFabBadge) {
+                                    cartFabBadge.textContent = data.cart_count;
+                                } else {
+                                    const badge = document.createElement('span');
+                                    badge.className = 'cart-fab-badge';
+                                    badge.id = 'cartFabBadge';
+                                    badge.textContent = data.cart_count;
+                                    cartFab.appendChild(badge);
+                                }
+                            } else {
+                                if (cartFabBadge) cartFabBadge.remove();
+                                // Reload after a moment to show empty cart
+                                setTimeout(() => location.reload(), 500);
+                            }
+                        }, 300);
                     }
                 }
             })
@@ -663,6 +675,9 @@ foreach ($_SESSION['cart'] as $item) {
                 alert('Ralat semasa membuang item. Sila cuba lagi.');
             });
         }
+
+        // Initialize
+        updateTotalPrice();
     </script>
 </body>
 </html>

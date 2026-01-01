@@ -1,0 +1,266 @@
+/**
+ * Return Page Styles - Dark Theme
+ * Consistent with checkout.php and order-baju.php
+ */
+
+/* ============================================
+   RETURN PAGE SPECIFIC STYLES
+   Dark theme matching checkout and order pages
+   ============================================ */
+
+.return-main {
+    padding: 4rem 0;
+    min-height: calc(100vh - 80px);
+    background: linear-gradient(180deg, #111 0%, #0a0a0a 100%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.return-container {
+    max-width: 700px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 0 3rem;
+}
+
+/* Status Card */
+.status-card {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 3rem 2.5rem;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    animation: slideUp 0.6s ease-out;
+}
+
+.status-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    opacity: 0.5;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Status Icon */
+.status-icon {
+    font-size: 5rem;
+    margin-bottom: 2rem;
+    display: block;
+    animation: scaleIn 0.5s ease-out 0.2s both;
+    filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.3));
+}
+
+@keyframes scaleIn {
+    from {
+        transform: scale(0);
+        opacity: 0;
+    }
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* Status Message */
+.status-message {
+    font-size: 2rem;
+    font-weight: 300;
+    margin-bottom: 1rem;
+    color: #fff;
+    letter-spacing: -0.02em;
+    animation: fadeIn 0.6s ease-out 0.3s both;
+}
+
+.status-message.success {
+    color: #10b981;
+}
+
+.status-message.pending {
+    color: #fbbf24;
+}
+
+.status-message.failed {
+    color: #ef4444;
+}
+
+.status-message.unknown {
+    color: rgba(255, 255, 255, 0.6);
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+/* Status Description */
+.status-description {
+    font-size: 1rem;
+    color: rgba(255, 255, 255, 0.75);
+    line-height: 1.7;
+    margin-bottom: 2.5rem;
+    animation: fadeIn 0.6s ease-out 0.4s both;
+}
+
+/* Order Details Section */
+.order-details {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    padding: 2rem;
+    margin-bottom: 2.5rem;
+    text-align: left;
+    animation: fadeIn 0.6s ease-out 0.5s both;
+}
+
+.order-details h3 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #fff;
+    margin-bottom: 1.25rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    font-size: 0.875rem;
+}
+
+.detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.875rem 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.detail-row:last-child {
+    border-bottom: none;
+}
+
+.detail-label {
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.65);
+    font-size: 0.875rem;
+    letter-spacing: 0.01em;
+}
+
+.detail-value {
+    font-weight: 600;
+    color: #fff;
+    font-size: 0.875rem;
+}
+
+.detail-value[style*="color: #10b981"] {
+    color: #10b981 !important;
+}
+
+/* Button Container */
+.button-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 2rem;
+    animation: fadeIn 0.6s ease-out 0.6s both;
+}
+
+/* Info Message */
+.info-message {
+    margin-top: 2.5rem;
+    padding-top: 2rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.12);
+    font-size: 0.875rem;
+    color: rgba(255, 255, 255, 0.7);
+    line-height: 1.7;
+    animation: fadeIn 0.6s ease-out 0.7s both;
+}
+
+.info-message strong {
+    color: #fff;
+    font-weight: 600;
+    display: block;
+    margin-bottom: 0.5rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .return-main {
+        padding: 2.5rem 0;
+    }
+    
+    .return-container {
+        padding: 0 1.5rem;
+    }
+    
+    .status-card {
+        padding: 2.5rem 2rem;
+    }
+    
+    .status-icon {
+        font-size: 4rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .status-message {
+        font-size: 1.75rem;
+    }
+    
+    .status-description {
+        font-size: 0.9375rem;
+    }
+    
+    .order-details {
+        padding: 1.5rem;
+    }
+    
+    .detail-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+    
+    .detail-label,
+    .detail-value {
+        font-size: 0.8125rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .status-card {
+        padding: 2rem 1.5rem;
+    }
+    
+    .status-icon {
+        font-size: 3.5rem;
+    }
+    
+    .status-message {
+        font-size: 1.5rem;
+    }
+    
+    .status-description {
+        font-size: 0.875rem;
+    }
+}
+
