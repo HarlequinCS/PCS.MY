@@ -203,26 +203,65 @@ class Slider {
     }
   
     setup() {
-      this.scene = new THREE.Scene()
-      this.clock = new THREE.Clock(true)
+      // Check if WebGL is available
+      this.webglAvailable = this.checkWebGLSupport()
       
-      this.renderer = new THREE.WebGLRenderer({ 
-        alpha: true,
-        antialias: true 
-      })
-      this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
-      this.renderer.setSize(window.innerWidth, window.innerHeight)
+      if (!this.webglAvailable) {
+        console.warn('WebGL is not available. Slider will work without WebGL effects.')
+        this.renderer = null
+        return
+      }
       
-      // Ensure canvas follows the viewport
-      this.renderer.domElement.style.position = 'fixed'
-      this.renderer.domElement.style.top = '0'
-      this.renderer.domElement.style.left = '0'
-      this.renderer.domElement.style.width = '100%'
-      this.renderer.domElement.style.height = '100%'
-      this.renderer.domElement.style.pointerEvents = 'none'
-      this.renderer.domElement.style.zIndex = '1'
-      
-      this.inner.appendChild(this.renderer.domElement)
+      try {
+        this.scene = new THREE.Scene()
+        this.clock = new THREE.Clock(true)
+        
+        this.renderer = new THREE.WebGLRenderer({ 
+          alpha: true,
+          antialias: true 
+        })
+        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+        this.renderer.setSize(window.innerWidth, window.innerHeight)
+        
+        // Ensure canvas follows the viewport
+        this.renderer.domElement.style.position = 'fixed'
+        this.renderer.domElement.style.top = '0'
+        this.renderer.domElement.style.left = '0'
+        this.renderer.domElement.style.width = '100%'
+        this.renderer.domElement.style.height = '100%'
+        this.renderer.domElement.style.pointerEvents = 'none'
+        this.renderer.domElement.style.zIndex = '1'
+        
+        this.inner.appendChild(this.renderer.domElement)
+      } catch (error) {
+        console.error('Error creating WebGL renderer:', error)
+        this.webglAvailable = false
+        this.renderer = null
+      }
+    }
+    
+    checkWebGLSupport() {
+      try {
+        // First check if WebGL is available in the browser
+        const canvas = document.createElement('canvas')
+        const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl') || canvas.getContext('webgl2')
+        if (!gl) {
+          return false
+        }
+        // If THREE.js is available, test creating a renderer
+        if (typeof THREE !== 'undefined') {
+          try {
+            const testRenderer = new THREE.WebGLRenderer({ alpha: true, antialias: true })
+            testRenderer.dispose()
+            return true
+          } catch (rendererError) {
+            return false
+          }
+        }
+        return true // WebGL context is available, assume THREE.js will work
+      } catch (error) {
+        return false
+      }
     }
     
     loadTextures() {
@@ -994,7 +1033,9 @@ class Slider {
     }
     
     render() {
-      this.renderer.render(this.scene, this.camera)
+      if (this.renderer && this.scene && this.camera) {
+        this.renderer.render(this.scene, this.camera)
+      }
     }
     
     init() {
@@ -1005,41 +1046,54 @@ class Slider {
       }
       
       this.setup()
-      this.cameraSetup()
-      this.setStyles()
       
-      // Load textures - mesh will be created when textures are loaded
-      this.loadTextures()
+      // Only setup WebGL-related features if WebGL is available
+      if (this.webglAvailable && this.renderer) {
+        try {
+          this.cameraSetup()
+          this.setStyles()
+          
+          // Load textures - mesh will be created when textures are loaded
+          this.loadTextures()
+          
+          // Handle window resize
+          window.addEventListener('resize', () => {
+            if (this.renderer && this.camera && this.mat) {
+              this.renderer.setSize(window.innerWidth, window.innerHeight)
+              this.cameraSetup()
+              // Update mobile detection and resolution
+              const isMobile = window.innerWidth <= 768 ? 1.0 : 0.0
+              this.mat.uniforms.isMobile.value = isMobile
+              this.mat.uniforms.res.value = new THREE.Vector2(window.innerWidth, window.innerHeight)
+              // Update isSlide1 based on current slide
+              this.mat.uniforms.isSlide1.value = this.data.current === 0 ? 1.0 : 0.0
+              // Update crop settings for current slide
+              const currentCrop = this.cropSettings[this.data.current] || { horizontal: 0.5, vertical: 0.5 }
+              this.mat.uniforms.cropHorizontal.value = currentCrop.horizontal
+              this.mat.uniforms.cropVertical.value = currentCrop.vertical
+              this.render()
+            }
+          })
+          
+          // Continuously render WebGL scene for smooth animation
+          const animate = () => {
+            requestAnimationFrame(animate)
+            if (this.renderer && this.scene && this.camera) {
+              this.renderer.render(this.scene, this.camera)
+            }
+          }
+          animate()
+        } catch (error) {
+          console.error('Error initializing WebGL features:', error)
+          this.webglAvailable = false
+          this.renderer = null
+        }
+      } else {
+        // Fallback: Initialize slider without WebGL effects
+        console.log('Slider initialized without WebGL effects (WebGL not available)')
+      }
       
       this.listeners()
-      
-      // Handle window resize
-      window.addEventListener('resize', () => {
-        if (this.renderer && this.camera && this.mat) {
-          this.renderer.setSize(window.innerWidth, window.innerHeight)
-          this.cameraSetup()
-          // Update mobile detection and resolution
-          const isMobile = window.innerWidth <= 768 ? 1.0 : 0.0
-          this.mat.uniforms.isMobile.value = isMobile
-          this.mat.uniforms.res.value = new THREE.Vector2(window.innerWidth, window.innerHeight)
-          // Update isSlide1 based on current slide
-          this.mat.uniforms.isSlide1.value = this.data.current === 0 ? 1.0 : 0.0
-          // Update crop settings for current slide
-          const currentCrop = this.cropSettings[this.data.current] || { horizontal: 0.5, vertical: 0.5 }
-          this.mat.uniforms.cropHorizontal.value = currentCrop.horizontal
-          this.mat.uniforms.cropVertical.value = currentCrop.vertical
-          this.render()
-        }
-      })
-      
-      // Continuously render WebGL scene for smooth animation
-      const animate = () => {
-        requestAnimationFrame(animate)
-        if (this.renderer && this.scene && this.camera) {
-          this.renderer.render(this.scene, this.camera)
-        }
-      }
-      animate()
     }
   }
   
