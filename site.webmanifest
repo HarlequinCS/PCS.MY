@@ -2,7 +2,7 @@
   "name": "Projek Cuti Sem",
   "short_name": "PCS",
   "description": "Projek Cuti Sem - Premium Fashion Collection Coming Soon",
-  "start_url": "/workshirt",
+  "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#ff0000",
