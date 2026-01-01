@@ -47,13 +47,15 @@ All canonical URLs and sitemap entries have been validated and are compliant wit
 ## 📄 Page-by-Page Validation
 
 ### 1. Homepage (`index.html`)
-- **File:** `index.html`
+- **File:** `index.html` (contains Workshirt page content as of 2025-01-28)
 - **Canonical URL:** `https://projectcutisem.com/`
 - **Sitemap Entry:** `https://projectcutisem.com/`
 - **Status:** ✅ MATCH
 - **Redirect Variants:**
+  - ✅ `https://projectcutisem.com/` → Final destination (used in canonical)
   - ❌ `https://projectcutisem.com/index.html` → Redirects to `/` (not in canonical)
-  - ❌ `https://projectcutisem.com/` → Final destination (used in canonical)
+  - ❌ `https://projectcutisem.com/workshirt` → Redirects to `/` (301 redirect)
+  - ❌ `https://projectcutisem.com/workshirt.html` → Redirects to `/` (301 redirect)
 
 ### 2. Behind The Product (`behind-the-product.html`)
 - **File:** `behind-the-product.html`
@@ -65,15 +67,16 @@ All canonical URLs and sitemap entries have been validated and are compliant wit
   - ❌ `https://projectcutisem.com/behind-the-product.html` → Redirects to `/behind-the-product` (not in canonical)
   - ✅ `https://projectcutisem.com/behind-the-product` → Final destination (used in canonical)
 
-### 3. Workshirt (`workshirt.html`)
-- **File:** `workshirt.html`
-- **Canonical URL:** `https://projectcutisem.com/workshirt`
-- **Sitemap Entry:** `https://projectcutisem.com/workshirt`
+### 3. Workshirt (Now Homepage)
+- **Note:** Workshirt page has been migrated to homepage on 2025-01-28
+- **File:** `index.html` (formerly `workshirt.html`)
+- **Canonical URL:** `https://projectcutisem.com/` (changed from `/workshirt`)
+- **Sitemap Entry:** `https://projectcutisem.com/` (removed `/workshirt` entry)
 - **Status:** ✅ MATCH
 - **Redirect Variants:**
-  - ❌ `https://projectcutisem.com/workshirt/` → Redirects to `/workshirt` (not in canonical)
-  - ❌ `https://projectcutisem.com/workshirt.html` → Redirects to `/workshirt` (not in canonical)
-  - ✅ `https://projectcutisem.com/workshirt` → Final destination (used in canonical)
+  - ✅ `https://projectcutisem.com/` → Final destination (used in canonical)
+  - ❌ `https://projectcutisem.com/workshirt` → Redirects to `/` (301 redirect)
+  - ❌ `https://projectcutisem.com/workshirt.html` → Redirects to `/` (301 redirect)
 
 ---
 
@@ -135,8 +138,9 @@ The following URL patterns are **NOT** included in sitemap (as per best practice
 
 ### Rule 2: Self-Referential Canonicals Only
 ```
-✅ CORRECT: Page at /workshirt has canonical pointing to /workshirt
-❌ WRONG:   Page at /workshirt has canonical pointing to /home
+✅ CORRECT: Page at / has canonical pointing to /
+✅ CORRECT: Page at /behind-the-product has canonical pointing to /behind-the-product
+❌ WRONG:   Page at / has canonical pointing to /home
 ```
 
 ### Rule 3: Absolute URLs Only
@@ -202,7 +206,8 @@ When adding new pages:
 |-----|----------------|--------|
 | `https://projectcutisem.com/` | ✅ `https://projectcutisem.com/` | ✅ Valid |
 | `https://projectcutisem.com/behind-the-product` | ✅ `https://projectcutisem.com/behind-the-product` | ✅ Valid |
-| `https://projectcutisem.com/workshirt` | ✅ `https://projectcutisem.com/workshirt` | ✅ Valid |
+
+**Note:** `/workshirt` URL has been removed from sitemap (migrated to homepage `/` on 2025-01-28)
 
 ---
 
@@ -218,6 +223,7 @@ All pages are compliant with Google Search Console requirements:
 
 ---
 
-**Last Validated:** 2025-12-24  
-**Status:** ✅ All Validations Passed
+**Last Validated:** 2025-01-28  
+**Status:** ✅ All Validations Passed  
+**Recent Changes:** Workshirt page migrated to homepage (2025-01-28)
 
