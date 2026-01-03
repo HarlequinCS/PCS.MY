@@ -477,6 +477,64 @@
 }
 
 /* Form Styles */
+/* Order Type Selector */
+.order-type-selector {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.order-type-option {
+    flex: 1;
+    display: block;
+    cursor: pointer;
+}
+
+.order-type-option input[type="radio"] {
+    display: none;
+}
+
+.order-type-label {
+    display: block;
+    padding: 1rem 1.25rem;
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.02);
+    transition: all 0.3s ease;
+    text-align: center;
+}
+
+.order-type-label strong {
+    display: block;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #fff;
+    margin-bottom: 0.25rem;
+}
+
+.order-type-label small {
+    display: block;
+    font-size: 0.875rem;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.order-type-option input[type="radio"]:checked + .order-type-label {
+    border-color: #fff;
+    background: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 4px 12px rgba(255, 255, 255, 0.1);
+}
+
+.order-type-option:hover .order-type-label {
+    border-color: rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.05);
+}
+
+@media (max-width: 768px) {
+    .order-type-selector {
+        flex-direction: column;
+    }
+}
+
 .form-group {
     margin-bottom: 1.5rem;
     position: relative;

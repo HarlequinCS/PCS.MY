@@ -116,13 +116,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     
     // Validation
     if (empty($variant) || !isset($variants[$variant])) {
-        $message = 'Sila pilih variant';
+        $message = 'Please select a color';
         $messageType = 'error';
     } elseif (empty($size) || !in_array($size, $sizes)) {
-        $message = 'Sila pilih saiz';
+        $message = 'Please select a size';
         $messageType = 'error';
     } elseif ($quantity < 1) {
-        $message = 'Kuantiti mestilah sekurang-kurangnya 1';
+        $message = 'Quantity must be at least 1';
         $messageType = 'error';
     } else {
         // Calculate item total
@@ -143,7 +143,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         // Add to cart
         $_SESSION['cart'][] = $cartItem;
         
-        $message = 'Item berjaya ditambah ke cart!';
+        $message = 'Item successfully added to cart!';
         $messageType = 'success';
     }
 }
@@ -212,11 +212,11 @@ foreach ($_SESSION['cart'] as $item) {
                         <div class="product-image-wrapper" id="productImageWrapper">
                             <img src="" alt="Product Preview" id="mainProductImage" class="main-product-image">
                             <div class="image-placeholder" id="imagePlaceholder">
-                                <span>Pilih variant untuk melihat preview</span>
+                                <span>Select a color to see preview</span>
                             </div>
                         </div>
                         <div class="product-zoom-hint" id="zoomHint" style="display: none;">
-                            <span>Click untuk zoom</span>
+                            <span>Click to zoom</span>
                         </div>
                     </div>
                 </div>
@@ -244,7 +244,7 @@ foreach ($_SESSION['cart'] as $item) {
                             <!-- Variant Selection -->
                             <div class="form-section">
                                 <label class="form-label">
-                                    Pilih Warna
+                                    Select Color
                                     <span class="required-asterisk">*</span>
                                 </label>
                                 <div class="variant-selector" id="variantSelector">
@@ -277,7 +277,7 @@ foreach ($_SESSION['cart'] as $item) {
                             <div class="form-section">
                                 <div class="form-label-row">
                                     <label class="form-label">
-                                        Saiz
+                                        Size
                                         <span class="required-asterisk">*</span>
                                     </label>
                                     <button type="button" class="size-chart-link" id="sizeChartBtn">Size Chart</button>
@@ -295,7 +295,7 @@ foreach ($_SESSION['cart'] as $item) {
                             <!-- Quantity Selection -->
                             <div class="form-section">
                                 <label class="form-label">
-                                    Kuantiti
+                                    Quantity
                                     <span class="required-asterisk">*</span>
                                 </label>
                                 <div class="quantity-selector">
@@ -308,11 +308,11 @@ foreach ($_SESSION['cart'] as $item) {
                             <!-- Total Price Display -->
                             <div class="price-summary">
                                 <div class="price-row">
-                                    <span>Harga Seunit:</span>
+                                    <span>Price Per Unit:</span>
                                     <span>RM <?php echo number_format(PRICE_PER_SHIRT, 2); ?></span>
                                 </div>
                                 <div class="price-row price-row--total">
-                                    <span>Jumlah:</span>
+                                    <span>Total:</span>
                                     <span class="total-price">RM <span id="totalPriceDisplay"><?php echo number_format(PRICE_PER_SHIRT, 2); ?></span></span>
                                 </div>
                             </div>
@@ -440,7 +440,7 @@ foreach ($_SESSION['cart'] as $item) {
                     <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.3">
                         <path d="M9 2L7 6M17 2l2 4M3 10h18l-2 8H5l-2-8zM10 18a1 1 0 11-2 0 1 1 0 012 0zM20 18a1 1 0 11-2 0 1 1 0 012 0z"/>
                     </svg>
-                    <p>Cart anda kosong</p>
+                    <p>Your cart is empty</p>
                 </div>
             <?php else: ?>
                 <div class="cart-items-list" id="cartItemsList">
@@ -453,7 +453,7 @@ foreach ($_SESSION['cart'] as $item) {
                             </div>
                             <div class="cart-item-info">
                                 <h4 class="cart-item-title"><?php echo htmlspecialchars($item['variant_name']); ?></h4>
-                                <p class="cart-item-meta">Saiz: <?php echo htmlspecialchars($item['size']); ?> • Qty: <?php echo $item['quantity']; ?></p>
+                                <p class="cart-item-meta">Size: <?php echo htmlspecialchars($item['size']); ?> • Qty: <?php echo $item['quantity']; ?></p>
                                 <div class="cart-item-price">RM <?php echo number_format($item['subtotal'], 2); ?></div>
                             </div>
                             <button class="cart-item-remove" onclick="removeFromCart('<?php echo htmlspecialchars($item['id']); ?>')" aria-label="Remove item">
@@ -675,7 +675,7 @@ foreach ($_SESSION['cart'] as $item) {
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('Ralat semasa membuang item. Sila cuba lagi.');
+                alert('Error removing item. Please try again.');
             });
         }
 
