@@ -646,11 +646,11 @@ foreach ($_SESSION['cart'] as $item) {
                 
                 <div class="cart-summary">
                     <div class="cart-summary-row">
-                        <span>Jumlah Item:</span>
+                        <span>Total Items:</span>
                         <span><?php echo $cartCount; ?> item(s)</span>
                     </div>
                     <div class="cart-summary-row cart-summary-total">
-                        <span>Jumlah Keseluruhan:</span>
+                        <span>Total Amount:</span>
                         <span class="cart-total-amount">RM <?php echo number_format($cartTotal, 2); ?></span>
                     </div>
                 </div>

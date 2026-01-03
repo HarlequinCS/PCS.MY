@@ -386,18 +386,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             
             // Create short description within 100 character limit
             if ($totalItems == 1) {
-                // Single item: "Baju Premium - Hitam Depan, Size M, Qty 2"
+                // Single item: "WORKSHIRT COLLECTION - Classic Black, Size M, Qty 2"
                 $item = $cart[0];
                 $billDescription = sprintf(
-                    "Baju Premium - %s, Size %s, Qty %d",
+                    "WORKSHIRT COLLECTION - %s, Size %s, Qty %d",
                     $item['variant_name'],
                     $item['size'],
                     $item['quantity']
                 );
             } else {
-                // Multiple items: "Baju Premium - 3 items, Total Qty 5"
+                // Multiple items: "WORKSHIRT COLLECTION - 3 items, Total Qty 5"
                 $billDescription = sprintf(
-                    "Baju Premium - %d items, Total Qty %d",
+                    "WORKSHIRT COLLECTION - %d items, Total Qty %d",
                     $totalItems,
                     $totalQuantity
                 );
