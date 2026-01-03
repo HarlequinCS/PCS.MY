@@ -100,14 +100,13 @@ require_once __DIR__ . '/config/version.php';
 <body>
     <!-- Navigation Bar -->
     <nav class="order-nav">
-        <div class="nav-container">
+        <div class="nav-container nav-container--center">
             <a href="/" class="nav-logo-link">
                 <figure class="nav-logo">
                     <img src="images/PCS logo.svg" alt="Projek Cuti Sem" width="40" height="40" fetchpriority="high">
                 </figure>
                 <span class="nav-brand-text">PROJEK CUTI SEM</span>
             </a>
-            <a href="/" class="nav-back-link">← Back to Home</a>
         </div>
     </nav>
 

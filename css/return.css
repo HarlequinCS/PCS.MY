@@ -8,15 +8,11 @@
    Dark theme matching checkout and order pages
    ============================================ */
 
-/* Ensure navigation layout works correctly */
-.order-nav .nav-container {
+/* Center the logo in navigation (no back button needed - auto redirect) */
+.order-nav .nav-container--center {
     display: flex !important;
-    justify-content: space-between !important;
+    justify-content: center !important;
     align-items: center !important;
-}
-
-.order-nav .nav-back-link {
-    margin-left: auto;
 }
 
 .return-main {
