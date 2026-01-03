@@ -80,14 +80,27 @@ try {
     // Calculate proportional adjustment for amount (excluding delivery fee)
     $adjustedAmount = $newFinalAmount - $deliveryFee; // Remove delivery fee from final to get item amount
     
+    // Check if updated_at column exists
+    $columns = $pdo->query("SHOW COLUMNS FROM orders")->fetchAll(PDO::FETCH_COLUMN);
+    $hasUpdatedAt = in_array('updated_at', $columns);
+    
     // Update order
-    $updateStmt = $pdo->prepare("
-        UPDATE orders 
-        SET final_amount = :final_amount,
-            amount = :amount,
-            updated_at = NOW()
-        WHERE id = :id
-    ");
+    if ($hasUpdatedAt) {
+        $updateStmt = $pdo->prepare("
+            UPDATE orders 
+            SET final_amount = :final_amount,
+                amount = :amount,
+                updated_at = NOW()
+            WHERE id = :id
+        ");
+    } else {
+        $updateStmt = $pdo->prepare("
+            UPDATE orders 
+            SET final_amount = :final_amount,
+                amount = :amount
+            WHERE id = :id
+        ");
+    }
     
     $updateStmt->execute([
         ':final_amount' => $newFinalAmount,

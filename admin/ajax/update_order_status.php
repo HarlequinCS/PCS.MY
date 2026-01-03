@@ -47,13 +47,25 @@ try {
         exit;
     }
     
+    // Check if updated_at column exists
+    $columns = $pdo->query("SHOW COLUMNS FROM orders")->fetchAll(PDO::FETCH_COLUMN);
+    $hasUpdatedAt = in_array('updated_at', $columns);
+    
     // Update order status
-    $stmt = $pdo->prepare("
-        UPDATE orders 
-        SET status = :status, 
-            updated_at = NOW()
-        WHERE id = :id
-    ");
+    if ($hasUpdatedAt) {
+        $stmt = $pdo->prepare("
+            UPDATE orders 
+            SET status = :status, 
+                updated_at = NOW()
+            WHERE id = :id
+        ");
+    } else {
+        $stmt = $pdo->prepare("
+            UPDATE orders 
+            SET status = :status
+            WHERE id = :id
+        ");
+    }
     
     $stmt->execute([
         ':status' => $newStatus,

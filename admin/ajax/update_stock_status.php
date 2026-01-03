@@ -34,13 +34,25 @@ try {
     $pdo = getDBConnection();
     
     if ($orderId > 0) {
+        // Check if updated_at column exists
+        $columns = $pdo->query("SHOW COLUMNS FROM orders")->fetchAll(PDO::FETCH_COLUMN);
+        $hasUpdatedAt = in_array('updated_at', $columns);
+        
         // Update specific order's stock status
-        $stmt = $pdo->prepare("
-            UPDATE orders 
-            SET stock_status = :stock_status, 
-                updated_at = NOW()
-            WHERE id = :id
-        ");
+        if ($hasUpdatedAt) {
+            $stmt = $pdo->prepare("
+                UPDATE orders 
+                SET stock_status = :stock_status, 
+                    updated_at = NOW()
+                WHERE id = :id
+            ");
+        } else {
+            $stmt = $pdo->prepare("
+                UPDATE orders 
+                SET stock_status = :stock_status
+                WHERE id = :id
+            ");
+        }
         
         $stmt->execute([
             ':stock_status' => $newStockStatus,
@@ -65,13 +77,25 @@ try {
             echo json_encode(['success' => false, 'error' => 'Order not found']);
         }
     } elseif (!empty($variant)) {
+        // Check if updated_at column exists
+        $columns = $pdo->query("SHOW COLUMNS FROM orders")->fetchAll(PDO::FETCH_COLUMN);
+        $hasUpdatedAt = in_array('updated_at', $columns);
+        
         // Update all orders with this variant (bulk update)
-        $stmt = $pdo->prepare("
-            UPDATE orders 
-            SET stock_status = :stock_status, 
-                updated_at = NOW()
-            WHERE variant = :variant
-        ");
+        if ($hasUpdatedAt) {
+            $stmt = $pdo->prepare("
+                UPDATE orders 
+                SET stock_status = :stock_status, 
+                    updated_at = NOW()
+                WHERE variant = :variant
+            ");
+        } else {
+            $stmt = $pdo->prepare("
+                UPDATE orders 
+                SET stock_status = :stock_status
+                WHERE variant = :variant
+            ");
+        }
         
         $stmt->execute([
             ':stock_status' => $newStockStatus,
