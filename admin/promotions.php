@@ -3,12 +3,16 @@
  * Promotion Code Management Page
  */
 
+// Set timezone for all date/time operations (MANDATORY)
+date_default_timezone_set('Asia/Kuala_Lumpur');
+
 require_once __DIR__ . '/config.php';
 requireAdminLogin();
 
 define('DB_CONFIG_LOADED', true);
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../includes/db.php';
+require_once __DIR__ . '/../includes/datetime_helper.php';
 
 $pdo = getDBConnection();
 
@@ -21,7 +25,7 @@ $messageType = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     $actionPost = $_POST['action'];
     
-    if ($actionPost === 'create' || $actionPost === 'update') {
+    if ($actionPost === 'create' || $actionPost === 'update' || $actionPost === 'edit') {
         $code = strtoupper(trim($_POST['code'] ?? ''));
         $type = $_POST['type'] ?? 'percentage';
         $value = floatval($_POST['value'] ?? 0);
@@ -29,8 +33,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         $minPurchase = floatval($_POST['min_purchase'] ?? 0);
         $maxDiscount = !empty($_POST['max_discount']) ? floatval($_POST['max_discount']) : null;
         $usageLimit = !empty($_POST['usage_limit']) ? intval($_POST['usage_limit']) : null;
-        $validFrom = !empty($_POST['valid_from']) ? $_POST['valid_from'] : null;
-        $validUntil = !empty($_POST['valid_until']) ? $_POST['valid_until'] : null;
+        
+        // Normalize datetime inputs: convert HTML datetime-local to MySQL DATETIME format
+        // Empty inputs become NULL (not empty strings)
+        $validFrom = normalizeDateTime($_POST['valid_from'] ?? '');
+        $validUntil = normalizeDateTime($_POST['valid_until'] ?? '');
         
         // Validation
         if (empty($code)) {
@@ -52,22 +59,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                         $message = 'Promo code already exists';
                         $messageType = 'error';
                     } else {
+                        // New promotions must always start with used_count = 0
                         $stmt = $pdo->prepare("
                             INSERT INTO promotions (
                                 code, type, value, active, min_purchase, max_discount,
-                                usage_limit, valid_from, valid_until
+                                usage_limit, valid_from, valid_until, used_count
                             ) VALUES (
                                 :code, :type, :value, :active, :min_purchase, :max_discount,
-                                :usage_limit, :valid_from, :valid_until
+                                :usage_limit, :valid_from, :valid_until, 0
                             )
                         ");
                         $stmt->execute([
                             ':code' => $code,
                             ':type' => $type,
-                            ':value' => $value,
+                            ':value' => round(floatval($value), 2),
                             ':active' => $active,
-                            ':min_purchase' => $minPurchase,
-                            ':max_discount' => $maxDiscount,
+                            ':min_purchase' => round(floatval($minPurchase), 2),
+                            ':max_discount' => $maxDiscount !== null ? round(floatval($maxDiscount), 2) : null,
                             ':usage_limit' => $usageLimit,
                             ':valid_from' => $validFrom ?: null,
                             ':valid_until' => $validUntil ?: null
@@ -76,7 +84,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                         $messageType = 'success';
                         $action = 'list'; // Redirect to list
                     }
-                } else { // update
+                } else { // update or edit
                     $id = intval($_POST['id']);
                     $stmt = $pdo->prepare("
                         UPDATE promotions SET
@@ -92,13 +100,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                             updated_at = NOW()
                         WHERE id = :id
                     ");
+                    // Update promotion (used_count is NOT updated here - it's read-only, auto-incremented on usage)
                     $stmt->execute([
                         ':code' => $code,
                         ':type' => $type,
-                        ':value' => $value,
+                        ':value' => round(floatval($value), 2),
                         ':active' => $active,
-                        ':min_purchase' => $minPurchase,
-                        ':max_discount' => $maxDiscount,
+                        ':min_purchase' => round(floatval($minPurchase), 2),
+                        ':max_discount' => $maxDiscount !== null ? round(floatval($maxDiscount), 2) : null,
                         ':usage_limit' => $usageLimit,
                         ':valid_from' => $validFrom ?: null,
                         ':valid_until' => $validUntil ?: null,
@@ -351,12 +360,14 @@ if (isset($_GET['logout'])) {
                             <label for="valid_from">Valid From (Optional)</label>
                             <input type="datetime-local" name="valid_from" 
                                    value="<?php echo $promotion['valid_from'] ? date('Y-m-d\TH:i', strtotime($promotion['valid_from'])) : ''; ?>">
+                            <small>Leave empty if you don't want a start date</small>
                         </div>
                         
                         <div class="form-group">
                             <label for="valid_until">Valid Until (Optional)</label>
                             <input type="datetime-local" name="valid_until" 
                                    value="<?php echo $promotion['valid_until'] ? date('Y-m-d\TH:i', strtotime($promotion['valid_until'])) : ''; ?>">
+                            <small>Leave empty if you don't want an expiry date</small>
                         </div>
                     </div>
                     

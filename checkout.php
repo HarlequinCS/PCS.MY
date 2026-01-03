@@ -4,6 +4,9 @@
  * Displays cart items, collects complete user information, applies discounts, and processes payment
  */
 
+// Set timezone for all date/time operations (MANDATORY)
+date_default_timezone_set('Asia/Kuala_Lumpur');
+
 // ============================================
 // STEP 1: Start Session
 // ============================================
@@ -25,6 +28,9 @@ if (!defined('DB_CONFIG_LOADED')) {
 
 // Include database connection
 require_once __DIR__ . '/includes/db.php';
+
+// Include promotion code system
+require_once __DIR__ . '/includes/promotion.php';
 
 // Include version configuration for asset versioning
 require_once __DIR__ . '/config/version.php';
@@ -106,10 +112,11 @@ $promoSuccess = '';
 // STEP 4: Handle Promotion Code Validation (AJAX)
 // ============================================
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'validate_promo') {
-    $promoCodeInput = strtoupper(trim($_POST['promo_code'] ?? ''));
+    header('Content-Type: application/json');
     
-    if (empty($promoCodeInput)) {
-        header('Content-Type: application/json');
+    $promoCodeInput = $_POST['promo_code'] ?? '';
+    
+    if (empty(trim($promoCodeInput))) {
         echo json_encode(['success' => false, 'error' => 'Promotion code is required']);
         exit;
     }
@@ -117,72 +124,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     try {
         $pdo = getDBConnection();
         
-        // Check promotion code
-        $stmt = $pdo->prepare("
-            SELECT * FROM promotions 
-            WHERE code = :code 
-            AND active = 1
-            AND (valid_from IS NULL OR valid_from <= NOW())
-            AND (valid_until IS NULL OR valid_until >= NOW())
-        ");
+        // Validate promotion code using centralized function (follows exact validation order)
+        $validation = validatePromotionCode($promoCodeInput, $cartSubtotal, $pdo);
         
-        $stmt->execute([':code' => $promoCodeInput]);
-        $promotion = $stmt->fetch();
-        
-        if (!$promotion) {
-            header('Content-Type: application/json');
-            echo json_encode(['success' => false, 'error' => 'Invalid or expired promotion code']);
-            exit;
-        }
-        
-        // Check minimum purchase
-        if ($promotion['min_purchase'] > 0 && $cartSubtotal < $promotion['min_purchase']) {
-            header('Content-Type: application/json');
+        if (!$validation['success']) {
             echo json_encode([
-                'success' => false, 
-                'error' => 'Minimum purchase of RM ' . number_format($promotion['min_purchase'], 2) . ' required'
+                'success' => false,
+                'error' => $validation['error']
             ]);
             exit;
         }
         
-        // Check usage limit
-        if ($promotion['usage_limit'] !== null && $promotion['used_count'] >= $promotion['usage_limit']) {
-            header('Content-Type: application/json');
-            echo json_encode(['success' => false, 'error' => 'Promotion code has reached usage limit']);
-            exit;
-        }
+        $promotion = $validation['promotion'];
         
-        // Calculate discount
-        $discount = 0;
-        if ($promotion['type'] === 'percentage') {
-            $discount = ($cartSubtotal * $promotion['value']) / 100;
-            // Apply max discount if set
-            if ($promotion['max_discount'] !== null && $discount > $promotion['max_discount']) {
-                $discount = $promotion['max_discount'];
-            }
-        } else { // fixed
-            $discount = $promotion['value'];
-            // Don't allow discount more than subtotal
-            if ($discount > $cartSubtotal) {
-                $discount = $cartSubtotal;
-            }
-        }
+        // Calculate discount using centralized function
+        $discount = calculatePromotionDiscount($promotion, $cartSubtotal);
         
-        header('Content-Type: application/json');
+        // Store validated promotion in session
+        storePromotionInSession($promotion['code'], $discount);
+        
+        // Return success response
         echo json_encode([
             'success' => true,
             'code' => $promotion['code'],
             'type' => $promotion['type'],
-            'value' => $promotion['value'],
-            'discount' => round($discount, 2),
-            'subtotal' => $cartSubtotal,
+            'value' => floatval($promotion['value']),
+            'discount' => $discount,
+            'subtotal' => round($cartSubtotal, 2),
             'final' => round($cartSubtotal - $discount, 2)
         ]);
         exit;
         
     } catch (PDOException $e) {
         error_log('Promotion validation error: ' . $e->getMessage());
-        header('Content-Type: application/json');
         echo json_encode(['success' => false, 'error' => 'Error validating promotion code']);
         exit;
     }
@@ -251,94 +225,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     
     // Validate promotion code if provided
     if (!empty($promoCodeInput)) {
-        // If discount was already calculated via AJAX, use it (faster and more reliable)
-        if ($promoDiscountFromForm > 0) {
-            // Use the discount from AJAX validation
-            $discountAmount = $promoDiscountFromForm;
-            $promoCode = $promoCodeInput;
+        try {
+            $pdo = getDBConnection();
             
-            // Still validate the code exists and is valid (security check)
-            try {
-                $pdo = getDBConnection();
-                $stmt = $pdo->prepare("
-                    SELECT * FROM promotions 
-                    WHERE code = :code 
-                    AND active = 1
-                    AND (valid_from IS NULL OR valid_from <= NOW())
-                    AND (valid_until IS NULL OR valid_until >= NOW())
-                ");
-                
-                $stmt->execute([':code' => $promoCodeInput]);
-                $promotion = $stmt->fetch();
-                
-                if (!$promotion) {
-                    $errors[] = 'Invalid or expired promotion code';
-                    $discountAmount = 0;
-                    $promoCode = '';
-                } elseif ($promotion['usage_limit'] !== null && $promotion['used_count'] >= $promotion['usage_limit']) {
-                    $errors[] = 'Promotion code has reached usage limit';
-                    $discountAmount = 0;
-                    $promoCode = '';
-                }
-            } catch (PDOException $e) {
-                error_log('Promotion validation error: ' . $e->getMessage());
-                $errors[] = 'Error validating promotion code';
-                $discountAmount = 0;
+            // Validate promotion code using centralized function (follows exact validation order)
+            $validation = validatePromotionCode($promoCodeInput, $cartSubtotal, $pdo);
+            
+            if (!$validation['success']) {
+                $errors[] = $validation['error'];
+                $discountAmount = 0.00;
                 $promoCode = '';
+            } else {
+                $promotion = $validation['promotion'];
+                $discountAmount = calculatePromotionDiscount($promotion, $cartSubtotal);
+                $promoCode = strtoupper(trim($promoCodeInput));
             }
-        } else {
-            // If no discount from form, validate and calculate (fallback)
-            try {
-                $pdo = getDBConnection();
-                $stmt = $pdo->prepare("
-                    SELECT * FROM promotions 
-                    WHERE code = :code 
-                    AND active = 1
-                    AND (valid_from IS NULL OR valid_from <= NOW())
-                    AND (valid_until IS NULL OR valid_until >= NOW())
-                ");
-                
-                $stmt->execute([':code' => $promoCodeInput]);
-                $promotion = $stmt->fetch();
-                
-                if ($promotion) {
-                    // Check minimum purchase
-                    if ($promotion['min_purchase'] > 0 && $cartSubtotal < $promotion['min_purchase']) {
-                        $errors[] = 'Promotion code requires minimum purchase of RM ' . number_format($promotion['min_purchase'], 2);
-                    } elseif ($promotion['usage_limit'] !== null && $promotion['used_count'] >= $promotion['usage_limit']) {
-                        $errors[] = 'Promotion code has reached usage limit';
-                    } else {
-                        // Calculate discount
-                        if ($promotion['type'] === 'percentage') {
-                            $discountAmount = ($cartSubtotal * $promotion['value']) / 100;
-                            if ($promotion['max_discount'] !== null && $discountAmount > $promotion['max_discount']) {
-                                $discountAmount = $promotion['max_discount'];
-                            }
-                        } else { // fixed
-                            $discountAmount = $promotion['value'];
-                            if ($discountAmount > $cartSubtotal) {
-                                $discountAmount = $cartSubtotal;
-                            }
-                        }
-                        $promoCode = $promoCodeInput;
-                    }
-                } else {
-                    $errors[] = 'Invalid or expired promotion code';
-                }
-            } catch (PDOException $e) {
-                error_log('Promotion validation error: ' . $e->getMessage());
-                $errors[] = 'Error validating promotion code';
-            }
+        } catch (PDOException $e) {
+            error_log('Promotion validation error: ' . $e->getMessage());
+            $errors[] = 'Error validating promotion code';
+            $discountAmount = 0.00;
+            $promoCode = '';
         }
     }
     
     // Store order_type in session
     $_SESSION['order_type'] = $orderType;
     
-    // Calculate final amount: subtotal + delivery_fee - discount
-    $finalAmount = $cartSubtotal + $deliveryFee - $discountAmount;
+    // Calculate final amount: subtotal + delivery_fee - discount (all rounded to 2 decimal places)
+    $finalAmount = round($cartSubtotal + $deliveryFee - $discountAmount, 2);
     if ($finalAmount < 0) {
-        $finalAmount = 0;
+        $finalAmount = 0.00;
     }
     
     // Log discount calculation for debugging
@@ -418,15 +334,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                 ]);
             }
             
-            // Update promotion usage count if code was used
+            // Increment promotion usage count if code was used (after order creation)
             if (!empty($promoCode)) {
-                $updateStmt = $pdo->prepare("
-                    UPDATE promotions 
-                    SET used_count = used_count + 1 
-                    WHERE code = :code
-                ");
-                $updateStmt->execute([':code' => $promoCode]);
+                incrementPromotionUsage($promoCode, $pdo);
             }
+            
+            // Clear promotion from session after order creation
+            clearPromotionFromSession();
             
             // ============================================
             // STEP 8: Prepare Bill Data for ToyyibPay
