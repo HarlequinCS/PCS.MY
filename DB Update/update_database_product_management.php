@@ -73,18 +73,18 @@ try {
         // Insert default product
         $stmt = $pdo->prepare("
             INSERT INTO products (name, price, stock_status) 
-            VALUES ('Japanese Drill Half-Zip Workshirt', 50.00, 'pre_order')
+            VALUES ('WORKSHIRT COLLECTION', 50.00, 'pre_order')
         ");
         $stmt->execute();
         $productId = $pdo->lastInsertId();
         
         echo "✓ Default product created (ID: $productId)\n\n";
         
-        // Insert variants (matching order-baju.php)
+        // Insert variants (new variant names)
         $variants = [
-            ['hitamdepan', 'Hitam', 'images/hitamdepan.svg'],
-            ['hijaufront', 'Hijau', 'images/hijaufront.svg'],
-            ['merahdepan', 'Merah', 'images/merahdepan.svg']
+            ['hitamdepan', 'Classic Black', 'images/hitamdepan.svg'],
+            ['hijaufront', 'Forest Green', 'images/hijaufront.svg'],
+            ['merahdepan', 'Royal Red', 'images/merahdepan.svg']
         ];
         
         echo "Adding product variants...\n";

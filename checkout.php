@@ -43,7 +43,7 @@ define('STAGING_CATEGORY_CODE', 'g3ii2ms2');
 $baseUrl = 'https://projectcutisem.com';
 
 // Product Configuration
-define('PRODUCT_NAME', 'Japanese Drill Half-Zip Workshirt');
+define('PRODUCT_NAME', 'WORKSHIRT COLLECTION');
 define('PRICE_PER_SHIRT', 50.00); // RM50 per baju
 
 // Delivery Configuration
@@ -54,9 +54,9 @@ define('DEBUG_MODE', false); // Production mode enabled
 
 // Variant names for display
 $variantNames = [
-    'hitamdepan' => 'Hitam',
-    'hijaufront' => 'Hijau',
-    'merahdepan' => 'Merah'
+    'hitamdepan' => 'Classic Black',
+    'hijaufront' => 'Forest Green',
+    'merahdepan' => 'Royal Red'
 ];
 
 // Malaysia States
@@ -423,7 +423,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                 'categoryCode' => STAGING_CATEGORY_CODE,
                 
                 // Bill information
-                'billName' => 'Baju Premium Order',
+                'billName' => 'WORKSHIRT COLLECTION Order',
                 'billDescription' => $billDescription,
                 
                 // Price setting: 1 = Fixed amount, 2 = Multiple options

@@ -248,9 +248,9 @@ foreach ($stats as $stat) {
                                         <div style="margin-bottom: 0.5rem;">
                                             <?php 
                                             $variantNames = [
-                                                'hitamdepan' => 'Hitam',
-                                                'hijaufront' => 'Hijau',
-                                                'merahdepan' => 'Merah'
+                                                'hitamdepan' => 'Classic Black',
+                                                'hijaufront' => 'Forest Green',
+                                                'merahdepan' => 'Royal Red'
                                             ];
                                             $variantName = $variantNames[$item['variant']] ?? $item['variant'];
                                             ?>

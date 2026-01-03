@@ -210,8 +210,24 @@ body {
     font-size: 2rem;
     font-weight: 400;
     letter-spacing: -0.02em;
-    margin-bottom: 1rem;
+    margin-bottom: 0.75rem;
     line-height: 1.2;
+}
+
+.product-subtitle {
+    font-size: 1rem;
+    font-weight: 300;
+    color: rgba(255, 255, 255, 0.7);
+    margin-bottom: 0.5rem;
+    line-height: 1.5;
+}
+
+.product-brand {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.6);
+    margin-bottom: 1rem;
+    letter-spacing: 0.05em;
 }
 
 .product-price {

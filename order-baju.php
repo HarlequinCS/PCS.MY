@@ -136,24 +136,24 @@ try {
         }
     } else {
         // Fallback to defaults if no product found
-        define('PRODUCT_NAME', 'Japanese Drill Half-Zip Workshirt');
+        define('PRODUCT_NAME', 'WORKSHIRT COLLECTION');
         define('PRICE_PER_SHIRT', 50.00);
         $productStockStatus = 'pre_order';
         $inventoryData = [];
         
         $variants = [
             'hitamdepan' => [
-                'name' => 'Hitam',
+                'name' => 'Classic Black',
                 'image' => 'images/hitamdepan.svg',
                 'color' => '#1a1a1a'
             ],
             'hijaufront' => [
-                'name' => 'Hijau',
+                'name' => 'Forest Green',
                 'image' => 'images/hijaufront.svg',
                 'color' => '#2d5016'
             ],
             'merahdepan' => [
-                'name' => 'Merah',
+                'name' => 'Royal Red',
                 'image' => 'images/merahdepan.svg',
                 'color' => '#8b0000'
             ]
@@ -162,24 +162,24 @@ try {
 } catch (PDOException $e) {
     // Fallback to defaults on database error
     error_log('Error loading product from database: ' . $e->getMessage());
-    define('PRODUCT_NAME', 'Japanese Drill Half-Zip Workshirt');
+    define('PRODUCT_NAME', 'WORKSHIRT COLLECTION');
     define('PRICE_PER_SHIRT', 50.00);
     $productStockStatus = 'pre_order';
     $inventoryData = [];
     
     $variants = [
         'hitamdepan' => [
-            'name' => 'Hitam',
+            'name' => 'Classic Black',
             'image' => 'images/hitamdepan.svg',
             'color' => '#1a1a1a'
         ],
         'hijaufront' => [
-            'name' => 'Hijau',
+            'name' => 'Forest Green',
             'image' => 'images/hijaufront.svg',
             'color' => '#2d5016'
         ],
         'merahdepan' => [
-            'name' => 'Merah',
+            'name' => 'Royal Red',
             'image' => 'images/merahdepan.svg',
             'color' => '#8b0000'
         ]
