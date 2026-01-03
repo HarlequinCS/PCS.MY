@@ -125,6 +125,75 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         $message = 'Quantity must be at least 1';
         $messageType = 'error';
     } else {
+        // Check stock status for this variant
+        try {
+            $pdo = getDBConnection();
+            
+            // Get latest stock status for this variant (from most recent order)
+            $stockStmt = $pdo->prepare("
+                SELECT stock_status 
+                FROM orders 
+                WHERE variant = :variant 
+                ORDER BY created_at DESC 
+                LIMIT 1
+            ");
+            $stockStmt->execute([':variant' => $variant]);
+            $stockData = $stockStmt->fetch();
+            
+            if ($stockData && $stockData['stock_status'] === 'out_of_stock') {
+                $message = 'This variant is currently out of stock. Please select another color.';
+                $messageType = 'error';
+            } else {
+                // Continue with order processing
+                // Calculate item total
+                $itemTotal = PRICE_PER_SHIRT * $quantity;
+                
+                // Create cart item
+                $cartItem = [
+                    'id' => uniqid('item_'),
+                    'variant' => $variant,
+                    'variant_name' => $variants[$variant]['name'],
+                    'variant_image' => $variants[$variant]['image'],
+                    'size' => $size,
+                    'quantity' => $quantity,
+                    'price' => PRICE_PER_SHIRT,
+                    'subtotal' => $itemTotal
+                ];
+                
+                // Add to cart
+                $_SESSION['cart'][] = $cartItem;
+                
+                $message = 'Item successfully added to cart!';
+                $messageType = 'success';
+            }
+        } catch (PDOException $e) {
+            error_log('Stock check error: ' . $e->getMessage());
+            // Continue with order if stock check fails (fail open)
+            // Calculate item total
+            $itemTotal = PRICE_PER_SHIRT * $quantity;
+            
+            // Create cart item
+            $cartItem = [
+                'id' => uniqid('item_'),
+                'variant' => $variant,
+                'variant_name' => $variants[$variant]['name'],
+                'variant_image' => $variants[$variant]['image'],
+                'size' => $size,
+                'quantity' => $quantity,
+                'price' => PRICE_PER_SHIRT,
+                'subtotal' => $itemTotal
+            ];
+            
+            // Add to cart
+            $_SESSION['cart'][] = $cartItem;
+            
+            $message = 'Item successfully added to cart!';
+            $messageType = 'success';
+        }
+    }
+    
+    // Old code removed - now handled above
+    if (false) {
         // Calculate item total
         $itemTotal = PRICE_PER_SHIRT * $quantity;
         

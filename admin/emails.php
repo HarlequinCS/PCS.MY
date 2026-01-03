@@ -47,6 +47,14 @@ if (isset($_GET['logout'])) {
                 <span class="nav-icon">📧</span>
                 <span>Email Monitoring</span>
             </a>
+            <a href="/admin/orders.php" class="nav-item">
+                <span class="nav-icon">📦</span>
+                <span>Orders</span>
+            </a>
+            <a href="/admin/promotions.php" class="nav-item">
+                <span class="nav-icon">🎟️</span>
+                <span>Promotions</span>
+            </a>
             <a href="/admin/emails.php?logout=1" class="nav-item">
                 <span class="nav-icon">🚪</span>
                 <span>Logout</span>
