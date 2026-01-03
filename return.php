@@ -69,7 +69,12 @@ switch ($statusId) {
 }
 
 // ============================================
-// STEP 3: Display HTML Page
+// STEP 3: Include Version Configuration
+// ============================================
+require_once __DIR__ . '/config/version.php';
+
+// ============================================
+// STEP 4: Display HTML Page
 // ============================================
 ?>
 <!DOCTYPE html>
@@ -83,13 +88,13 @@ switch ($statusId) {
     <link rel="apple-touch-icon" href="https://projectcutisem.com/apple-touch-icon.png">
     
     <!-- Custom CSS: Order Baju Styles -->
-    <link rel="stylesheet" href="css/order-baju.css">
+    <link rel="stylesheet" href="<?php echo getVersionedAsset('css/order-baju.css'); ?>">
     
     <!-- Custom CSS: Order Button Animation -->
-    <link rel="stylesheet" href="css/orderbutton.css">
+    <link rel="stylesheet" href="<?php echo getVersionedAsset('css/orderbutton.css'); ?>">
     
     <!-- Return Page Specific Styles -->
-    <link rel="stylesheet" href="css/return.css">
+    <link rel="stylesheet" href="<?php echo getVersionedAsset('css/return.css'); ?>">
     
 </head>
 <body>
@@ -226,7 +231,7 @@ switch ($statusId) {
     <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
     
     <!-- Custom JavaScript: Order Button Animation -->
-    <script src="js/orderbutton.js"></script>
+    <script src="<?php echo getVersionedAsset('js/orderbutton.js'); ?>"></script>
     
     <!-- Additional JavaScript for page interactions -->
     <script>

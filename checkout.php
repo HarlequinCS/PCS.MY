@@ -26,6 +26,9 @@ if (!defined('DB_CONFIG_LOADED')) {
 // Include database connection
 require_once __DIR__ . '/includes/db.php';
 
+// Include version configuration for asset versioning
+require_once __DIR__ . '/config/version.php';
+
 // ToyyibPay Staging Credentials
 define('STAGING_SECRET_KEY', 'dh1kldj2-j8db-ofm0-qauv-e037egz4oiui');
 define('STAGING_CATEGORY_CODE', 'g3ii2ms2');
@@ -648,8 +651,8 @@ if ($finalAmount < 0) {
     <link rel="icon" type="image/x-icon" href="https://projectcutisem.com/favicon.ico">
     <link rel="shortcut icon" type="image/x-icon" href="https://projectcutisem.com/favicon.ico">
     <link rel="apple-touch-icon" href="https://projectcutisem.com/apple-touch-icon.png">
-    <link rel="stylesheet" href="css/order-baju.css">
-    <link rel="stylesheet" href="css/checkout.css">
+    <link rel="stylesheet" href="<?php echo getVersionedAsset('css/order-baju.css'); ?>">
+    <link rel="stylesheet" href="<?php echo getVersionedAsset('css/checkout.css'); ?>">
 </head>
 <body>
     <!-- Navigation Bar -->
