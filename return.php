@@ -98,9 +98,10 @@ require_once __DIR__ . '/config/version.php';
     
 </head>
 <body>
-    <!-- Navigation Bar -->
-    <nav class="order-nav">
-        <div class="nav-container nav-container--center">
+    <!-- Main Content -->
+    <main class="return-main">
+        <!-- Logo -->
+        <div class="return-logo">
             <a href="/" class="nav-logo-link">
                 <figure class="nav-logo">
                     <img src="images/PCS logo.svg" alt="Projek Cuti Sem" width="40" height="40" fetchpriority="high">
@@ -108,10 +109,6 @@ require_once __DIR__ . '/config/version.php';
                 <span class="nav-brand-text">PROJEK CUTI SEM</span>
             </a>
         </div>
-    </nav>
-
-    <!-- Main Content -->
-    <main class="return-main">
         <div class="return-container">
             <div class="status-card">
         <!-- Status Icon -->
