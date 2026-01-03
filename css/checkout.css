@@ -476,63 +476,76 @@
     font-weight: 700;
 }
 
-/* Form Styles */
-/* Order Type Selector */
-.order-type-selector {
-    display: flex;
-    gap: 1rem;
-    margin-bottom: 1rem;
+.order-total-row.final span:first-child {
+    font-size: 1.25rem;
 }
 
-.order-type-option {
-    flex: 1;
-    display: block;
-    cursor: pointer;
-}
-
-.order-type-option input[type="radio"] {
-    display: none;
-}
-
-.order-type-label {
-    display: block;
-    padding: 1rem 1.25rem;
-    border: 2px solid rgba(255, 255, 255, 0.1);
+.order-summary-note {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: rgba(251, 191, 36, 0.1);
+    border: 1px solid rgba(251, 191, 36, 0.2);
     border-radius: 8px;
-    background: rgba(255, 255, 255, 0.02);
-    transition: all 0.3s ease;
-    text-align: center;
 }
 
-.order-type-label strong {
-    display: block;
-    font-size: 1rem;
+.order-summary-note p {
+    margin: 0;
+    font-size: 0.8125rem;
+    line-height: 1.6;
+    color: rgba(251, 191, 36, 0.95);
+}
+
+.order-summary-note strong {
+    color: #fbbf24;
     font-weight: 600;
-    color: #fff;
-    margin-bottom: 0.25rem;
 }
 
-.order-type-label small {
+.payment-fee-note {
     display: block;
-    font-size: 0.875rem;
-    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.5);
+    font-weight: normal;
+    margin-top: 0.25rem;
+    font-style: italic;
 }
 
-.order-type-option input[type="radio"]:checked + .order-type-label {
-    border-color: #fff;
-    background: rgba(255, 255, 255, 0.08);
-    box-shadow: 0 4px 12px rgba(255, 255, 255, 0.1);
+/* Form Styles */
+/* Order Type Selector (Dropdown) */
+.order-type-select {
+    width: 100%;
+    padding: 0.875rem 1.25rem;
+    background: rgba(255, 255, 255, 0.06);
+    border: 2px solid rgba(255, 255, 255, 0.15);
+    border-radius: 8px;
+    font-size: 0.9375rem;
+    color: #fff;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 1.25rem center;
+    background-size: 12px;
+    padding-right: 3rem;
 }
 
-.order-type-option:hover .order-type-label {
+.order-type-select:hover {
     border-color: rgba(255, 255, 255, 0.3);
-    background: rgba(255, 255, 255, 0.05);
+    background-color: rgba(255, 255, 255, 0.08);
 }
 
-@media (max-width: 768px) {
-    .order-type-selector {
-        flex-direction: column;
-    }
+.order-type-select:focus {
+    outline: none;
+    border-color: rgba(255, 255, 255, 0.5);
+    background-color: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
+}
+
+.order-type-select option {
+    background: #1a1a1a;
+    color: #fff;
+    padding: 0.75rem;
 }
 
 .form-group {
@@ -564,6 +577,7 @@
 .form-group input,
 .form-group select,
 .form-group textarea {
+    font-family: inherit;
     width: 100%;
     padding: 0.875rem 1.25rem;
     background: rgba(255, 255, 255, 0.06);

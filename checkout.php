@@ -44,7 +44,7 @@ define('PRICE_PER_SHIRT', 50.00); // RM50 per baju
 define('DELIVERY_FEE', 8.00); // RM8 delivery fee for delivery option
 
 // Debug mode: Set to false in production
-define('DEBUG_MODE', false);
+define('DEBUG_MODE', false); // Production mode enabled
 
 // Variant names for display
 $variantNames = [
@@ -216,7 +216,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         $deliveryFee = DELIVERY_FEE;
         // Validate address fields are required for delivery
         if (empty($address1)) {
-            $errors[] = 'Address Line 1 is required for delivery';
+            $errors[] = 'Address is required for delivery';
         }
         if (empty($state) || !in_array($state, $malaysiaStates)) {
             $errors[] = 'Valid state is required for delivery';
@@ -272,17 +272,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                 $promotion = $stmt->fetch();
                 
                 if (!$promotion) {
-                    $errors[] = 'Kod promosi tidak sah atau telah tamat tempoh';
+                    $errors[] = 'Invalid or expired promotion code';
                     $discountAmount = 0;
                     $promoCode = '';
                 } elseif ($promotion['usage_limit'] !== null && $promotion['used_count'] >= $promotion['usage_limit']) {
-                    $errors[] = 'Kod promosi telah mencapai had penggunaan';
+                    $errors[] = 'Promotion code has reached usage limit';
                     $discountAmount = 0;
                     $promoCode = '';
                 }
             } catch (PDOException $e) {
                 error_log('Promotion validation error: ' . $e->getMessage());
-                $errors[] = 'Ralat semasa mengesahkan kod promosi';
+                $errors[] = 'Error validating promotion code';
                 $discountAmount = 0;
                 $promoCode = '';
             }
@@ -657,10 +657,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             // Show error message based on debug mode
             if (DEBUG_MODE) {
                 // Show detailed error in development
-                $errors[] = 'Ralat semasa memproses checkout: ' . htmlspecialchars($errorMessage);
+                $errors[] = 'Error processing checkout: ' . htmlspecialchars($errorMessage);
             } else {
                 // Show generic error in production
-                $errors[] = 'Ralat semasa memproses checkout. Sila cuba lagi atau hubungi kami.';
+                $errors[] = 'Error processing checkout. Please try again or contact us.';
             }
         }
     }
@@ -717,8 +717,8 @@ if ($finalAmount < 0) {
                     <strong>PRE-ORDER</strong>
                 </div>
                 <p>
-                    <strong>Ini adalah pre-order.</strong> Kami akan menghantar kemaskini kemajuan pesanan anda melalui email pada setiap peringkat proses. 
-                    Sila pastikan alamat email anda betul dan aktif untuk menerima notifikasi.
+                    <strong>This is a pre-order.</strong> We will send order progress updates via email at each stage of the process. 
+                    Please ensure your email address is correct and active to receive notifications.
                 </p>
             </div>
             
@@ -801,8 +801,11 @@ if ($finalAmount < 0) {
                             </div>
                         <?php endif; ?>
                         <div class="order-total-row final">
-                            <span>Total:</span>
+                            <span>Total Amount to Pay:</span>
                             <span id="finalTotalDisplay">RM <?php echo number_format($finalAmount, 2); ?></span>
+                        </div>
+                        <div class="order-summary-note">
+                            <p><strong>Note:</strong> A RM 1.00 transaction fee will be added for online banking payments. This fee is not included in the total above and will be shown during payment.</p>
                         </div>
                     </div>
                 </div>
@@ -813,23 +816,15 @@ if ($finalAmount < 0) {
                     
                     <!-- Order Type Selection -->
                     <div class="form-group">
-                        <label>Order Type <span class="required">*</span></label>
-                        <div class="order-type-selector">
-                            <label class="order-type-option">
-                                <input type="radio" name="order_type" value="pickup" <?php echo ($currentOrderType ?? 'delivery') === 'pickup' ? 'checked' : ''; ?>>
-                                <span class="order-type-label">
-                                    <strong>Pickup</strong>
-                                    <small>Free - Collect from our store</small>
-                                </span>
-                            </label>
-                            <label class="order-type-option">
-                                <input type="radio" name="order_type" value="delivery" <?php echo ($currentOrderType ?? 'delivery') === 'delivery' ? 'checked' : ''; ?>>
-                                <span class="order-type-label">
-                                    <strong>Delivery</strong>
-                                    <small>RM <?php echo number_format(DELIVERY_FEE, 2); ?> delivery fee</small>
-                                </span>
-                            </label>
-                        </div>
+                        <label for="order_type">Order Type <span class="required">*</span></label>
+                        <select name="order_type" id="order_type" class="order-type-select" required>
+                            <option value="pickup" <?php echo ($currentOrderType ?? 'delivery') === 'pickup' ? 'selected' : ''; ?>>
+                                Pickup - Free (Collect from our store)
+                            </option>
+                            <option value="delivery" <?php echo ($currentOrderType ?? 'delivery') === 'delivery' ? 'selected' : ''; ?>>
+                                Delivery - RM <?php echo number_format(DELIVERY_FEE, 2); ?> delivery fee
+                            </option>
+                        </select>
                     </div>
                     
                     <div class="form-group required">
@@ -855,60 +850,54 @@ if ($finalAmount < 0) {
                         </div>
                     </div>
                     
-                    <h3>Delivery Address</h3>
-                    
-                    <div class="form-group required" data-required-for-delivery>
-                        <label for="address1">Address Line 1</label>
-                        <input type="text" name="address1" id="address1" 
-                               value="<?php echo isset($_POST['address1']) ? htmlspecialchars($_POST['address1']) : ''; ?>" 
-                               data-required-for-delivery>
-                    </div>
-                    
-                    <div class="form-group" data-required-for-delivery>
-                        <label for="address2">Address Line 2 (Optional)</label>
-                        <input type="text" name="address2" id="address2" 
-                               value="<?php echo isset($_POST['address2']) ? htmlspecialchars($_POST['address2']) : ''; ?>"
-                               data-required-for-delivery>
-                    </div>
-                    
-                    <div class="form-group" data-required-for-delivery>
-                        <label for="address3">Address Line 3 (Optional)</label>
-                        <input type="text" name="address3" id="address3" 
-                               value="<?php echo isset($_POST['address3']) ? htmlspecialchars($_POST['address3']) : ''; ?>"
-                               data-required-for-delivery>
-                    </div>
-                    
-                    <div class="form-row">
+                    <!-- Delivery Address Section (shown only for delivery) -->
+                    <div id="deliveryAddressSection" style="display: <?php echo ($currentOrderType ?? 'delivery') === 'delivery' ? 'block' : 'none'; ?>;">
+                        <h3>Delivery Address</h3>
+                        
                         <div class="form-group required" data-required-for-delivery>
-                            <label for="state">State</label>
-                            <select name="state" id="state" data-required-for-delivery>
-                                <option value="">-- Select State --</option>
-                                <?php foreach ($malaysiaStates as $stateOption): ?>
-                                    <option value="<?php echo htmlspecialchars($stateOption); ?>"
-                                            <?php echo (isset($_POST['state']) && $_POST['state'] === $stateOption) ? 'selected' : ''; ?>>
-                                        <?php echo htmlspecialchars($stateOption); ?>
-                                    </option>
-                                <?php endforeach; ?>
-                            </select>
+                            <label for="address1">Address</label>
+                            <textarea name="address1" id="address1" 
+                                      rows="3"
+                                      placeholder="Enter your full delivery address"
+                                      data-required-for-delivery><?php echo isset($_POST['address1']) ? htmlspecialchars($_POST['address1']) : ''; ?></textarea>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group required" data-required-for-delivery>
+                                <label for="state">State</label>
+                                <select name="state" id="state" data-required-for-delivery>
+                                    <option value="">-- Select State --</option>
+                                    <?php foreach ($malaysiaStates as $stateOption): ?>
+                                        <option value="<?php echo htmlspecialchars($stateOption); ?>"
+                                                <?php echo (isset($_POST['state']) && $_POST['state'] === $stateOption) ? 'selected' : ''; ?>>
+                                            <?php echo htmlspecialchars($stateOption); ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group required" data-required-for-delivery>
+                                <label for="district">District/City</label>
+                                <input type="text" name="district" id="district" 
+                                       value="<?php echo isset($_POST['district']) ? htmlspecialchars($_POST['district']) : ''; ?>" 
+                                       data-required-for-delivery>
+                            </div>
                         </div>
                         
                         <div class="form-group required" data-required-for-delivery>
-                            <label for="district">District/City</label>
-                            <input type="text" name="district" id="district" 
-                                   value="<?php echo isset($_POST['district']) ? htmlspecialchars($_POST['district']) : ''; ?>" 
+                            <label for="postcode">Postcode</label>
+                            <input type="text" name="postcode" id="postcode" 
+                                   pattern="[0-9]{5}" 
+                                   maxlength="5"
+                                   value="<?php echo isset($_POST['postcode']) ? htmlspecialchars($_POST['postcode']) : ''; ?>" 
                                    data-required-for-delivery>
+                            <small>5 digits only</small>
                         </div>
                     </div>
                     
-                    <div class="form-group required" data-required-for-delivery>
-                        <label for="postcode">Postcode</label>
-                        <input type="text" name="postcode" id="postcode" 
-                               pattern="[0-9]{5}" 
-                               maxlength="5"
-                               value="<?php echo isset($_POST['postcode']) ? htmlspecialchars($_POST['postcode']) : ''; ?>" 
-                               data-required-for-delivery>
-                        <small>5 digits only</small>
-                    </div>
+                    <!-- Hidden fields for backward compatibility (keep address2 and address3 as empty for delivery) -->
+                    <input type="hidden" name="address2" value="">
+                    <input type="hidden" name="address3" value="">
                     
                     <!-- Pre-Order Notice -->
                     <div class="pre-order-banner-inline" style="margin-top: 1.5rem;">
@@ -963,18 +952,6 @@ if ($finalAmount < 0) {
                     document.getElementById('promoCodeApplied').value = data.code;
                     document.getElementById('promoDiscount').value = data.discount;
                     
-                    // Log for debugging
-                    console.log('✅ Promo code applied:', {
-                        code: data.code,
-                        discount: data.discount,
-                        subtotal: data.subtotal,
-                        final: data.final
-                    });
-                    console.log('Hidden fields updated:', {
-                        promoCodeApplied: document.getElementById('promoCodeApplied').value,
-                        promoDiscount: document.getElementById('promoDiscount').value
-                    });
-                    
                     // Update display (data.final already includes delivery fee from server)
                     updateOrderTotal(data.subtotal, data.discount, data.final);
                     
@@ -987,9 +964,10 @@ if ($finalAmount < 0) {
                     // Clear discount
                     document.getElementById('promoCodeApplied').value = '';
                     document.getElementById('promoDiscount').value = '0';
-                    console.log('❌ Promo code failed, cleared hidden fields');
+                    // Promo code validation failed
                     // Recalculate with current order type
-                    const orderType = document.querySelector('input[name="order_type"]:checked')?.value || 'delivery';
+                    const orderTypeSelect = document.getElementById('order_type');
+                    const orderType = orderTypeSelect ? orderTypeSelect.value : 'delivery';
                     const deliveryFee = (orderType === 'delivery') ? DELIVERY_FEE : 0;
                     const subtotal = data.subtotal || CART_SUBTOTAL;
                     updateOrderTotal(subtotal, 0, subtotal + deliveryFee);
@@ -1000,7 +978,7 @@ if ($finalAmount < 0) {
                 this.textContent = 'Apply';
             })
             .catch(error => {
-                console.error('Error:', error);
+                // Error handling (logging removed for production)
                 promoMessage.innerHTML = '<div class="promo-message error">Error validating promotion code</div>';
                 this.disabled = false;
                 this.textContent = 'Apply';
@@ -1047,7 +1025,8 @@ if ($finalAmount < 0) {
             }
             
             // Get current order type to calculate delivery fee
-            const orderType = document.querySelector('input[name="order_type"]:checked')?.value || 'delivery';
+            const orderTypeSelect = document.getElementById('order_type');
+            const orderType = orderTypeSelect ? orderTypeSelect.value : 'delivery';
             const deliveryFee = (orderType === 'delivery') ? DELIVERY_FEE : 0;
             const calculatedFinal = subtotal + deliveryFee - discount;
             
@@ -1079,24 +1058,37 @@ if ($finalAmount < 0) {
             }
         }
         
-        // Handle order type change
-        const orderTypeInputs = document.querySelectorAll('input[name="order_type"]');
-        orderTypeInputs.forEach(input => {
-            input.addEventListener('change', function() {
+        // Handle order type change (dropdown)
+        const orderTypeSelect = document.getElementById('order_type');
+        const deliveryAddressSection = document.getElementById('deliveryAddressSection');
+        
+        if (orderTypeSelect) {
+            orderTypeSelect.addEventListener('change', function() {
                 const orderType = this.value;
                 updateTotalsForOrderType(orderType);
                 
-                // Toggle address field requirements
-                const addressFields = document.querySelectorAll('[data-required-for-delivery]');
-                addressFields.forEach(field => {
-                    if (orderType === 'delivery') {
+                // Show/hide delivery address section
+                if (orderType === 'delivery') {
+                    deliveryAddressSection.style.display = 'block';
+                    // Add required attributes
+                    const addressFields = deliveryAddressSection.querySelectorAll('[data-required-for-delivery]');
+                    addressFields.forEach(field => {
                         field.setAttribute('required', 'required');
-                    } else {
+                    });
+                } else {
+                    deliveryAddressSection.style.display = 'none';
+                    // Remove required attributes
+                    const addressFields = deliveryAddressSection.querySelectorAll('[data-required-for-delivery]');
+                    addressFields.forEach(field => {
                         field.removeAttribute('required');
-                    }
-                });
+                        field.value = ''; // Clear values when hidden
+                    });
+                }
             });
-        });
+            
+            // Trigger on page load to set initial state
+            orderTypeSelect.dispatchEvent(new Event('change'));
+        }
         
         // Allow Enter key to apply promo code
         document.getElementById('promoCodeInput').addEventListener('keypress', function(e) {
@@ -1111,24 +1103,18 @@ if ($finalAmount < 0) {
             // Log promo code values before submit
             const promoCodeApplied = document.getElementById('promoCodeApplied').value;
             const promoDiscount = document.getElementById('promoDiscount').value;
-            console.log('📤 Form submitting with:', {
-                promoCode: promoCodeApplied,
-                discount: promoDiscount,
-                subtotal: <?php echo $cartSubtotal; ?>,
-                final: <?php echo $cartSubtotal; ?> - parseFloat(promoDiscount || 0)
-            });
+            // Form submission (logging removed for production)
             
             const fullname = document.getElementById('fullname').value.trim();
             const email = document.getElementById('email').value.trim();
             const phone = document.getElementById('phone').value.trim();
-            const address1 = document.getElementById('address1').value.trim();
-            const state = document.getElementById('state').value;
-            const district = document.getElementById('district').value.trim();
-            const postcode = document.getElementById('postcode').value.trim();
+            const orderTypeSelect = document.getElementById('order_type');
+            const orderType = orderTypeSelect ? orderTypeSelect.value : 'delivery';
             
-            if (!fullname || !email || !phone || !address1 || !state || !district || !postcode) {
+            // Basic validation
+            if (!fullname || !email || !phone) {
                 e.preventDefault();
-                alert('Sila isi semua medan yang diperlukan.');
+                alert('Please fill in all required fields.');
                 return false;
             }
             
@@ -1136,15 +1122,29 @@ if ($finalAmount < 0) {
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             if (!emailRegex.test(email)) {
                 e.preventDefault();
-                alert('Sila masukkan email yang sah.');
+                alert('Please enter a valid email address.');
                 return false;
             }
             
-            // Postcode validation
-            if (!/^\d{5}$/.test(postcode)) {
-                e.preventDefault();
-                alert('Poskod mestilah 5 digit nombor.');
-                return false;
+            // Address validation only for delivery
+            if (orderType === 'delivery') {
+                const address1 = document.getElementById('address1').value.trim();
+                const state = document.getElementById('state').value;
+                const district = document.getElementById('district').value.trim();
+                const postcode = document.getElementById('postcode').value.trim();
+                
+                if (!address1 || !state || !district || !postcode) {
+                    e.preventDefault();
+                    alert('Please fill in all delivery address fields.');
+                    return false;
+                }
+                
+                // Postcode validation
+                if (!/^\d{5}$/.test(postcode)) {
+                    e.preventDefault();
+                    alert('Postcode must be 5 digits.');
+                    return false;
+                }
             }
             
             // Show loading state
