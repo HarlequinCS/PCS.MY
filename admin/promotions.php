@@ -191,6 +191,10 @@ if (isset($_GET['logout'])) {
                 <span class="nav-icon">📦</span>
                 <span>Orders</span>
             </a>
+            <a href="/admin/products.php" class="nav-item">
+                <span class="nav-icon">🛍️</span>
+                <span>Products</span>
+            </a>
             <a href="/admin/promotions.php" class="nav-item active">
                 <span class="nav-icon">🎟️</span>
                 <span>Promotions</span>

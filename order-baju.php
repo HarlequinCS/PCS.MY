@@ -76,28 +76,115 @@ function createOrdersTableIfNotExists() {
 
 createOrdersTableIfNotExists();
 
-// Product Configuration
-define('PRODUCT_NAME', 'Japanese Drill Half-Zip Workshirt');
-define('PRICE_PER_SHIRT', 50.00); // RM50 per baju
-
-// Variant Configuration
-$variants = [
-    'hitamdepan' => [
-        'name' => 'Hitam',
-        'image' => 'images/hitamdepan.svg',
-        'color' => '#1a1a1a'
-    ],
-    'hijaufront' => [
-        'name' => 'Hijau',
-        'image' => 'images/hijaufront.svg',
-        'color' => '#2d5016'
-    ],
-    'merahdepan' => [
-        'name' => 'Merah',
-        'image' => 'images/merahdepan.svg',
-        'color' => '#8b0000'
-    ]
-];
+// Product Configuration - Load from Database
+try {
+    $pdo = getDBConnection();
+    
+    // Get product from database
+    $productStmt = $pdo->query("SELECT * FROM products LIMIT 1");
+    $product = $productStmt->fetch();
+    
+    if ($product) {
+        define('PRODUCT_NAME', $product['name']);
+        define('PRICE_PER_SHIRT', floatval($product['price']));
+        $productStockStatus = $product['stock_status'];
+        
+        // Get variants from database
+        $variantsStmt = $pdo->prepare("
+            SELECT variant_key, variant_name, variant_image 
+            FROM product_variants 
+            WHERE product_id = :product_id
+            ORDER BY variant_key
+        ");
+        $variantsStmt->execute([':product_id' => $product['id']]);
+        $dbVariants = $variantsStmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        // Build variants array with colors (for display)
+        $variants = [];
+        $variantColors = [
+            'hitamdepan' => '#1a1a1a',
+            'hijaufront' => '#2d5016',
+            'merahdepan' => '#8b0000'
+        ];
+        
+        foreach ($dbVariants as $v) {
+            $variants[$v['variant_key']] = [
+                'name' => $v['variant_name'],
+                'image' => $v['variant_image'],
+                'color' => $variantColors[$v['variant_key']] ?? '#1a1a1a'
+            ];
+        }
+        
+        // Get inventory data if in_stock
+        $inventoryData = [];
+        if ($productStockStatus === 'in_stock') {
+            $inventoryStmt = $pdo->prepare("
+                SELECT pv.variant_key, pi.size, pi.quantity
+                FROM product_inventory pi
+                JOIN product_variants pv ON pi.variant_id = pv.id
+                WHERE pv.product_id = :product_id
+            ");
+            $inventoryStmt->execute([':product_id' => $product['id']]);
+            $inventoryRows = $inventoryStmt->fetchAll();
+            
+            foreach ($inventoryRows as $row) {
+                if (!isset($inventoryData[$row['variant_key']])) {
+                    $inventoryData[$row['variant_key']] = [];
+                }
+                $inventoryData[$row['variant_key']][$row['size']] = intval($row['quantity']);
+            }
+        }
+    } else {
+        // Fallback to defaults if no product found
+        define('PRODUCT_NAME', 'Japanese Drill Half-Zip Workshirt');
+        define('PRICE_PER_SHIRT', 50.00);
+        $productStockStatus = 'pre_order';
+        $inventoryData = [];
+        
+        $variants = [
+            'hitamdepan' => [
+                'name' => 'Hitam',
+                'image' => 'images/hitamdepan.svg',
+                'color' => '#1a1a1a'
+            ],
+            'hijaufront' => [
+                'name' => 'Hijau',
+                'image' => 'images/hijaufront.svg',
+                'color' => '#2d5016'
+            ],
+            'merahdepan' => [
+                'name' => 'Merah',
+                'image' => 'images/merahdepan.svg',
+                'color' => '#8b0000'
+            ]
+        ];
+    }
+} catch (PDOException $e) {
+    // Fallback to defaults on database error
+    error_log('Error loading product from database: ' . $e->getMessage());
+    define('PRODUCT_NAME', 'Japanese Drill Half-Zip Workshirt');
+    define('PRICE_PER_SHIRT', 50.00);
+    $productStockStatus = 'pre_order';
+    $inventoryData = [];
+    
+    $variants = [
+        'hitamdepan' => [
+            'name' => 'Hitam',
+            'image' => 'images/hitamdepan.svg',
+            'color' => '#1a1a1a'
+        ],
+        'hijaufront' => [
+            'name' => 'Hijau',
+            'image' => 'images/hijaufront.svg',
+            'color' => '#2d5016'
+        ],
+        'merahdepan' => [
+            'name' => 'Merah',
+            'image' => 'images/merahdepan.svg',
+            'color' => '#8b0000'
+        ]
+    ];
+}
 
 // Size Options
 $sizes = ['S', 'M', 'L', 'XL', 'XXL'];
@@ -125,30 +212,59 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         $message = 'Quantity must be at least 1';
         $messageType = 'error';
     } else {
-        // Check stock status for this variant
-        try {
-            $pdo = getDBConnection();
-            
-            // Get latest stock status for this variant (from most recent order)
-            $stockStmt = $pdo->prepare("
-                SELECT stock_status 
-                FROM orders 
-                WHERE variant = :variant 
-                ORDER BY created_at DESC 
-                LIMIT 1
-            ");
-            $stockStmt->execute([':variant' => $variant]);
-            $stockData = $stockStmt->fetch();
-            
-            if ($stockData && $stockData['stock_status'] === 'out_of_stock') {
-                $message = 'This variant is currently out of stock. Please select another color.';
-                $messageType = 'error';
-            } else {
-                // Continue with order processing
-                // Calculate item total
+        // Check product stock status and inventory
+        if (isset($productStockStatus) && $productStockStatus === 'out_of_stock') {
+            $message = 'This product is currently out of stock. Please check back later.';
+            $messageType = 'error';
+        } elseif (isset($productStockStatus) && $productStockStatus === 'in_stock') {
+            // Check inventory quantity for in_stock products
+            try {
+                $pdo = getDBConnection();
+                $inventoryStmt = $pdo->prepare("
+                    SELECT pi.quantity 
+                    FROM product_inventory pi
+                    JOIN product_variants pv ON pi.variant_id = pv.id
+                    WHERE pv.variant_key = :variant_key AND pi.size = :size
+                ");
+                $inventoryStmt->execute([
+                    ':variant_key' => $variant,
+                    ':size' => $size
+                ]);
+                $inventory = $inventoryStmt->fetch();
+                
+                $availableQty = $inventory ? intval($inventory['quantity']) : 0;
+                
+                if ($availableQty < $quantity) {
+                    if ($availableQty === 0) {
+                        $message = 'This variant and size combination is currently out of stock.';
+                    } else {
+                        $message = "Only {$availableQty} unit(s) available for this variant and size. Please adjust your quantity.";
+                    }
+                    $messageType = 'error';
+                } else {
+                    // Inventory check passed, proceed with adding to cart
+                    $itemTotal = PRICE_PER_SHIRT * $quantity;
+                    
+                    $cartItem = [
+                        'id' => uniqid('item_'),
+                        'variant' => $variant,
+                        'variant_name' => $variants[$variant]['name'],
+                        'variant_image' => $variants[$variant]['image'],
+                        'size' => $size,
+                        'quantity' => $quantity,
+                        'price' => PRICE_PER_SHIRT,
+                        'subtotal' => $itemTotal
+                    ];
+                    
+                    $_SESSION['cart'][] = $cartItem;
+                    $message = 'Item successfully added to cart!';
+                    $messageType = 'success';
+                }
+            } catch (PDOException $e) {
+                error_log('Inventory check error: ' . $e->getMessage());
+                // Fail open - allow order if inventory check fails
                 $itemTotal = PRICE_PER_SHIRT * $quantity;
                 
-                // Create cart item
                 $cartItem = [
                     'id' => uniqid('item_'),
                     'variant' => $variant,
@@ -160,19 +276,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                     'subtotal' => $itemTotal
                 ];
                 
-                // Add to cart
                 $_SESSION['cart'][] = $cartItem;
-                
                 $message = 'Item successfully added to cart!';
                 $messageType = 'success';
             }
-        } catch (PDOException $e) {
-            error_log('Stock check error: ' . $e->getMessage());
-            // Continue with order if stock check fails (fail open)
-            // Calculate item total
+        } else {
+            // pre_order status - allow ordering without inventory check
             $itemTotal = PRICE_PER_SHIRT * $quantity;
             
-            // Create cart item
             $cartItem = [
                 'id' => uniqid('item_'),
                 'variant' => $variant,
@@ -184,9 +295,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                 'subtotal' => $itemTotal
             ];
             
-            // Add to cart
             $_SESSION['cart'][] = $cartItem;
-            
             $message = 'Item successfully added to cart!';
             $messageType = 'success';
         }

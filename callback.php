@@ -44,35 +44,66 @@ $transactionId = isset($postData['transaction_id']) ? $postData['transaction_id'
 $amount = isset($postData['amount']) ? $postData['amount'] : '';
 
 // ============================================
-// STEP 5: Update Database (Optional)
+// STEP 5: Update Database
 // ============================================
 // Update payment status dalam database jika payment successful
 // Status ID: 1 = Success, 2 = Pending, 3 = Failed
 if ($statusId == 1) {
     // Payment successful - update database
-    // CONTOH PSEUDO CODE (gantikan dengan database logic sebenar):
-    /*
     try {
-        // Connect to database
-        $pdo = new PDO('mysql:host=localhost;dbname=your_db', 'username', 'password');
+        // Include database connection
+        define('DB_CONFIG_LOADED', true);
+        require_once __DIR__ . '/config/database.php';
+        require_once __DIR__ . '/includes/db.php';
         
-        // Update payment status
-        $stmt = $pdo->prepare("
-            UPDATE payments 
-            SET 
-                status = 'paid',
-                transaction_id = :transaction_id,
-                bill_code = :bill_code,
-                updated_at = NOW()
-            WHERE 
-                external_reference_no = :order_id
+        $pdo = getDBConnection();
+        
+        // Update order status to paid
+        $updateStmt = $pdo->prepare("
+            UPDATE orders 
+            SET status = 'paid' 
+            WHERE billExternalReferenceNo = :ref_no
         ");
+        $updateStmt->execute([':ref_no' => $orderId]);
         
-        $stmt->execute([
-            ':transaction_id' => $transactionId,
-            ':bill_code' => $billCode,
-            ':order_id' => $orderId
-        ]);
+        // Get all orders for this reference (may have multiple items)
+        $ordersStmt = $pdo->prepare("
+            SELECT variant, size, quantity 
+            FROM orders 
+            WHERE billExternalReferenceNo = :ref_no
+        ");
+        $ordersStmt->execute([':ref_no' => $orderId]);
+        $orderItems = $ordersStmt->fetchAll();
+        
+        // Decrease inventory for each item (only if product is in_stock)
+        $productStmt = $pdo->query("SELECT id, stock_status FROM products LIMIT 1");
+        $product = $productStmt->fetch();
+        
+        if ($product && $product['stock_status'] === 'in_stock') {
+            foreach ($orderItems as $item) {
+                // Decrease inventory quantity
+                $decreaseStmt = $pdo->prepare("
+                    UPDATE product_inventory pi
+                    JOIN product_variants pv ON pi.variant_id = pv.id
+                    SET pi.quantity = GREATEST(0, pi.quantity - :qty)
+                    WHERE pv.variant_key = :variant_key AND pi.size = :size
+                ");
+                $decreaseStmt->execute([
+                    ':qty' => intval($item['quantity']),
+                    ':variant_key' => $item['variant'],
+                    ':size' => $item['size']
+                ]);
+                
+                // Log inventory decrease
+                error_log(sprintf(
+                    "Inventory decreased: Variant %s, Size %s, Quantity -%d (Order: %s)",
+                    $item['variant'],
+                    $item['size'],
+                    intval($item['quantity']),
+                    $orderId
+                ));
+            }
+        }
         
         // Log success
         error_log("Payment updated successfully: Order ID {$orderId}");
@@ -81,7 +112,6 @@ if ($statusId == 1) {
         // Log error but don't fail callback
         error_log("Database update failed: " . $e->getMessage());
     }
-    */
 }
 
 // ============================================
@@ -91,4 +121,3 @@ if ($statusId == 1) {
 // Jangan output apa-apa content
 http_response_code(200);
 exit;
-

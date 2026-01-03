@@ -320,30 +320,79 @@ body {
 .main-content {
     margin-left: 260px;
     flex: 1;
-    padding: 2rem;
-    max-width: calc(100% - 260px);
+    padding: 0;
 }
 
 .content-header {
-    margin-bottom: 2rem;
+    background: var(--card-bg);
+    padding: 30px 40px;
+    border-bottom: 1px solid var(--border-color);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .content-header h1 {
     font-size: 2rem;
-    font-weight: 700;
+    margin-bottom: 20px;
     color: var(--text-primary);
-    margin-bottom: 0.5rem;
 }
 
-/* Statistics Grid */
+.header-stats {
+    display: flex;
+    gap: 20px;
+}
+
+.stat-card {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    padding: 20px 30px;
+    border-radius: 12px;
+    border-left: 4px solid;
+    min-width: 150px;
+}
+
+.stat-card.pending {
+    border-left-color: var(--warning-color);
+}
+
+.stat-card.approved {
+    border-left-color: var(--success-color);
+}
+
+.stat-card.total {
+    border-left-color: var(--primary-color);
+}
+
+.stat-label {
+    display: block;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.stat-value {
+    display: block;
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+/* Content Body */
+.content-body {
+    padding: 30px 40px;
+}
+
+/* Statistics Grid (for Orders page) */
 .stats-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 1.5rem;
     margin-bottom: 2rem;
+    padding: 0 2rem;
+    margin-top: 2rem;
 }
 
-.stat-card {
+.stats-grid .stat-card {
     background: var(--card-bg);
     padding: 1.5rem;
     border-radius: 12px;
@@ -352,12 +401,12 @@ body {
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.stat-card:hover {
+.stats-grid .stat-card:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
-.stat-card h3 {
+.stats-grid .stat-card h3 {
     margin: 0 0 0.5rem 0;
     font-size: 0.875rem;
     font-weight: 600;
@@ -366,7 +415,7 @@ body {
     letter-spacing: 0.5px;
 }
 
-.stat-card .stat-value {
+.stats-grid .stat-card .stat-value {
     font-size: 2rem;
     font-weight: 700;
     color: var(--text-primary);
@@ -743,6 +792,194 @@ a:hover {
     color: var(--text-primary);
 }
 
+/* Filter Tabs */
+.filter-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 30px;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.tab-btn {
+    padding: 12px 24px;
+    border: none;
+    background: none;
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    transition: all 0.3s ease;
+    margin-bottom: -2px;
+}
+
+.tab-btn:hover {
+    color: var(--text-primary);
+}
+
+.tab-btn.active {
+    color: var(--primary-color);
+    border-bottom-color: var(--primary-color);
+}
+
+/* Comments Container */
+.comments-container {
+    display: grid;
+    gap: 20px;
+}
+
+.comment-card {
+    background: var(--card-bg);
+    border-radius: 12px;
+    padding: 25px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    border-left: 4px solid;
+    transition: all 0.3s ease;
+    animation: slideIn 0.4s ease-out;
+}
+
+.comment-card.pending {
+    border-left-color: var(--warning-color);
+}
+
+.comment-card.approved {
+    border-left-color: var(--success-color);
+}
+
+.comment-card.rejected {
+    border-left-color: var(--danger-color);
+    opacity: 0.7;
+}
+
+.comment-card:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+    transform: translateY(-2px);
+}
+
+.comment-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 15px;
+}
+
+.comment-meta {
+    flex: 1;
+}
+
+.comment-id {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin-bottom: 5px;
+}
+
+.comment-date {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.comment-status {
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.comment-status.pending {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.comment-status.approved {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.comment-status.rejected {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.comment-text {
+    font-size: 1rem;
+    line-height: 1.7;
+    color: var(--text-primary);
+    margin-bottom: 15px;
+    padding: 15px;
+    background: var(--bg-color);
+    border-radius: 8px;
+}
+
+.comment-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 15px;
+    border-top: 1px solid var(--border-color);
+}
+
+.comment-ip {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    font-family: monospace;
+}
+
+.comment-actions {
+    display: flex;
+    gap: 10px;
+}
+
+/* Loading Spinner */
+.loading-spinner {
+    text-align: center;
+    padding: 60px 20px;
+}
+
+.spinner {
+    width: 50px;
+    height: 50px;
+    border: 4px solid var(--border-color);
+    border-top-color: var(--primary-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 20px;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.loading-spinner p {
+    color: var(--text-secondary);
+}
+
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-secondary);
+}
+
+.empty-state-icon {
+    font-size: 4rem;
+    margin-bottom: 20px;
+    opacity: 0.5;
+}
+
+.empty-state h3 {
+    font-size: 1.5rem;
+    margin-bottom: 10px;
+    color: var(--text-primary);
+}
+
+
+
+
+
 /* Responsive Design */
 @media (max-width: 768px) {
     .mobile-menu-toggle {
@@ -796,6 +1033,168 @@ a:hover {
 
     .form-actions {
         flex-direction: column;
+    }
+    
+    .content-body {
+        padding: 20px;
+    }
+    
+    .filter-tabs {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+    
+    .tab-btn {
+        padding: 10px 16px;
+        font-size: 0.9rem;
+        flex: 1;
+        min-width: calc(33.333% - 6px);
+    }
+    
+    .comment-card {
+        padding: 20px;
+    }
+    
+    .comment-header {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .comment-footer {
+        flex-direction: column;
+        gap: 15px;
+        align-items: flex-start;
+    }
+    
+    .comment-actions {
+        width: 100%;
+        flex-direction: column;
+    }
+    
+    .comment-actions .btn {
+        width: 100%;
+    }
+    
+    .email-filters {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .search-box {
+        max-width: 100%;
+    }
+    
+    .filter-buttons {
+        width: 100%;
+        justify-content: stretch;
+    }
+    
+    .filter-btn {
+        flex: 1;
+    }
+    
+    .email-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .email-address {
+        width: 100%;
+    }
+    
+    .email-meta {
+        grid-template-columns: 1fr;
+    }
+    
+    .header-stats {
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    
+    .stat-card {
+        flex: 1;
+        min-width: calc(50% - 5px);
+        padding: 15px 20px;
+    }
+    
+    .stat-value {
+        font-size: 1.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .content-header {
+        padding: 15px;
+        margin-top: 55px;
+    }
+    
+    .content-header h1 {
+        font-size: 1.3rem;
+        margin-bottom: 12px;
+    }
+    
+    .header-stats {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .stat-card {
+        width: 100%;
+        min-width: 100%;
+        padding: 15px;
+    }
+    
+    .stat-label {
+        font-size: 0.8rem;
+    }
+    
+    .stat-value {
+        font-size: 1.8rem;
+    }
+    
+    .content-body {
+        padding: 15px;
+    }
+    
+    .filter-tabs {
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .tab-btn {
+        width: 100%;
+        min-width: 100%;
+        padding: 12px;
+        text-align: center;
+    }
+    
+    .comment-card {
+        padding: 18px;
+        border-radius: 10px;
+    }
+    
+    .comment-text {
+        font-size: 0.95rem;
+        padding: 12px;
+        margin-bottom: 12px;
+    }
+    
+    .comment-id,
+    .comment-date,
+    .comment-ip {
+        font-size: 0.8rem;
+    }
+    
+    .comment-status {
+        font-size: 0.7rem;
+        padding: 5px 10px;
+    }
+    
+    .btn-sm {
+        padding: 10px 16px;
+        font-size: 0.9rem;
+        width: 100%;
     }
 }
 
