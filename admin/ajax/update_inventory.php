@@ -73,19 +73,20 @@ try {
     $columns = $pdo->query("SHOW COLUMNS FROM product_inventory LIKE 'updated_at'")->fetch();
 
     // Insert or update inventory (INSERT ON DUPLICATE KEY UPDATE)
+    // Note: created_at is only set on INSERT, not on UPDATE (duplicate key)
     if ($columns) {
         $updateSql = "
             INSERT INTO product_inventory (variant_id, size, quantity, created_at, updated_at)
             VALUES (:variant_id, :size, :quantity, NOW(), NOW())
             ON DUPLICATE KEY UPDATE 
-                quantity = :quantity,
+                quantity = VALUES(quantity),
                 updated_at = NOW()
         ";
     } else {
         $updateSql = "
             INSERT INTO product_inventory (variant_id, size, quantity)
             VALUES (:variant_id, :size, :quantity)
-            ON DUPLICATE KEY UPDATE quantity = :quantity
+            ON DUPLICATE KEY UPDATE quantity = VALUES(quantity)
         ";
     }
 
@@ -118,6 +119,11 @@ try {
 
 } catch (PDOException $e) {
     error_log('Inventory update error: ' . $e->getMessage());
-    echo json_encode(['success' => false, 'error' => 'Database error']);
+    error_log('SQL Error Code: ' . $e->getCode());
+    error_log('SQL Error Info: ' . print_r($e->errorInfo, true));
+    
+    // Return more detailed error for debugging (remove detailed message in production if needed)
+    $errorMessage = 'Database error: ' . $e->getMessage();
+    echo json_encode(['success' => false, 'error' => $errorMessage]);
 }
 
