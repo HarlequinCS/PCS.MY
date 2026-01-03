@@ -6,6 +6,7 @@
  */
 
 // Version number - increment this when deploying CSS/JS changes
+// Production version: Update this number whenever you deploy CSS/JS changes to force cache refresh
 define('ASSETS_VERSION', '1.0.0');
 
 /**

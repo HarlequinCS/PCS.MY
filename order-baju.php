@@ -519,7 +519,7 @@ foreach ($_SESSION['cart'] as $item) {
                                 <strong>Fit:</strong> Relaxed Workwear Fit
                             </div>
                             <div class="detail-item">
-                                <strong>Made in:</strong> Malaysia
+                                <strong>Made with:</strong> love
                             </div>
                         </div>
                     </div>

@@ -740,6 +740,57 @@ figure.logo img {
   box-sizing: border-box;
 }
 
+.content-section--instagram {
+  background: linear-gradient(180deg, #111 0%, #0a0a0a 100%);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 6rem 0;
+  text-align: center;
+}
+
+.content-section--instagram .section-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
+.instagram-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 1.125rem 3rem;
+  background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+  color: #fff;
+  border: none;
+  border-radius: 50px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-family: 'helvetica neue', helvetica, sans-serif;
+  text-decoration: none;
+  box-shadow: 0 4px 15px rgba(188, 24, 136, 0.3);
+}
+
+.instagram-btn svg {
+  width: 24px;
+  height: 24px;
+  fill: currentColor;
+}
+
+.instagram-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(188, 24, 136, 0.5);
+  background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+  filter: brightness(1.1);
+}
+
+.instagram-btn:active {
+  transform: translateY(-1px);
+}
+
 .content-section--features {
   background: linear-gradient(180deg, #0a0a0a 0%, #111 100%);
   border-top: 1px solid rgba(255, 255, 255, 0.1);

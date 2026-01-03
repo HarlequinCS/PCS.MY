@@ -232,9 +232,7 @@ require_once __DIR__ . '/config/version.php';
     <!-- Additional JavaScript for page interactions -->
     <script>
         // Console log for debugging
-        console.log('✅ Return page loaded');
-        console.log('Status ID:', <?php echo $statusId; ?>);
-        console.log('Status:', '<?php echo $statusClass; ?>');
+        // Return page loaded - status check complete
         
         // Homepage URL (adjust as needed)
         const homepageUrl = '/';
@@ -258,11 +256,11 @@ require_once __DIR__ . '/config/version.php';
                     if (defaultText) {
                         defaultText.textContent = `Redirecting in ${countdown}s...`;
                     }
-                    console.log('⏱️ Countdown:', countdown);
+                    // Countdown active
                     countdown--;
                 } else {
                     clearInterval(countdownInterval);
-                    console.log('🏠 Redirecting to homepage');
+                    // Redirecting to homepage
                     // Redirect to homepage
                     window.location.href = homepageUrl;
                 }
@@ -282,12 +280,12 @@ require_once __DIR__ . '/config/version.php';
                     mutations.forEach(function(mutation) {
                         if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
                             if (orderButton.classList.contains('animate') && !countdownStarted) {
-                                console.log('🚚 Order button animation started');
+                                // Order button animation started
                                 
                                 // Start countdown after animation completes (10 seconds)
                                 setTimeout(function() {
                                     if (!countdownStarted) {
-                                        console.log('⏱️ Starting 3 second countdown before redirect');
+                                        // Starting countdown before redirect
                                         startCountdownAndRedirect(3);
                                     }
                                 }, 10000); // Wait for animation to complete (10 seconds)
@@ -304,7 +302,7 @@ require_once __DIR__ . '/config/version.php';
                 
                 // Auto-trigger button animation on page load
                 setTimeout(function() {
-                    console.log('🚚 Auto-triggering order button animation');
+                    // Auto-triggering order button animation
                     orderButton.click();
                 }, 1000);
             }
