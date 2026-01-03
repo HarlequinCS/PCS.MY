@@ -360,7 +360,7 @@ if (isset($_GET['logout'])) {
                             <label for="valid_from">Valid From (Optional)</label>
                             <input type="datetime-local" name="valid_from" 
                                    value="<?php echo $promotion['valid_from'] ? date('Y-m-d\TH:i', strtotime($promotion['valid_from'])) : ''; ?>">
-                            <small>Leave empty if you don't want a start date</small>
+                            <small>Leave empty if you don't want a start date (Please Choose The Date A Day Earlier Than The Current Date To Avoid Confusion)</small>
                         </div>
                         
                         <div class="form-group">
