@@ -102,6 +102,7 @@ switch ($statusId) {
                 </figure>
                 <span class="nav-brand-text">PROJEK CUTI SEM</span>
             </a>
+            <a href="/" class="nav-back-link">← Back to Home</a>
         </div>
     </nav>
 
