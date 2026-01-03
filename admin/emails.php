@@ -114,25 +114,8 @@ if (isset($_GET['logout'])) {
         </div>
     </main>
     
+    <script src="/admin/js/admin.js?v=30"></script>
     <script>
-        // Mobile menu toggle
-        const mobileMenuToggle = document.getElementById('mobileMenuToggle');
-        const sidebar = document.getElementById('sidebar');
-        const sidebarOverlay = document.getElementById('sidebarOverlay');
-        
-        function toggleSidebar() {
-            sidebar.classList.toggle('active');
-            sidebarOverlay.classList.toggle('active');
-            mobileMenuToggle.classList.toggle('active');
-        }
-        
-        if (mobileMenuToggle) {
-            mobileMenuToggle.addEventListener('click', toggleSidebar);
-        }
-        
-        if (sidebarOverlay) {
-            sidebarOverlay.addEventListener('click', toggleSidebar);
-        }
         
         // Load emails
         async function loadEmails() {
@@ -147,7 +130,6 @@ if (isset($_GET['logout'])) {
                     showError('Failed to load emails');
                 }
             } catch (error) {
-                console.error('Error loading emails:', error);
                 showError('Failed to load emails. Please try again.');
             }
         }

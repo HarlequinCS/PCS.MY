@@ -152,25 +152,106 @@ $sizes = ['S', 'M', 'L', 'XL', 'XXL'];
         }
 
         .variant-group {
-            margin-bottom: 2rem;
+            margin-bottom: 3rem;
         }
 
-        .variant-header {
+        .variant-card {
+            display: flex;
+            gap: 2rem;
+            margin-bottom: 1.5rem;
+            padding: 1.5rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            align-items: flex-start;
+        }
+
+        .variant-image-container {
+            flex-shrink: 0;
+            width: 200px;
+            height: 200px;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 2px solid var(--border-color);
+            background: rgba(255, 255, 255, 0.02);
             display: flex;
             align-items: center;
-            gap: 1rem;
-            margin-bottom: 1rem;
-            padding: 1rem;
-            background: rgba(255, 255, 255, 0.03);
-            border-radius: 8px;
+            justify-content: center;
         }
 
-        .variant-image {
-            width: 60px;
-            height: 60px;
-            object-fit: cover;
-            border-radius: 6px;
-            border: 2px solid var(--border-color);
+        .variant-image-large {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
+        }
+
+        .variant-image-placeholder {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        .variant-details {
+            flex: 1;
+        }
+
+        .variant-name {
+            margin: 0 0 1rem 0;
+            font-size: 1.5rem;
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .variant-meta {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .variant-meta-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .variant-meta-item:last-child {
+            border-bottom: none;
+        }
+
+        .meta-label {
+            font-weight: 600;
+            color: var(--text-secondary);
+            min-width: 120px;
+            font-size: 0.875rem;
+        }
+
+        .meta-value {
+            color: var(--text-primary);
+            font-family: 'Courier New', monospace;
+            font-size: 0.875rem;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+        }
+
+        @media (max-width: 768px) {
+            .variant-card {
+                flex-direction: column;
+                gap: 1.5rem;
+            }
+
+            .variant-image-container {
+                width: 100%;
+                height: 250px;
+            }
         }
 
         .inventory-note {
@@ -304,14 +385,32 @@ $sizes = ['S', 'M', 'L', 'XL', 'XXL'];
 
                             <?php foreach ($variants as $variant): ?>
                                 <div class="variant-group">
-                                    <div class="variant-header">
-                                        <img src="/<?php echo htmlspecialchars($variant['variant_image']); ?>" 
-                                             alt="<?php echo htmlspecialchars($variant['variant_name']); ?>"
-                                             class="variant-image"
-                                             onerror="this.src='/images/placeholder.svg'">
-                                        <div>
-                                            <h4 style="margin: 0 0 0.25rem 0;"><?php echo htmlspecialchars($variant['variant_name']); ?></h4>
-                                            <small style="color: var(--text-secondary);">Key: <?php echo htmlspecialchars($variant['variant_key']); ?></small>
+                                    <div class="variant-card">
+                                        <div class="variant-image-container">
+                                            <img src="/<?php echo htmlspecialchars($variant['variant_image']); ?>" 
+                                                 alt="<?php echo htmlspecialchars($variant['variant_name']); ?>"
+                                                 class="variant-image-large"
+                                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                                            <div class="variant-image-placeholder" style="display: none;">
+                                                <span>No Image</span>
+                                            </div>
+                                        </div>
+                                        <div class="variant-details">
+                                            <h4 class="variant-name"><?php echo htmlspecialchars($variant['variant_name']); ?></h4>
+                                            <div class="variant-meta">
+                                                <div class="variant-meta-item">
+                                                    <span class="meta-label">Variant Key:</span>
+                                                    <span class="meta-value"><?php echo htmlspecialchars($variant['variant_key']); ?></span>
+                                                </div>
+                                                <div class="variant-meta-item">
+                                                    <span class="meta-label">Variant ID:</span>
+                                                    <span class="meta-value">#<?php echo $variant['id']; ?></span>
+                                                </div>
+                                                <div class="variant-meta-item">
+                                                    <span class="meta-label">Image Path:</span>
+                                                    <span class="meta-value"><?php echo htmlspecialchars($variant['variant_image']); ?></span>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
 

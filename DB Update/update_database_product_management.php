@@ -4,8 +4,8 @@
  * Run this once to set up product management tables and initialize default product
  */
 
-require_once __DIR__ . '/config/database.php';
-require_once __DIR__ . '/includes/db.php';
+require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../includes/db.php';
 
 try {
     $pdo = getDBConnection();
@@ -124,4 +124,3 @@ try {
     echo "Error Code: " . $e->getCode() . "\n";
     exit(1);
 }
-

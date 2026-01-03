@@ -47,7 +47,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             })
             .catch(error => {
-                console.error('Error:', error);
                 priceMessage.textContent = 'Network error. Please try again.';
                 priceMessage.style.color = 'var(--danger-color)';
             })
@@ -110,7 +109,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             })
             .catch(error => {
-                console.error('Error:', error);
                 statusMessage.textContent = 'Network error. Please try again.';
                 statusMessage.style.color = 'var(--danger-color)';
                 this.value = oldStatus; // Revert on error
@@ -172,7 +170,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             })
             .catch(error => {
-                console.error('Error:', error);
                 messageEl.textContent = 'Network error. Please try again.';
                 messageEl.style.color = 'var(--danger-color)';
             })
