@@ -8,6 +8,17 @@
    Dark theme matching checkout and order pages
    ============================================ */
 
+/* Ensure navigation layout works correctly */
+.order-nav .nav-container {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+}
+
+.order-nav .nav-back-link {
+    margin-left: auto;
+}
+
 .return-main {
     padding: 4rem 0;
     min-height: calc(100vh - 80px);
