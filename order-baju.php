@@ -402,10 +402,11 @@ foreach ($_SESSION['cart'] as $item) {
                 <!-- Right Column: Order Options -->
                 <div class="order-options-column">
                     <div class="order-content">
-                        <!-- Product Title & Price -->
+                        <!-- Product Title -->
                         <div class="product-header">
                             <h1 class="product-title"><?php echo htmlspecialchars(PRODUCT_NAME); ?></h1>
-                            <div class="product-price">RM <?php echo number_format(PRICE_PER_SHIRT, 2); ?></div>
+                            <p class="product-subtitle">Your new everyday outfit for class and beyond.</p>
+                            <p class="product-brand">PCS™ - Represent Project Cuti Sem</p>
                         </div>
 
                         <!-- Message Display -->
