@@ -105,6 +105,80 @@ if ($statusId == 1) {
             }
         }
         
+        // ============================================
+        // STEP 6: Send Order Confirmation Email (with duplicate protection)
+        // ============================================
+        // Check if email has already been sent to prevent duplicates
+        $checkEmailStmt = $pdo->prepare("
+            SELECT email_sent 
+            FROM orders 
+            WHERE billExternalReferenceNo = :ref_no 
+            AND status = 'paid' 
+            LIMIT 1
+        ");
+        $checkEmailStmt->execute([':ref_no' => $orderId]);
+        $emailCheck = $checkEmailStmt->fetch();
+        
+        // Send email only if payment is successful AND email not yet sent
+        if ($emailCheck && ($emailCheck['email_sent'] == 0 || $emailCheck['email_sent'] === false)) {
+            try {
+                // Include email functions
+                require_once __DIR__ . '/includes/email.php';
+                
+                // Get order data (first order record contains customer info)
+                $orderDataStmt = $pdo->prepare("
+                    SELECT DISTINCT 
+                        name, fullname, email, phone, address1, address2, address3,
+                        state, district, postcode, order_type, billExternalReferenceNo, created_at
+                    FROM orders 
+                    WHERE billExternalReferenceNo = :ref_no
+                    LIMIT 1
+                ");
+                $orderDataStmt->execute([':ref_no' => $orderId]);
+                $orderData = $orderDataStmt->fetch();
+                
+                // Get all order items for this reference
+                $itemsStmt = $pdo->prepare("
+                    SELECT variant, size, quantity, amount, discount_amount, 
+                           delivery_fee, final_amount
+                    FROM orders 
+                    WHERE billExternalReferenceNo = :ref_no
+                ");
+                $itemsStmt->execute([':ref_no' => $orderId]);
+                $orderItems = $itemsStmt->fetchAll();
+                
+                // Send email if we have valid order data and email address
+                if ($orderData && !empty($orderData['email']) && !empty($orderItems)) {
+                    $emailSent = sendOrderConfirmationEmail($orderData, $orderItems);
+                    
+                    if ($emailSent) {
+                        // Update email_sent flag to 1 for all orders with this reference
+                        $updateEmailStmt = $pdo->prepare("
+                            UPDATE orders 
+                            SET email_sent = 1 
+                            WHERE billExternalReferenceNo = :ref_no
+                        ");
+                        $updateEmailStmt->execute([':ref_no' => $orderId]);
+                        
+                        error_log("Order confirmation email sent successfully: Order ID {$orderId}, Email: {$orderData['email']}");
+                    } else {
+                        error_log("Failed to send order confirmation email: Order ID {$orderId}, Email: {$orderData['email']}");
+                        // Don't update email_sent flag if email failed - allow retry
+                    }
+                } else {
+                    error_log("Cannot send email: Invalid order data or missing email address for Order ID {$orderId}");
+                }
+                
+            } catch (Exception $e) {
+                // Log email error but don't fail the callback
+                error_log("Email sending error for Order ID {$orderId}: " . $e->getMessage());
+                // Don't update email_sent flag on error - allow retry
+            }
+        } else {
+            // Email already sent, skip
+            error_log("Email already sent for Order ID {$orderId}, skipping duplicate send");
+        }
+        
         // Log success
         error_log("Payment updated successfully: Order ID {$orderId}");
         
