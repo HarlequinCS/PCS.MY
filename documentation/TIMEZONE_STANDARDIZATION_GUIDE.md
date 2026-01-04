@@ -67,34 +67,36 @@ This ensures:
 
 ## Migration Process
 
-### Step 1: Analysis
+### Web Interface (Recommended)
 
-Run the analysis script to understand current state:
+The easiest way to run migration is through the admin panel:
 
+1. **Access**: Log in to admin panel → Navigate to "Timezone Migration"
+2. **Analysis**: Click "Run Analysis" to see current state
+3. **Dry Run**: Click "Dry Run (Test)" to see what would change
+4. **Live Migration**: Click "Proceed to Live Migration" → Confirm → Execute
+
+The web interface provides:
+- ✅ Admin authentication (secure)
+- ✅ User-friendly output display
+- ✅ Confirmation step before live migration
+- ✅ Real-time progress display
+
+### Command Line Alternative
+
+If you prefer command line:
+
+**Step 1: Analysis**
 ```bash
 php DB\ Update/analyze_timezone_state.php
 ```
 
-This will show:
-- Current PHP timezone
-- Current MySQL timezone
-- All datetime columns in database
-- Sample data values
-
-### Step 2: Dry Run Migration
-
-Test the migration without modifying data:
-
+**Step 2: Dry Run**
 ```bash
 php DB\ Update/migrate_timezone_data.php
 ```
 
-Review the output to see what would change.
-
-### Step 3: Live Migration
-
-Perform actual migration:
-
+**Step 3: Live Migration**
 ```bash
 php DB\ Update/migrate_timezone_data.php --live
 ```

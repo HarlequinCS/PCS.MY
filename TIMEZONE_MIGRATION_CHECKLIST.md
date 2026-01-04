@@ -10,18 +10,36 @@
 ## Migration Steps
 
 ### Step 1: Analysis
+
+**Option A: Web Interface (Recommended)**
+1. Log in to admin panel
+2. Navigate to "Timezone Migration" in sidebar
+3. Click "Run Analysis"
+4. Review the output
+
+**Option B: Command Line**
 ```bash
 php DB\ Update/analyze_timezone_state.php
 ```
+
 - [ ] Review PHP timezone state
 - [ ] Review MySQL timezone state
 - [ ] Check all datetime columns identified
 - [ ] Verify sample data values
 
 ### Step 2: Dry Run
+
+**Option A: Web Interface (Recommended)**
+1. In admin panel "Timezone Migration" page
+2. Click "Dry Run (Test)"
+3. Review what would change
+4. Check sample changes shown
+
+**Option B: Command Line**
 ```bash
 php DB\ Update/migrate_timezone_data.php
 ```
+
 - [ ] Review what would change
 - [ ] Verify conversion logic is correct
 - [ ] Check row counts match expectations
@@ -37,9 +55,19 @@ php DB\ Update/migrate_timezone_data.php
 - [ ] Deploy updated admin/orders.php
 
 ### Step 4: Live Migration
+
+**Option A: Web Interface (Recommended)**
+1. In admin panel "Timezone Migration" page
+2. After reviewing dry run, click "Proceed to Live Migration"
+3. Check the confirmation checkbox
+4. Click "Execute Live Migration"
+5. Monitor the output
+
+**Option B: Command Line**
 ```bash
 php DB\ Update/migrate_timezone_data.php --live
 ```
+
 - [ ] Monitor for errors
 - [ ] Verify migration completes successfully
 - [ ] Check transaction committed
