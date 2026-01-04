@@ -237,6 +237,8 @@ require_once __DIR__ . '/config/version.php';
         (function() {
             var initAttempts = 0;
             var maxAttempts = 100; // 10 seconds max wait
+            var countdownStarted = false;
+            var countdownInterval = null;
             
             function initButton() {
                 initAttempts++;
@@ -255,6 +257,7 @@ require_once __DIR__ . '/config/version.php';
                 // Use jQuery ready
                 jQuery(document).ready(function($) {
                     var orderButton = $('.order');
+                    var defaultText = orderButton.find('.default');
                     
                     if (orderButton.length > 0) {
                         // Wait a bit more to ensure orderbutton.js has set up the handler
@@ -277,14 +280,41 @@ require_once __DIR__ . '/config/version.php';
                             }, 200);
                         }, 800); // Wait 800ms for orderbutton.js to initialize
                         
-                        // Redirect to homepage after animation completes (10 seconds)
+                        // Start countdown after animation completes (10 seconds)
                         setTimeout(function() {
-                            window.location.href = '/';
-                        }, 11000); // 800ms delay + 10 seconds animation + 200ms buffer
+                            startCountdown(3, defaultText, function() {
+                                window.location.href = '/';
+                            });
+                        }, 10000); // Wait for 10 seconds animation to complete
                     } else {
                         console.error('❌ Order button not found in DOM');
                     }
                 });
+            }
+            
+            // Countdown function
+            function startCountdown(seconds, textElement, callback) {
+                if (countdownStarted) {
+                    return; // Prevent multiple countdowns
+                }
+                
+                countdownStarted = true;
+                var countdown = seconds;
+                
+                // Update button text with countdown
+                countdownInterval = setInterval(function() {
+                    if (countdown > 0) {
+                        if (textElement && textElement.length > 0) {
+                            textElement.text('Redirecting in ' + countdown + 's...');
+                        }
+                        countdown--;
+                    } else {
+                        clearInterval(countdownInterval);
+                        if (callback) {
+                            callback();
+                        }
+                    }
+                }, 1000);
             }
             
             // Start initialization
