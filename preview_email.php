@@ -83,7 +83,9 @@ $deliveryAddress = [
 ];
 
 // Logo and support email
-$logoUrl = 'https://projectcutisem.com/images/PCS%20logo.svg';
+// For local preview, use relative path
+$logoUrl = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST'] . '/images/android-chrome-512x512.png';
+// For production email, PNG is recommended over SVG for better email client compatibility
 $supportEmail = 'info@projectcutisem.com';
 
 // Define template constants (required by template)

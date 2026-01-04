@@ -27,7 +27,8 @@ if (!defined('EMAIL_TEMPLATE_LOADED')) {
 }
 
 // Default values if not provided
-$logoUrl = $logoUrl ?? 'https://projectcutisem.com/images/PCS%20logo.svg';
+// Note: Using PNG instead of SVG for better email client compatibility
+$logoUrl = $logoUrl ?? 'https://projectcutisem.com/images/android-chrome-512x512.png';
 $supportEmail = $supportEmail ?? 'info@projectcutisem.com';
 ?>
 <!DOCTYPE html>
@@ -59,7 +60,7 @@ $supportEmail = $supportEmail ?? 'info@projectcutisem.com';
                     <!-- Logo Header -->
                     <tr>
                         <td align="center" style="padding: 40px 30px 30px; background-color: #ffffff;">
-                            <img src="<?php echo htmlspecialchars($logoUrl); ?>" alt="Projek Cuti Sem" width="120" height="auto" style="display: block; max-width: 120px; height: auto;" />
+                            <img src="<?php echo htmlspecialchars($logoUrl); ?>" alt="Projek Cuti Sem" width="120" border="0" style="display: block; max-width: 120px; height: auto; margin: 0 auto; font-family: Arial, sans-serif; font-size: 16px; color: #1a1a1a;" />
                         </td>
                     </tr>
                     

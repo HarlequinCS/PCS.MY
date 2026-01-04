@@ -162,7 +162,10 @@ function sendOrderConfirmationEmail($orderData, $orderItems) {
     }
     
     // Logo and support email
-    $logoUrl = 'https://projectcutisem.com/images/PCS%20logo.svg';
+    // IMPORTANT: Many email clients (especially Outlook) don't support SVG images
+    // Use PNG version for better compatibility: 'https://projectcutisem.com/images/android-chrome-512x512.png'
+    // Or convert SVG to PNG and upload to server
+    $logoUrl = 'https://projectcutisem.com/images/android-chrome-512x512.png'; // Using PNG for better email compatibility
     $supportEmail = 'info@projectcutisem.com';
     
     // Load email template
