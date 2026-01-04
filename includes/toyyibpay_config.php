@@ -40,30 +40,34 @@ function getToyyibPayConfig() {
         ];
         
         // Production configuration
-        // TODO: Insert your production credentials below
+        // Production credentials are hardcoded here (primary source)
+        // Database settings are only used as fallback if hardcoded values are empty
         $productionConfig = [
             'endpoint' => 'https://toyyibpay.com/index.php/api/createBill', // Production endpoint
-            'secret_key' => '58bq974i-wcu2-ypkz-4mbn-cvjuxtpil8kr', // TODO: INSERT YOUR PRODUCTION SECRET KEY HERE
-            'category_code' => 'lfhcsj8w' // TODO: INSERT YOUR PRODUCTION CATEGORY CODE HERE
+            'secret_key' => '58bq974i-wcu2-ypkz-4mbn-cvjuxtpil8kr', // Production secret key (hardcoded)
+            'category_code' => 'lfhcsj8w' // Production category code (hardcoded)
         ];
         
-        // If production mode, get credentials from database
+        // If production mode, use hardcoded credentials first, database as fallback
         if ($mode === 'production') {
-            // Get production secret key
-            $secretStmt = $pdo->prepare("SELECT setting_value FROM settings WHERE setting_key = 'toyyibpay_production_secret_key' LIMIT 1");
-            $secretStmt->execute();
-            $secretResult = $secretStmt->fetch(PDO::FETCH_ASSOC);
-            $productionConfig['secret_key'] = ($secretResult && isset($secretResult['setting_value'])) 
-                ? $secretResult['setting_value'] 
-                : '';
-            
-            // Get production category code
-            $categoryStmt = $pdo->prepare("SELECT setting_value FROM settings WHERE setting_key = 'toyyibpay_production_category_code' LIMIT 1");
-            $categoryStmt->execute();
-            $categoryResult = $categoryStmt->fetch(PDO::FETCH_ASSOC);
-            $productionConfig['category_code'] = ($categoryResult && isset($categoryResult['setting_value'])) 
-                ? $categoryResult['setting_value'] 
-                : '';
+            // Only check database if hardcoded values are empty
+            if (empty($productionConfig['secret_key']) || empty($productionConfig['category_code'])) {
+                // Get production secret key from database (fallback)
+                $secretStmt = $pdo->prepare("SELECT setting_value FROM settings WHERE setting_key = 'toyyibpay_production_secret_key' LIMIT 1");
+                $secretStmt->execute();
+                $secretResult = $secretStmt->fetch(PDO::FETCH_ASSOC);
+                if ($secretResult && !empty($secretResult['setting_value'])) {
+                    $productionConfig['secret_key'] = $secretResult['setting_value'];
+                }
+                
+                // Get production category code from database (fallback)
+                $categoryStmt = $pdo->prepare("SELECT setting_value FROM settings WHERE setting_key = 'toyyibpay_production_category_code' LIMIT 1");
+                $categoryStmt->execute();
+                $categoryResult = $categoryStmt->fetch(PDO::FETCH_ASSOC);
+                if ($categoryResult && !empty($categoryResult['setting_value'])) {
+                    $productionConfig['category_code'] = $categoryResult['setting_value'];
+                }
+            }
             
             // Validate production credentials are set
             if (empty($productionConfig['secret_key']) || empty($productionConfig['category_code'])) {

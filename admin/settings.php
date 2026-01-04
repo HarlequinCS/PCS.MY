@@ -22,43 +22,8 @@ $pdo = getDBConnection();
 $message = '';
 $messageType = '';
 
-// Handle production credentials update
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'update_credentials') {
-    try {
-        // Sanitize inputs
-        $productionSecret = trim($_POST['production_secret_key'] ?? '');
-        $productionCategory = trim($_POST['production_category_code'] ?? '');
-        
-        // Validate inputs (basic validation)
-        if (!empty($productionSecret)) {
-            // Update production secret key
-            $stmt = $pdo->prepare("
-                INSERT INTO settings (setting_key, setting_value) 
-                VALUES ('toyyibpay_production_secret_key', :value)
-                ON DUPLICATE KEY UPDATE setting_value = :value
-            ");
-            $stmt->execute([':value' => $productionSecret]);
-        }
-        
-        if (!empty($productionCategory)) {
-            // Update production category code
-            $stmt = $pdo->prepare("
-                INSERT INTO settings (setting_key, setting_value) 
-                VALUES ('toyyibpay_production_category_code', :value)
-                ON DUPLICATE KEY UPDATE setting_value = :value
-            ");
-            $stmt->execute([':value' => $productionCategory]);
-        }
-        
-        $message = 'Production credentials updated successfully!';
-        $messageType = 'success';
-        
-    } catch (PDOException $e) {
-        error_log('Error updating production credentials: ' . $e->getMessage());
-        $message = 'Error updating credentials: ' . htmlspecialchars($e->getMessage());
-        $messageType = 'error';
-    }
-}
+// Production credentials are hardcoded in includes/toyyibpay_config.php
+// No database storage needed - credentials form removed
 
 // Get current mode
 $modeStmt = $pdo->prepare("SELECT setting_value FROM settings WHERE setting_key = 'toyyibpay_mode' LIMIT 1");
@@ -66,19 +31,10 @@ $modeStmt->execute();
 $modeResult = $modeStmt->fetch(PDO::FETCH_ASSOC);
 $currentMode = ($modeResult && isset($modeResult['setting_value'])) ? $modeResult['setting_value'] : 'staging';
 
-// Get production credentials (masked for display)
-$secretStmt = $pdo->prepare("SELECT setting_value FROM settings WHERE setting_key = 'toyyibpay_production_secret_key' LIMIT 1");
-$secretStmt->execute();
-$secretResult = $secretStmt->fetch(PDO::FETCH_ASSOC);
-$productionSecret = ($secretResult && isset($secretResult['setting_value'])) ? $secretResult['setting_value'] : '';
-
-$categoryStmt = $pdo->prepare("SELECT setting_value FROM settings WHERE setting_key = 'toyyibpay_production_category_code' LIMIT 1");
-$categoryStmt->execute();
-$categoryResult = $categoryStmt->fetch(PDO::FETCH_ASSOC);
-$productionCategory = ($categoryResult && isset($categoryResult['setting_value'])) ? $categoryResult['setting_value'] : '';
-
-// Mask secret key for display (show last 4 characters only)
-$maskedSecret = !empty($productionSecret) ? str_repeat('*', max(0, strlen($productionSecret) - 4)) . substr($productionSecret, -4) : '';
+// Production credentials are hardcoded in includes/toyyibpay_config.php
+// Database storage is optional/fallback only
+$productionSecret = '58bq974i-wcu2-ypkz-4mbn-cvjuxtpil8kr'; // Hardcoded in config file
+$productionCategory = 'lfhcsj8w'; // Hardcoded in config file
 
 ?>
 <!DOCTYPE html>
@@ -337,45 +293,19 @@ $maskedSecret = !empty($productionSecret) ? str_repeat('*', max(0, strlen($produ
                 </div>
                 <?php endif; ?>
                 
-                <!-- Production Credentials Form -->
+                <!-- Production Credentials Info -->
                 <div class="credentials-form">
                     <h3 style="margin: 0 0 20px 0; color: #333;">Production Credentials</h3>
-                    <p style="margin: 0 0 20px 0; color: #666; font-size: 14px;">
-                        Enter your production ToyyibPay credentials below. These will be used when production mode is active.
-                    </p>
-                    
-                    <form method="POST" action="">
-                        <input type="hidden" name="action" value="update_credentials">
-                        
-                        <div class="form-group">
-                            <label for="production_secret_key">Production Secret Key</label>
-                            <input 
-                                type="text" 
-                                id="production_secret_key" 
-                                name="production_secret_key" 
-                                placeholder="Enter production secret key"
-                                value="<?php echo htmlspecialchars($productionSecret); ?>"
-                            >
-                            <?php if (!empty($maskedSecret)): ?>
-                            <div class="form-help">
-                                Current value: <?php echo htmlspecialchars($maskedSecret); ?>
-                            </div>
-                            <?php endif; ?>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="production_category_code">Production Category Code</label>
-                            <input 
-                                type="text" 
-                                id="production_category_code" 
-                                name="production_category_code" 
-                                placeholder="Enter production category code"
-                                value="<?php echo htmlspecialchars($productionCategory); ?>"
-                            >
-                        </div>
-                        
-                        <button type="submit" class="btn-save">Save Credentials</button>
-                    </form>
+                    <div class="warning-box" style="background: #e7f3ff; border: 1px solid #2196F3; color: #0c5460; margin-bottom: 20px;">
+                        <strong>ℹ️ Credentials Location:</strong>
+                        Production credentials are hardcoded in <code>includes/toyyibpay_config.php</code>.
+                        <br><br>
+                        <strong>Current Values:</strong><br>
+                        Secret Key: <code><?php echo htmlspecialchars($productionSecret); ?></code><br>
+                        Category Code: <code><?php echo htmlspecialchars($productionCategory); ?></code>
+                        <br><br>
+                        To update credentials, edit the file directly: <code>includes/toyyibpay_config.php</code>
+                    </div>
                 </div>
             </div>
         </div>
