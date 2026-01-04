@@ -51,9 +51,12 @@ try {
     $updateStmt = $pdo->prepare("
         INSERT INTO settings (setting_key, setting_value) 
         VALUES ('toyyibpay_mode', :mode)
-        ON DUPLICATE KEY UPDATE setting_value = :mode
+        ON DUPLICATE KEY UPDATE setting_value = :mode2
     ");
-    $updateStmt->execute([':mode' => $newMode]);
+    $updateStmt->execute([
+        ':mode' => $newMode,
+        ':mode2' => $newMode
+    ]);
     
     // Log the change
     error_log("ToyyibPay mode changed from '{$currentMode}' to '{$newMode}' by admin: " . ($_SESSION['admin_username'] ?? 'unknown'));
