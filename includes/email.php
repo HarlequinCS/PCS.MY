@@ -117,6 +117,12 @@ function sendOrderConfirmationEmail($orderData, $orderItems) {
         return false;
     }
     
+    // Load variant mapping functions
+    require_once __DIR__ . '/email_variant_mapping.php';
+    
+    // Map order items to use display names
+    $orderItems = mapOrderItemsVariants($orderItems);
+    
     // Calculate totals
     $subtotal = 0;
     $totalDiscount = 0;
@@ -134,112 +140,34 @@ function sendOrderConfirmationEmail($orderData, $orderItems) {
     // Build email subject
     $subject = "Order Confirmation - #{$orderData['billExternalReferenceNo']} - Projek Cuti Sem";
     
-    // Build email body (HTML)
+    // Prepare template variables
+    $customerName = $orderData['fullname'] ?? $orderData['name'] ?? 'Customer';
+    $orderReference = $orderData['billExternalReferenceNo'];
+    $orderDate = date('d M Y, h:i A', strtotime($orderData['created_at']));
+    $orderType = $orderData['order_type'] ?? 'delivery';
+    
+    // Prepare delivery address if delivery order
+    $deliveryAddress = null;
+    if ($orderType === 'delivery' && !empty($orderData['address1'])) {
+        $deliveryAddress = [
+            'fullname' => $orderData['fullname'] ?? $orderData['name'] ?? '',
+            'name' => $orderData['name'] ?? '',
+            'address1' => $orderData['address1'] ?? '',
+            'address2' => $orderData['address2'] ?? '',
+            'address3' => $orderData['address3'] ?? '',
+            'state' => $orderData['state'] ?? '',
+            'district' => $orderData['district'] ?? '',
+            'postcode' => $orderData['postcode'] ?? ''
+        ];
+    }
+    
+    // Logo and support email
+    $logoUrl = 'https://projectcutisem.com/images/PCS%20logo.svg';
+    $supportEmail = 'info@projectcutisem.com';
+    
+    // Load email template
     ob_start();
-    ?>
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <style>
-            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f4f4f4; }
-            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-            .header { background-color: #1a1a1a; color: white; padding: 30px 20px; text-align: center; }
-            .header h1 { margin: 0; font-size: 24px; }
-            .content { background-color: #ffffff; padding: 30px 20px; }
-            .order-details { background-color: #f9f9f9; padding: 20px; margin: 20px 0; border-left: 4px solid #1a1a1a; }
-            .order-details h2 { margin-top: 0; color: #1a1a1a; }
-            .order-details h3 { color: #1a1a1a; border-bottom: 1px solid #ddd; padding-bottom: 10px; }
-            .item-row { padding: 10px 0; border-bottom: 1px solid #eee; }
-            .item-row:last-child { border-bottom: none; }
-            .total-row { font-weight: bold; padding: 15px 0; border-top: 2px solid #333; margin-top: 10px; }
-            .total-row p { margin: 5px 0; }
-            .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; background-color: #ffffff; }
-            .info-row { margin: 10px 0; }
-            .info-label { font-weight: bold; display: inline-block; width: 150px; }
-        </style>
-    </head>
-    <body>
-        <div class="container">
-            <div class="header">
-                <h1>Order Confirmation</h1>
-                <p style="margin: 10px 0 0 0;">Thank you for your order!</p>
-            </div>
-            <div class="content">
-                <p>Dear <?php echo htmlspecialchars($orderData['fullname'] ?? $orderData['name']); ?>,</p>
-                
-                <p>Your order has been confirmed and payment has been received. We're preparing your items for <?php echo ($orderData['order_type'] ?? 'delivery') === 'pickup' ? 'pickup' : 'delivery'; ?>.</p>
-                
-                <div class="order-details">
-                    <h2>Order Details</h2>
-                    <div class="info-row">
-                        <span class="info-label">Order Reference:</span>
-                        <span><?php echo htmlspecialchars($orderData['billExternalReferenceNo']); ?></span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-label">Order Date:</span>
-                        <span><?php echo date('d M Y, h:i A', strtotime($orderData['created_at'])); ?></span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-label">Order Type:</span>
-                        <span><?php echo ucfirst($orderData['order_type'] ?? 'delivery'); ?></span>
-                    </div>
-                    
-                    <h3>Items Ordered</h3>
-                    <?php foreach ($orderItems as $item): ?>
-                    <div class="item-row">
-                        <strong><?php echo htmlspecialchars($item['variant'] ?? 'N/A'); ?></strong> - 
-                        Size: <?php echo htmlspecialchars($item['size'] ?? 'N/A'); ?> - 
-                        Quantity: <?php echo ($item['quantity'] ?? 0); ?> - 
-                        RM <?php echo number_format($item['final_amount'] ?? 0, 2); ?>
-                    </div>
-                    <?php endforeach; ?>
-                    
-                    <div class="total-row">
-                        <p>Subtotal: RM <?php echo number_format($subtotal, 2); ?></p>
-                        <?php if ($totalDiscount > 0): ?>
-                        <p>Discount: -RM <?php echo number_format($totalDiscount, 2); ?></p>
-                        <?php endif; ?>
-                        <?php if (($orderData['order_type'] ?? 'delivery') === 'delivery' && $totalDeliveryFee > 0): ?>
-                        <p>Delivery Fee: RM <?php echo number_format($totalDeliveryFee, 2); ?></p>
-                        <?php endif; ?>
-                        <p style="font-size: 18px; margin-top: 10px;">Total: RM <?php echo number_format($finalTotal, 2); ?></p>
-                    </div>
-                </div>
-                
-                <?php if (($orderData['order_type'] ?? 'delivery') === 'delivery' && !empty($orderData['address1'])): ?>
-                <div class="order-details">
-                    <h3>Delivery Address</h3>
-                    <p>
-                        <?php echo htmlspecialchars($orderData['fullname'] ?? $orderData['name']); ?><br>
-                        <?php echo htmlspecialchars($orderData['address1']); ?><br>
-                        <?php if (!empty($orderData['address2'])): ?>
-                            <?php echo htmlspecialchars($orderData['address2']); ?><br>
-                        <?php endif; ?>
-                        <?php if (!empty($orderData['address3'])): ?>
-                            <?php echo htmlspecialchars($orderData['address3']); ?><br>
-                        <?php endif; ?>
-                        <?php echo htmlspecialchars($orderData['postcode'] ?? ''); ?> <?php echo htmlspecialchars($orderData['district'] ?? ''); ?><br>
-                        <?php echo htmlspecialchars($orderData['state'] ?? ''); ?><br>
-                        Malaysia
-                    </p>
-                </div>
-                <?php endif; ?>
-                
-                <p>We will notify you once your order is ready for <?php echo ($orderData['order_type'] ?? 'delivery') === 'pickup' ? 'pickup' : 'shipment'; ?>.</p>
-                
-                <p>If you have any questions, please contact us.</p>
-                
-                <p>Thank you for choosing Projek Cuti Sem!</p>
-            </div>
-            <div class="footer">
-                <p>&copy; <?php echo date('Y'); ?> Projek Cuti Sem. All rights reserved.</p>
-            </div>
-        </div>
-    </body>
-    </html>
-    <?php
+    require __DIR__ . '/email_template_order_confirmation.php';
     $body = ob_get_clean();
     
     // Send email
