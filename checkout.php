@@ -465,7 +465,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                 'billChargeToCustomer' => 0
             ];
             
-            // Log bill data for debugging
+            // Log configuration and bill data for debugging
+            error_log('ToyyibPay Config Used - Endpoint: ' . $toyyibpayConfig['endpoint']);
+            error_log('ToyyibPay Config Used - Category Code: ' . $toyyibpayConfig['category_code']);
             error_log('ToyyibPay Bill Data: ' . json_encode($billData, JSON_PRETTY_PRINT));
             
             // ============================================

@@ -18,7 +18,8 @@ if (!defined('DB_CONFIG_LOADED')) {
 function getToyyibPayConfig() {
     static $config = null;
     
-    // Cache config to avoid multiple database queries
+    // Cache config to avoid multiple database queries (per request only)
+    // Note: Static cache is cleared on each new HTTP request, so mode changes take effect immediately
     if ($config !== null) {
         return $config;
     }
@@ -77,9 +78,11 @@ function getToyyibPayConfig() {
             }
             
             $config = $productionConfig;
+            error_log('ToyyibPay: Production mode active - Using endpoint: ' . $config['endpoint']);
         } else {
             // Staging mode (default)
             $config = $stagingConfig;
+            error_log('ToyyibPay: Staging mode active - Using endpoint: ' . $config['endpoint']);
         }
         
         return $config;
