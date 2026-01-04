@@ -225,35 +225,12 @@ require_once __DIR__ . '/config/version.php';
     
     <!-- jQuery (must be loaded before orderbutton.js) -->
     <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
-    <script>
-        // Fallback if jQuery CDN fails
-        if (typeof jQuery === 'undefined') {
-            console.error('jQuery failed to load from CDN');
-        }
-    </script>
     
     <!-- Custom JavaScript: Order Button Animation -->
     <script src="<?php echo getVersionedAsset('js/orderbutton.js'); ?>"></script>
-    <script>
-        // Verify orderbutton.js loaded
-        document.addEventListener('DOMContentLoaded', function() {
-            const orderButton = document.querySelector('.order');
-            if (orderButton && typeof jQuery !== 'undefined') {
-                console.log('Order button and jQuery ready');
-            } else {
-                console.error('Order button or jQuery not available', {
-                    button: !!orderButton,
-                    jQuery: typeof jQuery !== 'undefined'
-                });
-            }
-        });
-    </script>
     
     <!-- Additional JavaScript for page interactions -->
     <script>
-        // Console log for debugging
-        // Return page loaded - status check complete
-        
         // Homepage URL (adjust as needed)
         const homepageUrl = '/';
         let countdownStarted = false;
@@ -267,7 +244,7 @@ require_once __DIR__ . '/config/version.php';
             
             countdownStarted = true;
             const orderButton = document.querySelector('.order');
-            const defaultText = orderButton.querySelector('.default');
+            const defaultText = orderButton ? orderButton.querySelector('.default') : null;
             let countdown = seconds;
             
             // Update button text with countdown
@@ -276,11 +253,9 @@ require_once __DIR__ . '/config/version.php';
                     if (defaultText) {
                         defaultText.textContent = `Redirecting in ${countdown}s...`;
                     }
-                    // Countdown active
                     countdown--;
                 } else {
                     clearInterval(countdownInterval);
-                    // Redirecting to homepage
                     // Redirect to homepage
                     window.location.href = homepageUrl;
                 }
@@ -301,11 +276,9 @@ require_once __DIR__ . '/config/version.php';
                         if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
                             if (orderButton.classList.contains('animate') && !countdownStarted) {
                                 // Order button animation started
-                                
                                 // Start countdown after animation completes (10 seconds)
                                 setTimeout(function() {
                                     if (!countdownStarted) {
-                                        // Starting countdown before redirect
                                         startCountdownAndRedirect(3);
                                     }
                                 }, 10000); // Wait for animation to complete (10 seconds)
@@ -322,7 +295,6 @@ require_once __DIR__ . '/config/version.php';
                 
                 // Auto-trigger button animation on page load
                 setTimeout(function() {
-                    // Auto-triggering order button animation
                     orderButton.click();
                 }, 1000);
             }
