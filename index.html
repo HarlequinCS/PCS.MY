@@ -784,18 +784,18 @@
     }
     </script>
     
-    <!-- ToyyibPay Mode Check - Update Buy Now Button Behavior -->
+    <!-- Button Mode Check - Update Buy Now Button Behavior -->
     <script>
-        // Check ToyyibPay mode and update Buy Now button behavior
+        // Check button mode and update Buy Now button behavior
         // This runs after DOM loads and workshirt.js is loaded (workshirt.js has defer attribute)
         window.addEventListener('DOMContentLoaded', function() {
             // Wait a bit for workshirt.js to load (it has defer attribute)
             setTimeout(function() {
-                fetch('/api/get_toyyibpay_mode.php')
+                fetch('/api/get_button_mode.php')
                     .then(response => response.json())
                     .then(data => {
-                        if (data.success && data.isProduction) {
-                            // Production mode: redirect to order-baju.php
+                        if (data.success && data.isLaunch) {
+                            // Launch mode: redirect to order-baju.php
                             const buyNowButtons = document.querySelectorAll('.js-buy-now-btn');
                             buyNowButtons.forEach(btn => {
                                 // Remove existing click handlers by cloning
@@ -810,11 +810,11 @@
                                 }, true); // Use capture phase to run before other handlers
                             });
                         }
-                        // Staging mode: keep current behavior (opens modal via workshirt.js)
+                        // Coming Soon mode: keep current behavior (opens modal via workshirt.js)
                     })
                     .catch(error => {
-                        console.error('Error checking ToyyibPay mode:', error);
-                        // On error, keep default behavior (staging - opens modal)
+                        console.error('Error checking button mode:', error);
+                        // On error, keep default behavior (coming_soon - opens modal)
                     });
             }, 100); // Small delay to ensure workshirt.js handlers are attached
         });

@@ -31,7 +31,10 @@ function getToyyibPayConfig() {
         $modeStmt = $pdo->prepare("SELECT setting_value FROM settings WHERE setting_key = 'toyyibpay_mode' LIMIT 1");
         $modeStmt->execute();
         $modeResult = $modeStmt->fetch(PDO::FETCH_ASSOC);
-        $mode = ($modeResult && isset($modeResult['setting_value'])) ? $modeResult['setting_value'] : 'staging';
+        $mode = ($modeResult && isset($modeResult['setting_value'])) ? trim(strtolower($modeResult['setting_value'])) : 'staging';
+        
+        // Debug: Log mode detection
+        error_log('ToyyibPay Mode Detection: Database value = "' . ($modeResult['setting_value'] ?? 'NULL') . '", Normalized mode = "' . $mode . '"');
         
         // Staging configuration (default)
         $stagingConfig = [
@@ -50,7 +53,8 @@ function getToyyibPayConfig() {
         ];
         
         // If production mode, use hardcoded credentials first, database as fallback
-        if ($mode === 'production') {
+        // Normalize mode to handle case variations
+        if (strtolower(trim($mode)) === 'production') {
             // Only check database if hardcoded values are empty
             if (empty($productionConfig['secret_key']) || empty($productionConfig['category_code'])) {
                 // Get production secret key from database (fallback)

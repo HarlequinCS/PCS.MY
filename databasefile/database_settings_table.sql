@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS `settings` (
 INSERT INTO `settings` (`setting_key`, `setting_value`) VALUES
 ('toyyibpay_mode', 'staging'),
 ('toyyibpay_production_secret_key', ''),
-('toyyibpay_production_category_code', '')
+('toyyibpay_production_category_code', ''),
+('button_mode', 'coming_soon')
 ON DUPLICATE KEY UPDATE `setting_key` = `setting_key`;
 
