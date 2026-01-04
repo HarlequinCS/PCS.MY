@@ -53,22 +53,39 @@ try {
     // Start transaction (will rollback in dry run)
     $pdo->beginTransaction();
     
-    // Define tables and columns to migrate
+    // Define tables with their datetime columns and primary key column names
     // ASSUMPTION: Existing data is in server local time (may be Asia/Kuala_Lumpur or UTC)
     // We'll convert assuming it's currently in Asia/Kuala_Lumpur (most likely)
     $migrationTargets = [
-        'orders' => ['created_at', 'updated_at'],
-        'promotions' => ['valid_from', 'valid_until', 'created_at', 'updated_at'],
-        'comment' => ['created_at'],
-        'visitors' => ['visit_date'],
-        'email_notifications' => ['created_at', 'updated_at']
+        'orders' => [
+            'columns' => ['created_at', 'updated_at'],
+            'primary_key' => 'id'
+        ],
+        'promotions' => [
+            'columns' => ['valid_from', 'valid_until', 'created_at', 'updated_at'],
+            'primary_key' => 'id'
+        ],
+        'comment' => [
+            'columns' => ['created_at'],
+            'primary_key' => 'comment_id'
+        ],
+        'visitors' => [
+            'columns' => ['visit_date'],
+            'primary_key' => 'visitor_id'
+        ],
+        'email_notifications' => [
+            'columns' => ['created_at', 'updated_at'],
+            'primary_key' => 'notification_id'
+        ]
     ];
     
     $totalRows = 0;
     $totalColumns = 0;
     $changes = [];
     
-    foreach ($migrationTargets as $table => $columns) {
+    foreach ($migrationTargets as $table => $config) {
+        $columns = $config['columns'];
+        $primaryKey = $config['primary_key'];
         // Check if table exists
         $tableExists = $pdo->query("SHOW TABLES LIKE '$table'")->rowCount() > 0;
         if (!$tableExists) {
@@ -88,7 +105,7 @@ try {
             
             // Get all rows with non-null values
             $stmt = $pdo->prepare("
-                SELECT id, $column as datetime_value
+                SELECT $primaryKey, $column as datetime_value
                 FROM $table
                 WHERE $column IS NOT NULL
             ");
@@ -105,7 +122,7 @@ try {
             $columnChanges = 0;
             
             foreach ($rows as $row) {
-                $id = $row['id'] ?? null;
+                $id = $row[$primaryKey] ?? null;
                 $originalValue = $row['datetime_value'];
                 
                 if (empty($originalValue)) {
@@ -132,7 +149,7 @@ try {
                             $updateStmt = $pdo->prepare("
                                 UPDATE $table
                                 SET $column = :new_value
-                                WHERE id = :id
+                                WHERE $primaryKey = :id
                             ");
                             $updateStmt->execute([
                                 ':new_value' => $utcValue,

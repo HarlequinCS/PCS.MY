@@ -33,23 +33,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             $pdo = getDBConnection();
             $pdo->beginTransaction();
             
-            $migrationTargets = [
-                'orders' => ['created_at', 'updated_at'],
-                'promotions' => ['valid_from', 'valid_until', 'created_at', 'updated_at'],
-                'comment' => ['created_at'],
-                'visitors' => ['visit_date'],
-                'email_notifications' => ['created_at', 'updated_at']
-            ];
-            
-            $totalRows = 0;
-            $totalColumns = 0;
-            $changes = [];
-            
-            echo "========================================\n";
-            echo "TIMEZONE DATA MIGRATION (LIVE MODE)\n";
-            echo "========================================\n\n";
-            
-            foreach ($migrationTargets as $table => $columns) {
+        // Define tables with their datetime columns and primary key column names
+        $migrationTargets = [
+            'orders' => [
+                'columns' => ['created_at', 'updated_at'],
+                'primary_key' => 'id'
+            ],
+            'promotions' => [
+                'columns' => ['valid_from', 'valid_until', 'created_at', 'updated_at'],
+                'primary_key' => 'id'
+            ],
+            'comment' => [
+                'columns' => ['created_at'],
+                'primary_key' => 'comment_id'
+            ],
+            'visitors' => [
+                'columns' => ['visit_date'],
+                'primary_key' => 'visitor_id'
+            ],
+            'email_notifications' => [
+                'columns' => ['created_at', 'updated_at'],
+                'primary_key' => 'notification_id'
+            ]
+        ];
+        
+        $totalRows = 0;
+        $totalColumns = 0;
+        $changes = [];
+        
+        echo "========================================\n";
+        echo "TIMEZONE DATA MIGRATION (LIVE MODE)\n";
+        echo "========================================\n\n";
+        
+        foreach ($migrationTargets as $table => $config) {
+            $columns = $config['columns'];
+            $primaryKey = $config['primary_key'];
                 $tableExists = $pdo->query("SHOW TABLES LIKE '$table'")->rowCount() > 0;
                 if (!$tableExists) {
                     echo "⏭️  Skipping table '$table' (does not exist)\n";
@@ -66,7 +84,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                     }
                     
                     $stmt = $pdo->prepare("
-                        SELECT id, $column as datetime_value
+                        SELECT $primaryKey, $column as datetime_value
                         FROM $table
                         WHERE $column IS NOT NULL
                     ");
@@ -83,7 +101,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                     $columnChanges = 0;
                     
                     foreach ($rows as $row) {
-                        $id = $row['id'] ?? null;
+                        $id = $row[$primaryKey] ?? null;
                         $originalValue = $row['datetime_value'];
                         
                         if (empty($originalValue)) {
@@ -99,7 +117,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                                 $updateStmt = $pdo->prepare("
                                     UPDATE $table
                                     SET $column = :new_value
-                                    WHERE id = :id
+                                    WHERE $primaryKey = :id
                                 ");
                                 $updateStmt->execute([
                                     ':new_value' => $utcValue,
@@ -328,12 +346,28 @@ if ($action === 'dryrun') {
         $pdo = getDBConnection();
         $pdo->beginTransaction();
         
+        // Define tables with their datetime columns and primary key column names
         $migrationTargets = [
-            'orders' => ['created_at', 'updated_at'],
-            'promotions' => ['valid_from', 'valid_until', 'created_at', 'updated_at'],
-            'comment' => ['created_at'],
-            'visitors' => ['visit_date'],
-            'email_notifications' => ['created_at', 'updated_at']
+            'orders' => [
+                'columns' => ['created_at', 'updated_at'],
+                'primary_key' => 'id'
+            ],
+            'promotions' => [
+                'columns' => ['valid_from', 'valid_until', 'created_at', 'updated_at'],
+                'primary_key' => 'id'
+            ],
+            'comment' => [
+                'columns' => ['created_at'],
+                'primary_key' => 'comment_id'
+            ],
+            'visitors' => [
+                'columns' => ['visit_date'],
+                'primary_key' => 'visitor_id'
+            ],
+            'email_notifications' => [
+                'columns' => ['created_at', 'updated_at'],
+                'primary_key' => 'notification_id'
+            ]
         ];
         
         $totalRows = 0;
@@ -345,7 +379,9 @@ if ($action === 'dryrun') {
         echo "========================================\n\n";
         echo "⚠️  DRY RUN MODE - No data will be modified\n\n";
         
-        foreach ($migrationTargets as $table => $columns) {
+        foreach ($migrationTargets as $table => $config) {
+            $columns = $config['columns'];
+            $primaryKey = $config['primary_key'];
             $tableExists = $pdo->query("SHOW TABLES LIKE '$table'")->rowCount() > 0;
             if (!$tableExists) {
                 echo "⏭️  Skipping table '$table' (does not exist)\n";
@@ -362,7 +398,7 @@ if ($action === 'dryrun') {
                 }
                 
                 $stmt = $pdo->prepare("
-                    SELECT id, $column as datetime_value
+                    SELECT $primaryKey, $column as datetime_value
                     FROM $table
                     WHERE $column IS NOT NULL
                 ");
@@ -380,7 +416,7 @@ if ($action === 'dryrun') {
                 $sampleChanges = [];
                 
                 foreach ($rows as $row) {
-                    $id = $row['id'] ?? null;
+                    $id = $row[$primaryKey] ?? null;
                     $originalValue = $row['datetime_value'];
                     
                     if (empty($originalValue)) {
