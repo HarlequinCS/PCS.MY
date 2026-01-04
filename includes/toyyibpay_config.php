@@ -120,3 +120,21 @@ function getToyyibPayMode() {
     }
 }
 
+/**
+ * Get ToyyibPay base URL for payment page redirects
+ * Dynamically returns the correct base URL based on current mode
+ * 
+ * @return string Base URL (e.g., 'https://dev.toyyibpay.com' or 'https://toyyibpay.com')
+ */
+function getToyyibPayBaseUrl() {
+    $mode = getToyyibPayMode();
+    
+    // Return appropriate base URL based on mode
+    if (strtolower(trim($mode)) === 'production') {
+        return 'https://toyyibpay.com';
+    } else {
+        // Default to staging
+        return 'https://dev.toyyibpay.com';
+    }
+}
+

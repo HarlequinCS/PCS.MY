@@ -567,8 +567,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             // Log success
             error_log('Bill created successfully: BillCode = ' . $billCode);
             
-            // Redirect user to ToyyibPay payment page
-            header('Location: https://dev.toyyibpay.com/' . $billCode);
+            // Get dynamic base URL based on current mode (staging/production)
+            $toyyibpayBaseUrl = getToyyibPayBaseUrl();
+            
+            // Redirect user to ToyyibPay payment page (dynamically switches between staging and production)
+            header('Location: ' . $toyyibpayBaseUrl . '/' . $billCode);
             exit;
             
         } catch (Exception $e) {

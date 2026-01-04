@@ -10,6 +10,7 @@ requireAdminLogin();
 define('DB_CONFIG_LOADED', true);
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../includes/db.php';
+require_once __DIR__ . '/sidebar_helper.php';
 
 // Handle logout
 if (isset($_GET['logout'])) {
@@ -19,6 +20,7 @@ if (isset($_GET['logout'])) {
 }
 
 $pdo = getDBConnection();
+$currentPage = basename(__FILE__);
 $message = '';
 $messageType = '';
 
@@ -146,52 +148,8 @@ $currentMode = ($modeResult && isset($modeResult['setting_value'])) ? $modeResul
     <!-- Sidebar Overlay -->
     <div class="sidebar-overlay" id="sidebarOverlay"></div>
     
-    <!-- Sidebar -->
-    <aside class="sidebar" id="sidebar">
-        <div class="sidebar-header">
-            <h2>PCS Admin</h2>
-            <p>Admin Panel</p>
-        </div>
-        
-        <nav class="sidebar-nav">
-            <a href="/admin/dashboard.php" class="nav-item">
-                <span class="nav-icon">📝</span>
-                <span>Comments</span>
-            </a>
-            <a href="/admin/emails.php" class="nav-item">
-                <span class="nav-icon">📧</span>
-                <span>Email Monitoring</span>
-            </a>
-            <a href="/admin/orders.php" class="nav-item">
-                <span class="nav-icon">📦</span>
-                <span>Orders</span>
-            </a>
-            <a href="/admin/products.php" class="nav-item">
-                <span class="nav-icon">🛍️</span>
-                <span>Products</span>
-            </a>
-            <a href="/admin/promotions.php" class="nav-item">
-                <span class="nav-icon">🎟️</span>
-                <span>Promotions</span>
-            </a>
-            <a href="/admin/settings.php" class="nav-item">
-                <span class="nav-icon">⚙️</span>
-                <span>Payment Settings</span>
-            </a>
-            <a href="/admin/button_settings.php" class="nav-item active">
-                <span class="nav-icon">🔘</span>
-                <span>Button Settings</span>
-            </a>
-            <a href="/admin/button_settings.php?logout=1" class="nav-item">
-                <span class="nav-icon">🚪</span>
-                <span>Logout</span>
-            </a>
-        </nav>
-        
-        <div class="sidebar-footer">
-            <p>Logged in as: <strong><?php echo htmlspecialchars($_SESSION['admin_username']); ?></strong></p>
-        </div>
-    </aside>
+    <!-- Dynamic Sidebar - Automatically generated from admin directory -->
+    <?php echo generateAdminSidebar($currentPage); ?>
     
     <main class="main-content">
         <div class="settings-container">

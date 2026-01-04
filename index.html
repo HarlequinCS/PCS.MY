@@ -794,7 +794,9 @@
                 fetch('/api/get_button_mode.php')
                     .then(response => response.json())
                     .then(data => {
-                        if (data.success && data.isLaunch) {
+                        // Check if button should redirect to order page
+                        // Redirects when button_mode is 'launch' (regardless of payment mode)
+                        if (data.success && data.shouldRedirect) {
                             // Launch mode: redirect to order-baju.php
                             const buyNowButtons = document.querySelectorAll('.js-buy-now-btn');
                             buyNowButtons.forEach(btn => {
@@ -809,8 +811,21 @@
                                     window.location.href = '/order-baju.php';
                                 }, true); // Use capture phase to run before other handlers
                             });
+                            
+                            // Log mode information for debugging
+                            console.log('Buy Now Button Mode:', {
+                                buttonMode: data.button_mode,
+                                toyyibpayMode: data.toyyibpay_mode,
+                                redirecting: true
+                            });
+                        } else {
+                            // Coming Soon mode: keep current behavior (opens modal via workshirt.js)
+                            console.log('Buy Now Button Mode:', {
+                                buttonMode: data.button_mode || 'coming_soon',
+                                toyyibpayMode: data.toyyibpay_mode || 'staging',
+                                redirecting: false
+                            });
                         }
-                        // Coming Soon mode: keep current behavior (opens modal via workshirt.js)
                     })
                     .catch(error => {
                         console.error('Error checking button mode:', error);
