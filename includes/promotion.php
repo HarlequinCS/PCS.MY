@@ -8,8 +8,8 @@
  * All monetary values rounded to 2 decimal places
  */
 
-// Set timezone for all date/time operations
-date_default_timezone_set('Asia/Kuala_Lumpur');
+// Load timezone configuration (sets default timezone and provides helper functions)
+require_once __DIR__ . '/../config/timezone.php';
 
 // Include datetime helper for normalization
 require_once __DIR__ . '/datetime_helper.php';
@@ -64,62 +64,73 @@ function validatePromotionCode($code, $cartSubtotal, $pdo) {
             ];
         }
         
-        // Step 3: Time validity (using MySQL NOW() - no PHP datetime mixing)
-        // Correct validation SQL (MUST FOLLOW EXACTLY)
-        $stmt = $pdo->prepare("
-            SELECT * FROM promotions 
-            WHERE code = :code 
-            AND active = 1
-            AND (
-                valid_from IS NULL 
-                OR valid_from <= NOW()
-            )
-            AND (
-                valid_until IS NULL 
-                OR valid_until >= NOW()
-            )
-        ");
-        $stmt->execute([':code' => $code]);
-        $promotionTimeValid = $stmt->fetch(PDO::FETCH_ASSOC);
+        // Step 3: Time validity (TIMEZONE-AWARE)
+        // Database stores UTC, application uses Asia/Kuala_Lumpur
+        // Strategy: Get current time in app timezone, convert to UTC for comparison
+        
+        $timeValid = true;
+        $validationError = null;
+        
+        // Get current time in Asia/Kuala_Lumpur, then convert to UTC for DB comparison
+        $currentTimeApp = getCurrentDateTime(); // Asia/Kuala_Lumpur
+        $currentTimeUTC = appToDbTime($currentTimeApp); // Convert to UTC
+        
+        // Promotion dates are stored in UTC (after migration) or may be in app timezone (before migration)
+        // We'll handle both: assume UTC if format suggests it, otherwise treat as app timezone
+        $validFromUTC = null;
+        $validUntilUTC = null;
+        
+        if ($promotion['valid_from'] !== null) {
+            // Try to parse - if it's already UTC format, use as-is; otherwise convert from app timezone
+            try {
+                // Assume stored value is in UTC (after migration)
+                // But we need to validate based on app timezone logic
+                // So: convert stored UTC to app timezone, then back to UTC (ensures consistency)
+                $dt = new DateTime($promotion['valid_from'], new DateTimeZone(DB_TIMEZONE));
+                $validFromUTC = $dt->format('Y-m-d H:i:s');
+            } catch (Exception $e) {
+                // Fallback: treat as app timezone and convert
+                $validFromUTC = appToDbTime($promotion['valid_from']);
+            }
+            
+            // Compare: current UTC time must be >= valid_from UTC
+            if ($currentTimeUTC < $validFromUTC) {
+                $timeValid = false;
+                $validationError = 'Promotion code is not yet valid';
+            }
+        }
+        
+        if ($timeValid && $promotion['valid_until'] !== null) {
+            try {
+                $dt = new DateTime($promotion['valid_until'], new DateTimeZone(DB_TIMEZONE));
+                $validUntilUTC = $dt->format('Y-m-d H:i:s');
+            } catch (Exception $e) {
+                $validUntilUTC = appToDbTime($promotion['valid_until']);
+            }
+            
+            // Compare: current UTC time must be <= valid_until UTC
+            if ($currentTimeUTC > $validUntilUTC) {
+                $timeValid = false;
+                $validationError = 'Promotion code has expired';
+            }
+        }
         
         // Debug logging for datetime validation
         error_log(json_encode([
             'code' => $code,
-            'now' => date('Y-m-d H:i:s'),
-            'valid_from' => $promotion['valid_from'],
-            'valid_until' => $promotion['valid_until'],
-            'time_valid' => $promotionTimeValid !== false
+            'current_app' => $currentTimeApp,
+            'current_utc' => $currentTimeUTC,
+            'valid_from_db' => $promotion['valid_from'],
+            'valid_from_utc' => $validFromUTC,
+            'valid_until_db' => $promotion['valid_until'],
+            'valid_until_utc' => $validUntilUTC,
+            'time_valid' => $timeValid
         ]));
         
-        if (!$promotionTimeValid) {
-            // Check which condition failed for specific error message
-            if ($promotion['valid_from'] !== null) {
-                $stmtCheck = $pdo->prepare("SELECT NOW() < valid_from FROM promotions WHERE code = :code");
-                $stmtCheck->execute([':code' => $code]);
-                $isFuture = $stmtCheck->fetchColumn();
-                if ($isFuture) {
-                    return [
-                        'success' => false,
-                        'error' => 'Promotion code is not yet valid',
-                        'promotion' => null
-                    ];
-                }
-            }
-            if ($promotion['valid_until'] !== null) {
-                $stmtCheck = $pdo->prepare("SELECT NOW() > valid_until FROM promotions WHERE code = :code");
-                $stmtCheck->execute([':code' => $code]);
-                $isExpired = $stmtCheck->fetchColumn();
-                if ($isExpired) {
-                    return [
-                        'success' => false,
-                        'error' => 'Promotion code has expired',
-                        'promotion' => null
-                    ];
-                }
-            }
+        if (!$timeValid) {
             return [
                 'success' => false,
-                'error' => 'Promotion code is not valid at this time',
+                'error' => $validationError ?: 'Promotion code is not valid at this time',
                 'promotion' => null
             ];
         }
@@ -144,11 +155,21 @@ function validatePromotionCode($code, $cartSubtotal, $pdo) {
             ];
         }
         
+        // Convert promotion dates from UTC to app timezone for return
+        // (so frontend displays correct times)
+        $promotionReturn = $promotion;
+        if ($promotion['valid_from']) {
+            $promotionReturn['valid_from'] = dbToAppTime($promotion['valid_from']);
+        }
+        if ($promotion['valid_until']) {
+            $promotionReturn['valid_until'] = dbToAppTime($promotion['valid_until']);
+        }
+        
         // All validations passed
         return [
             'success' => true,
             'error' => null,
-            'promotion' => $promotion
+            'promotion' => $promotionReturn
         ];
         
     } catch (PDOException $e) {

@@ -1,6 +1,8 @@
 <?php
 /**
  * Database Connection Helper
+ * 
+ * CRITICAL: Sets MySQL session timezone to UTC for consistent datetime storage
  */
 
 // Prevent direct access
@@ -18,6 +20,12 @@ function getDBConnection() {
         try {
             $dsn = "mysql:host={$config['host']};dbname={$config['database']};charset={$config['charset']}";
             $pdo = new PDO($dsn, $config['username'], $config['password'], $config['options']);
+            
+            // CRITICAL: Set MySQL session timezone to UTC
+            // This ensures all NOW(), CURRENT_TIMESTAMP, etc. use UTC
+            // Application layer converts to/from Asia/Kuala_Lumpur
+            $pdo->exec("SET time_zone = '+00:00'");
+            
         } catch (PDOException $e) {
             error_log("Database connection failed: " . $e->getMessage());
             http_response_code(500);

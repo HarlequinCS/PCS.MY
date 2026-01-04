@@ -8,9 +8,9 @@
  */
 
 // ============================================
-// STEP 1: Set Timezone
+// STEP 1: Load Timezone Configuration
 // ============================================
-date_default_timezone_set('Asia/Kuala_Lumpur');
+require_once __DIR__ . '/config/timezone.php';
 
 // ============================================
 // STEP 2: Capture POST Data from ToyyibPay
@@ -21,8 +21,8 @@ $postData = $_POST;
 // ============================================
 // STEP 3: Log All Callback Data
 // ============================================
-// Prepare log entry with timestamp
-$timestamp = date('Y-m-d H:i:s');
+// Prepare log entry with timestamp (in app timezone for readability)
+$timestamp = getCurrentDateTime();
 $logEntry = sprintf(
     "[%s] POST Data: %s\n",
     $timestamp,

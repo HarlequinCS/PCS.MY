@@ -3,8 +3,8 @@
  * Promotion Code Management Page
  */
 
-// Set timezone for all date/time operations (MANDATORY)
-date_default_timezone_set('Asia/Kuala_Lumpur');
+// Load timezone configuration (sets default timezone and provides helper functions)
+require_once __DIR__ . '/../config/timezone.php';
 
 require_once __DIR__ . '/config.php';
 requireAdminLogin();
@@ -38,8 +38,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         
         // Normalize datetime inputs: convert HTML datetime-local to MySQL DATETIME format
         // Empty inputs become NULL (not empty strings)
-        $validFrom = normalizeDateTime($_POST['valid_from'] ?? '');
-        $validUntil = normalizeDateTime($_POST['valid_until'] ?? '');
+        // IMPORTANT: Input is in Asia/Kuala_Lumpur (from user), convert to UTC for storage
+        $validFromInput = normalizeDateTime($_POST['valid_from'] ?? '');
+        $validUntilInput = normalizeDateTime($_POST['valid_until'] ?? '');
+        
+        // Convert from app timezone to UTC for database storage
+        $validFrom = $validFromInput ? appToDbTime($validFromInput) : null;
+        $validUntil = $validUntilInput ? appToDbTime($validUntilInput) : null;
         
         // Validation
         if (empty($code)) {
@@ -65,10 +70,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                         $stmt = $pdo->prepare("
                             INSERT INTO promotions (
                                 code, type, value, active, min_purchase, max_discount,
-                                usage_limit, valid_from, valid_until, used_count
+                                usage_limit, valid_from, valid_until, used_count, created_at
                             ) VALUES (
                                 :code, :type, :value, :active, :min_purchase, :max_discount,
-                                :usage_limit, :valid_from, :valid_until, 0
+                                :usage_limit, :valid_from, :valid_until, 0, :created_at
                             )
                         ");
                         $stmt->execute([
@@ -80,7 +85,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                             ':max_discount' => $maxDiscount !== null ? round(floatval($maxDiscount), 2) : null,
                             ':usage_limit' => $usageLimit,
                             ':valid_from' => $validFrom ?: null,
-                            ':valid_until' => $validUntil ?: null
+                            ':valid_until' => $validUntil ?: null,
+                            ':created_at' => getCurrentDateTimeUTC() // Store in UTC
                         ]);
                         $message = 'Promotion code created successfully';
                         $messageType = 'success';
@@ -99,7 +105,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                             usage_limit = :usage_limit,
                             valid_from = :valid_from,
                             valid_until = :valid_until,
-                            updated_at = NOW()
+                            updated_at = :updated_at
                         WHERE id = :id
                     ");
                     // Update promotion (used_count is NOT updated here - it's read-only, auto-incremented on usage)
@@ -113,6 +119,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                         ':usage_limit' => $usageLimit,
                         ':valid_from' => $validFrom ?: null,
                         ':valid_until' => $validUntil ?: null,
+                        ':updated_at' => getCurrentDateTimeUTC(), // Store in UTC
                         ':id' => $id
                     ]);
                     $message = 'Promotion code updated successfully';
@@ -244,8 +251,8 @@ if (isset($_GET['logout'])) {
                                     <td><?php echo $promo['max_discount'] ? 'RM ' . number_format($promo['max_discount'], 2) : '-'; ?></td>
                                     <td><?php echo $promo['usage_limit'] ?? 'Unlimited'; ?></td>
                                     <td><?php echo $promo['used_count']; ?></td>
-                                    <td><?php echo $promo['valid_from'] ? date('Y-m-d H:i', strtotime($promo['valid_from'])) : '-'; ?></td>
-                                    <td><?php echo $promo['valid_until'] ? date('Y-m-d H:i', strtotime($promo['valid_until'])) : '-'; ?></td>
+                                    <td><?php echo $promo['valid_from'] ? formatDateTime(dbToAppTime($promo['valid_from']), 'Y-m-d H:i') : '-'; ?></td>
+                                    <td><?php echo $promo['valid_until'] ? formatDateTime(dbToAppTime($promo['valid_until']), 'Y-m-d H:i') : '-'; ?></td>
                                     <td>
                                         <span class="status-badge <?php echo $promo['active'] ? 'status-active' : 'status-inactive'; ?>">
                                             <?php echo $promo['active'] ? 'Active' : 'Inactive'; ?>
@@ -325,14 +332,14 @@ if (isset($_GET['logout'])) {
                         <div class="form-group">
                             <label for="valid_from">Valid From (Optional)</label>
                             <input type="datetime-local" name="valid_from" 
-                                   value="<?php echo $promotion['valid_from'] ? date('Y-m-d\TH:i', strtotime($promotion['valid_from'])) : ''; ?>">
+                                   value="<?php echo $promotion['valid_from'] ? createAppDateTime(dbToAppTime($promotion['valid_from']))->format('Y-m-d\TH:i') : ''; ?>">
                             <small>Leave empty if you don't want a start date (Please Choose The Date A Day Earlier Than The Current Date To Avoid Confusion)</small>
                         </div>
                         
                         <div class="form-group">
                             <label for="valid_until">Valid Until (Optional)</label>
                             <input type="datetime-local" name="valid_until" 
-                                   value="<?php echo $promotion['valid_until'] ? date('Y-m-d\TH:i', strtotime($promotion['valid_until'])) : ''; ?>">
+                                   value="<?php echo $promotion['valid_until'] ? createAppDateTime(dbToAppTime($promotion['valid_until']))->format('Y-m-d\TH:i') : ''; ?>">
                             <small>Leave empty if you don't want an expiry date</small>
                         </div>
                     </div>

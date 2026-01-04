@@ -4,8 +4,8 @@
  * Displays cart items, collects complete user information, applies discounts, and processes payment
  */
 
-// Set timezone for all date/time operations (MANDATORY)
-date_default_timezone_set('Asia/Kuala_Lumpur');
+// Load timezone configuration (sets default timezone and provides helper functions)
+require_once __DIR__ . '/config/timezone.php';
 
 // ============================================
 // STEP 1: Start Session
@@ -304,7 +304,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                     :variant, :size, :quantity,
                     :amount, :promo_code, :discount_amount,
                     :order_type, :delivery_fee, :final_amount,
-                    :billExternalReferenceNo, 'pending', NOW()
+                    :billExternalReferenceNo, 'pending', :created_at
                 )
             ");
             
@@ -343,7 +343,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                     ':order_type' => $orderType,
                     ':delivery_fee' => $itemDeliveryFee,
                     ':final_amount' => $itemFinalAmount,
-                    ':billExternalReferenceNo' => $billExternalReferenceNo
+                    ':billExternalReferenceNo' => $billExternalReferenceNo,
+                    ':created_at' => getCurrentDateTimeUTC() // Store in UTC
                 ]);
             }
             

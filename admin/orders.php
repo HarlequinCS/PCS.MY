@@ -270,7 +270,13 @@ foreach ($stats as $stat) {
                                         <br><small><?php echo htmlspecialchars($firstItem['district'] ?? ''); ?>, <?php echo htmlspecialchars($firstItem['state'] ?? ''); ?></small>
                                     <?php endif; ?>
                                 </td>
-                                <td><?php echo date('Y-m-d H:i', strtotime($firstItem['created_at'])); ?></td>
+                                <td><?php 
+                                    // Load timezone helper if not already loaded
+                                    if (!function_exists('formatDateTime')) {
+                                        require_once __DIR__ . '/../config/timezone.php';
+                                    }
+                                    echo formatDateTime(dbToAppTime($firstItem['created_at']), 'Y-m-d H:i'); 
+                                ?></td>
                                 <td>
                                     <a href="#" onclick="openPriceAdjust(<?php echo $firstItem['id']; ?>, <?php echo $totalAmount; ?>); return false;" 
                                        class="price-adjust-link">Adjust Price</a>
