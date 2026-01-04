@@ -41,6 +41,7 @@ if (!file_exists(__DIR__ . '/../includes/db.php')) {
 
 define('DB_CONFIG_LOADED', true);
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../config/timezone.php';
 require_once __DIR__ . '/../includes/db.php';
 
 try {
@@ -119,8 +120,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 exit;
             } else {
                 // Reactivate if previously unsubscribed
-                $updateStmt = $pdo->prepare("UPDATE email_notifications SET status = 'active', updated_at = NOW(), ip_address = ?, user_agent = ? WHERE email = ?");
-                $updateStmt->execute([$ip_address, $user_agent, $email]);
+                $updateStmt = $pdo->prepare("UPDATE email_notifications SET status = 'active', updated_at = ?, ip_address = ?, user_agent = ? WHERE email = ?");
+                $updateStmt->execute([getCurrentDateTimeUTC(), $ip_address, $user_agent, $email]);
                 
                 http_response_code(200);
                 echo json_encode([
@@ -133,8 +134,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         
         // Insert new email
-        $stmt = $pdo->prepare("INSERT INTO email_notifications (email, ip_address, user_agent, status) VALUES (?, ?, ?, 'active')");
-        $stmt->execute([$email, $ip_address, $user_agent]);
+        // created_at and updated_at: Use UTC timezone helper to store in UTC
+        $stmt = $pdo->prepare("INSERT INTO email_notifications (email, ip_address, user_agent, status, created_at, updated_at) VALUES (?, ?, ?, 'active', ?, ?)");
+        $nowUTC = getCurrentDateTimeUTC();
+        $stmt->execute([$email, $ip_address, $user_agent, $nowUTC, $nowUTC]);
         
         $notificationId = $pdo->lastInsertId();
         

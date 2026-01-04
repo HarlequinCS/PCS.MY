@@ -53,8 +53,9 @@ if ($method === 'POST') {
         $userAgent = $_SERVER['HTTP_USER_AGENT'] ?? '';
         
         // Insert visitor (ignore duplicates)
-        $stmt = $pdo->prepare("INSERT IGNORE INTO visitors (ip_address, user_agent) VALUES (?, ?)");
-        $stmt->execute([$ip, $userAgent]);
+        // visit_date: Use UTC timezone helper to store in UTC
+        $stmt = $pdo->prepare("INSERT IGNORE INTO visitors (ip_address, user_agent, visit_date) VALUES (?, ?, ?)");
+        $stmt->execute([$ip, $userAgent, getCurrentDateTimeUTC()]);
         
         // Get total count
         $stmt = $pdo->query("SELECT COUNT(DISTINCT ip_address) as total FROM visitors");

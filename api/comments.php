@@ -33,6 +33,7 @@ if (!file_exists(__DIR__ . '/../includes/db.php')) {
 
 define('DB_CONFIG_LOADED', true);
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../config/timezone.php';
 require_once __DIR__ . '/../includes/db.php';
 
 // Get visitor IP
@@ -175,13 +176,15 @@ if ($method === 'POST') {
         try {
             // Clean INSERT - only specify non-auto columns
             // comment_id is AUTO_INCREMENT PRIMARY KEY - DO NOT include it
-            $stmt = $pdo->prepare("INSERT INTO comment (comment, status, ip_address) VALUES (?, ?, ?)");
+            // created_at: Use UTC timezone helper to store in UTC
+            $stmt = $pdo->prepare("INSERT INTO comment (comment, status, ip_address, created_at) VALUES (?, ?, ?, ?)");
             
             // Execute with sanitized values
             $result = $stmt->execute([
-                $comment,      // User's comment text
-                'pending',     // Status for admin approval
-                $ip            // Visitor IP address
+                $comment,              // User's comment text
+                'pending',             // Status for admin approval
+                $ip,                   // Visitor IP address
+                getCurrentDateTimeUTC() // Store in UTC
             ]);
             
             // Verify execution
@@ -244,8 +247,8 @@ if ($method === 'POST') {
                     $pdo->exec("ALTER TABLE comment AUTO_INCREMENT = $nextId");
                     
                     // Retry the insert ONCE
-                    $stmt = $pdo->prepare("INSERT INTO comment (comment, status, ip_address) VALUES (?, ?, ?)");
-                    $stmt->execute([$comment, 'pending', $ip]);
+                    $stmt = $pdo->prepare("INSERT INTO comment (comment, status, ip_address, created_at) VALUES (?, ?, ?, ?)");
+                    $stmt->execute([$comment, 'pending', $ip, getCurrentDateTimeUTC()]);
                     $commentId = $pdo->lastInsertId();
                     
                     if ($commentId && $commentId > 0) {
