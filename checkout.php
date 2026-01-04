@@ -35,9 +35,13 @@ require_once __DIR__ . '/includes/promotion.php';
 // Include version configuration for asset versioning
 require_once __DIR__ . '/config/version.php';
 
-// ToyyibPay Staging Credentials
+// ToyyibPay Staging Credentials (kept for backward compatibility)
 define('STAGING_SECRET_KEY', 'dh1kldj2-j8db-ofm0-qauv-e037egz4oiui');
 define('STAGING_CATEGORY_CODE', 'g3ii2ms2');
+
+// Load ToyyibPay config helper (supports staging/production toggle)
+// Note: DB_CONFIG_LOADED and database config are already loaded above
+require_once __DIR__ . '/includes/toyyibpay_config.php';
 
 // Base URL untuk staging environment
 $baseUrl = 'https://projectcutisem.com';
@@ -416,11 +420,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                 $billDescription = substr($billDescription, 0, 97) . '...';
             }
             
+            // Get ToyyibPay configuration (staging or production based on settings)
+            $toyyibpayConfig = getToyyibPayConfig();
+            
             // Prepare bill data (matching sandbox-test.php structure exactly)
             $billData = [
-                // Required: ToyyibPay credentials
-                'userSecretKey' => STAGING_SECRET_KEY,
-                'categoryCode' => STAGING_CATEGORY_CODE,
+                // Required: ToyyibPay credentials (from config helper)
+                'userSecretKey' => $toyyibpayConfig['secret_key'],
+                'categoryCode' => $toyyibpayConfig['category_code'],
                 
                 // Bill information
                 'billName' => 'WORKSHIRT COLLECTION Order',
@@ -464,8 +471,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             // ============================================
             // STEP 9: Call ToyyibPay API to Create Bill
             // ============================================
-            // Initialize cURL untuk API call
-            $ch = curl_init('https://dev.toyyibpay.com/index.php/api/createBill');
+            // Initialize cURL untuk API call (use endpoint from config)
+            $ch = curl_init($toyyibpayConfig['endpoint']);
             
             // Set cURL options
             curl_setopt($ch, CURLOPT_POST, true);

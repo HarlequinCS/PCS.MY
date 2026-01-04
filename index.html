@@ -782,6 +782,42 @@
         });
       });
     }
-  </script>
+    </script>
+    
+    <!-- ToyyibPay Mode Check - Update Buy Now Button Behavior -->
+    <script>
+        // Check ToyyibPay mode and update Buy Now button behavior
+        // This runs after DOM loads and workshirt.js is loaded (workshirt.js has defer attribute)
+        window.addEventListener('DOMContentLoaded', function() {
+            // Wait a bit for workshirt.js to load (it has defer attribute)
+            setTimeout(function() {
+                fetch('/api/get_toyyibpay_mode.php')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success && data.isProduction) {
+                            // Production mode: redirect to order-baju.php
+                            const buyNowButtons = document.querySelectorAll('.js-buy-now-btn');
+                            buyNowButtons.forEach(btn => {
+                                // Remove existing click handlers by cloning
+                                const newBtn = btn.cloneNode(true);
+                                btn.parentNode.replaceChild(newBtn, btn);
+                                
+                                // Add new click handler that redirects
+                                newBtn.addEventListener('click', function(e) {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    window.location.href = '/order-baju.php';
+                                }, true); // Use capture phase to run before other handlers
+                            });
+                        }
+                        // Staging mode: keep current behavior (opens modal via workshirt.js)
+                    })
+                    .catch(error => {
+                        console.error('Error checking ToyyibPay mode:', error);
+                        // On error, keep default behavior (staging - opens modal)
+                    });
+            }, 100); // Small delay to ensure workshirt.js handlers are attached
+        });
+    </script>
 </body>
 </html>
