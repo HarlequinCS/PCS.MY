@@ -224,90 +224,9 @@ require_once __DIR__ . '/config/version.php';
     </main>
     
     <!-- jQuery (must be loaded before orderbutton.js) -->
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
     
     <!-- Custom JavaScript: Order Button Animation -->
     <script src="<?php echo getVersionedAsset('js/orderbutton.js'); ?>"></script>
-    
-    <!-- Additional JavaScript for page interactions -->
-    <script>
-        // Console log for debugging
-        // Return page loaded - status check complete
-        
-        // Homepage URL (adjust as needed)
-        const homepageUrl = '/';
-        let countdownStarted = false;
-        let countdownInterval = null;
-        
-        // Countdown and redirect function
-        function startCountdownAndRedirect(seconds) {
-            if (countdownStarted) {
-                return; // Prevent multiple countdowns
-            }
-            
-            countdownStarted = true;
-            const orderButton = document.querySelector('.order');
-            const defaultText = orderButton.querySelector('.default');
-            let countdown = seconds;
-            
-            // Update button text with countdown
-            countdownInterval = setInterval(function() {
-                if (countdown > 0) {
-                    if (defaultText) {
-                        defaultText.textContent = `Redirecting in ${countdown}s...`;
-                    }
-                    // Countdown active
-                    countdown--;
-                } else {
-                    clearInterval(countdownInterval);
-                    // Redirecting to homepage
-                    // Redirect to homepage
-                    window.location.href = homepageUrl;
-                }
-            }, 1000);
-        }
-        
-        <?php if ($statusId == 1): ?>
-        // Handle button click (both manual and auto-trigger)
-        document.addEventListener('DOMContentLoaded', function() {
-            const orderButton = document.querySelector('.order');
-            
-            if (orderButton) {
-                // Listen for button click events (from orderbutton.js)
-                // The orderbutton.js will add 'animate' class on click
-                // We'll watch for that class change to trigger countdown
-                const observer = new MutationObserver(function(mutations) {
-                    mutations.forEach(function(mutation) {
-                        if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
-                            if (orderButton.classList.contains('animate') && !countdownStarted) {
-                                // Order button animation started
-                                
-                                // Start countdown after animation completes (10 seconds)
-                                setTimeout(function() {
-                                    if (!countdownStarted) {
-                                        // Starting countdown before redirect
-                                        startCountdownAndRedirect(3);
-                                    }
-                                }, 10000); // Wait for animation to complete (10 seconds)
-                            }
-                        }
-                    });
-                });
-                
-                // Observe the button for class changes
-                observer.observe(orderButton, {
-                    attributes: true,
-                    attributeFilter: ['class']
-                });
-                
-                // Auto-trigger button animation on page load
-                setTimeout(function() {
-                    // Auto-triggering order button animation
-                    orderButton.click();
-                }, 1000);
-            }
-        });
-        <?php endif; ?>
-    </script>
 </body>
 </html>
