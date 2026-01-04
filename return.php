@@ -87,14 +87,14 @@ require_once __DIR__ . '/config/version.php';
     <link rel="shortcut icon" type="image/x-icon" href="https://projectcutisem.com/favicon.ico">
     <link rel="apple-touch-icon" href="https://projectcutisem.com/apple-touch-icon.png">
     
-    <!-- Custom CSS: Order Baju Styles -->
-    <link rel="stylesheet" href="<?php echo getVersionedAsset('css/order-baju.css'); ?>">
+    <!-- Custom CSS: Order Button Animation (load first to prevent conflicts) -->
+    <link rel="stylesheet" href="css/orderbutton.css?v=<?php echo ASSETS_VERSION; ?>">
     
-    <!-- Custom CSS: Order Button Animation -->
-    <link rel="stylesheet" href="<?php echo getVersionedAsset('css/orderbutton.css'); ?>">
+    <!-- Custom CSS: Order Baju Styles -->
+    <link rel="stylesheet" href="css/order-baju.css?v=<?php echo ASSETS_VERSION; ?>">
     
     <!-- Return Page Specific Styles -->
-    <link rel="stylesheet" href="<?php echo getVersionedAsset('css/return.css'); ?>">
+    <link rel="stylesheet" href="css/return.css?v=<?php echo ASSETS_VERSION; ?>">
     
 </head>
 <body>
@@ -227,41 +227,71 @@ require_once __DIR__ . '/config/version.php';
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
     
     <!-- Custom JavaScript: Order Button Animation -->
-    <script src="<?php echo getVersionedAsset('js/orderbutton.js'); ?>"></script>
+    <script src="js/orderbutton.js?v=<?php echo ASSETS_VERSION; ?>"></script>
     
     <?php if ($statusId == 1): ?>
     <!-- Auto-trigger animation and redirect for successful payment -->
     <script>
-        // Wait for jQuery and DOM to be ready
+        // Wait for jQuery and orderbutton.js to be ready
         (function() {
+            var initAttempts = 0;
+            var maxAttempts = 100; // 10 seconds max wait
+            
             function initButton() {
+                initAttempts++;
+                
                 // Check if jQuery is loaded
-                if (typeof jQuery === 'undefined') {
-                    setTimeout(initButton, 100);
-                    return;
+                if (typeof jQuery === 'undefined' || typeof $ === 'undefined') {
+                    if (initAttempts < maxAttempts) {
+                        setTimeout(initButton, 100);
+                        return;
+                    } else {
+                        console.error('❌ jQuery failed to load after 10 seconds');
+                        return;
+                    }
                 }
                 
+                // Use jQuery ready
                 jQuery(document).ready(function($) {
-                    const orderButton = $('.order');
+                    var orderButton = $('.order');
                     
                     if (orderButton.length > 0) {
-                        // Auto-trigger button animation after page loads
+                        // Wait a bit more to ensure orderbutton.js has set up the handler
                         setTimeout(function() {
+                            // Trigger button click to start animation
                             orderButton.trigger('click');
-                        }, 500);
+                            
+                            // Verify animation started
+                            setTimeout(function() {
+                                if (orderButton.hasClass('animate')) {
+                                    console.log('✅ Animation started successfully');
+                                } else {
+                                    console.error('❌ Animation class not added - trying manual trigger');
+                                    // Fallback: manually add animate class
+                                    orderButton.addClass('animate');
+                                    setTimeout(function() {
+                                        orderButton.removeClass('animate');
+                                    }, 10000);
+                                }
+                            }, 200);
+                        }, 800); // Wait 800ms for orderbutton.js to initialize
                         
                         // Redirect to homepage after animation completes (10 seconds)
                         setTimeout(function() {
                             window.location.href = '/';
-                        }, 11000); // 500ms delay + 10 seconds animation + 500ms buffer
+                        }, 11000); // 800ms delay + 10 seconds animation + 200ms buffer
                     } else {
-                        console.error('Order button not found');
+                        console.error('❌ Order button not found in DOM');
                     }
                 });
             }
             
             // Start initialization
-            initButton();
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', initButton);
+            } else {
+                initButton();
+            }
         })();
     </script>
     <?php endif; ?>
