@@ -228,5 +228,42 @@ require_once __DIR__ . '/config/version.php';
     
     <!-- Custom JavaScript: Order Button Animation -->
     <script src="<?php echo getVersionedAsset('js/orderbutton.js'); ?>"></script>
+    
+    <?php if ($statusId == 1): ?>
+    <!-- Auto-trigger animation and redirect for successful payment -->
+    <script>
+        // Wait for jQuery and DOM to be ready
+        (function() {
+            function initButton() {
+                // Check if jQuery is loaded
+                if (typeof jQuery === 'undefined') {
+                    setTimeout(initButton, 100);
+                    return;
+                }
+                
+                jQuery(document).ready(function($) {
+                    const orderButton = $('.order');
+                    
+                    if (orderButton.length > 0) {
+                        // Auto-trigger button animation after page loads
+                        setTimeout(function() {
+                            orderButton.trigger('click');
+                        }, 500);
+                        
+                        // Redirect to homepage after animation completes (10 seconds)
+                        setTimeout(function() {
+                            window.location.href = '/';
+                        }, 11000); // 500ms delay + 10 seconds animation + 500ms buffer
+                    } else {
+                        console.error('Order button not found');
+                    }
+                });
+            }
+            
+            // Start initialization
+            initButton();
+        })();
+    </script>
+    <?php endif; ?>
 </body>
 </html>
