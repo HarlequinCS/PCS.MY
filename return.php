@@ -225,9 +225,29 @@ require_once __DIR__ . '/config/version.php';
     
     <!-- jQuery (must be loaded before orderbutton.js) -->
     <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+    <script>
+        // Fallback if jQuery CDN fails
+        if (typeof jQuery === 'undefined') {
+            console.error('jQuery failed to load from CDN');
+        }
+    </script>
     
     <!-- Custom JavaScript: Order Button Animation -->
     <script src="<?php echo getVersionedAsset('js/orderbutton.js'); ?>"></script>
+    <script>
+        // Verify orderbutton.js loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            const orderButton = document.querySelector('.order');
+            if (orderButton && typeof jQuery !== 'undefined') {
+                console.log('Order button and jQuery ready');
+            } else {
+                console.error('Order button or jQuery not available', {
+                    button: !!orderButton,
+                    jQuery: typeof jQuery !== 'undefined'
+                });
+            }
+        });
+    </script>
     
     <!-- Additional JavaScript for page interactions -->
     <script>
