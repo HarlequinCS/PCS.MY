@@ -231,6 +231,9 @@ require_once __DIR__ . '/config/version.php';
     
     <!-- Additional JavaScript for page interactions -->
     <script>
+        // Console log for debugging
+        // Return page loaded - status check complete
+        
         // Homepage URL (adjust as needed)
         const homepageUrl = '/';
         let countdownStarted = false;
@@ -244,7 +247,7 @@ require_once __DIR__ . '/config/version.php';
             
             countdownStarted = true;
             const orderButton = document.querySelector('.order');
-            const defaultText = orderButton ? orderButton.querySelector('.default') : null;
+            const defaultText = orderButton.querySelector('.default');
             let countdown = seconds;
             
             // Update button text with countdown
@@ -253,9 +256,11 @@ require_once __DIR__ . '/config/version.php';
                     if (defaultText) {
                         defaultText.textContent = `Redirecting in ${countdown}s...`;
                     }
+                    // Countdown active
                     countdown--;
                 } else {
                     clearInterval(countdownInterval);
+                    // Redirecting to homepage
                     // Redirect to homepage
                     window.location.href = homepageUrl;
                 }
@@ -276,9 +281,11 @@ require_once __DIR__ . '/config/version.php';
                         if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
                             if (orderButton.classList.contains('animate') && !countdownStarted) {
                                 // Order button animation started
+                                
                                 // Start countdown after animation completes (10 seconds)
                                 setTimeout(function() {
                                     if (!countdownStarted) {
+                                        // Starting countdown before redirect
                                         startCountdownAndRedirect(3);
                                     }
                                 }, 10000); // Wait for animation to complete (10 seconds)
@@ -295,6 +302,7 @@ require_once __DIR__ . '/config/version.php';
                 
                 // Auto-trigger button animation on page load
                 setTimeout(function() {
+                    // Auto-triggering order button animation
                     orderButton.click();
                 }, 1000);
             }
