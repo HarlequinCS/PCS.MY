@@ -31,6 +31,21 @@ try {
     // Get current ToyyibPay mode
     $toyyibpayMode = getToyyibPayMode();
     
+    // Get current button link from database
+    $linkStmt = $pdo->prepare("SELECT setting_value FROM settings WHERE setting_key = 'button_link' LIMIT 1");
+    $linkStmt->execute();
+    $linkResult = $linkStmt->fetch(PDO::FETCH_ASSOC);
+    
+    // Default link if not set in database
+    $buttonLink = ($linkResult && isset($linkResult['setting_value']) && !empty($linkResult['setting_value'])) 
+        ? $linkResult['setting_value'] 
+        : '/order-baju.php';
+    
+    // Ensure link starts with / for relative paths
+    if (!empty($buttonLink) && $buttonLink[0] !== '/') {
+        $buttonLink = '/' . $buttonLink;
+    }
+    
     // Determine if Buy Now button should redirect to order page
     // Button redirects to order page if:
     // 1. Button mode is 'launch' (enables order functionality)
@@ -42,6 +57,7 @@ try {
         'success' => true,
         'button_mode' => $buttonMode,
         'toyyibpay_mode' => $toyyibpayMode,
+        'button_link' => $buttonLink,
         'isLaunch' => ($buttonMode === 'launch'),
         'isProduction' => (strtolower(trim($toyyibpayMode)) === 'production'),
         'shouldRedirect' => $shouldRedirect
@@ -54,6 +70,7 @@ try {
         'success' => false,
         'button_mode' => 'coming_soon',
         'toyyibpay_mode' => 'staging',
+        'button_link' => '/order-baju.php',
         'isLaunch' => false,
         'isProduction' => false,
         'shouldRedirect' => false,

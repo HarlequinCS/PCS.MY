@@ -1,0 +1,6 @@
+# Deny access to test and debug files in production
+<FilesMatch "^(test_|debug_|fix_).*\.php$">
+    Order deny,allow
+    Deny from all
+</FilesMatch>
+

@@ -24,6 +24,11 @@ ServerSignature Off
     Deny from all
 </FilesMatch>
 
+# Redirect index.html to index.php (301 permanent redirect)
+# This ensures the PHP version is always used for dynamic functionality
+RewriteCond %{THE_REQUEST} \s/+index\.html[\s?] [NC]
+RewriteRule ^index\.html$ /index.php [R=301,L]
+
 # Redirect /workshirt and /workshirt.html to / (301 permanent redirect)
 RewriteCond %{THE_REQUEST} \s/+workshirt\.html[\s?] [NC]
 RewriteRule ^workshirt\.html$ / [R=301,L]

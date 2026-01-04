@@ -1,3 +1,15 @@
+<?php
+/**
+ * Main Landing Page - Projek Cuti Sem
+ * Converted from index.html to index.php to support dynamic button link configuration
+ * 
+ * This page displays the WORKSHIRT COLLECTION and handles Buy Now button behavior
+ * based on settings configured in the admin panel.
+ */
+
+// No database connection needed here - JavaScript will fetch button link via API
+// This PHP file allows for future server-side enhancements if needed
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -797,26 +809,42 @@
                         // Check if button should redirect to order page
                         // Redirects when button_mode is 'launch' (regardless of payment mode)
                         if (data.success && data.shouldRedirect) {
-                            // Launch mode: redirect to order-baju.php
+                            // Launch mode: redirect to the link from database
+                            // Get the button link from API response (dynamically set in admin panel)
+                            const buttonLink = data.button_link || '/order-baju.php';
+                            
+                            // Find all Buy Now buttons on the page (supports multiple buttons)
                             const buyNowButtons = document.querySelectorAll('.js-buy-now-btn');
+                            
                             buyNowButtons.forEach(btn => {
-                                // Remove existing click handlers by cloning
+                                // Store original button reference to preserve any existing data attributes
+                                const originalBtn = btn;
+                                
+                                // Remove existing click handlers by cloning the button
+                                // This ensures we don't interfere with workshirt.js handlers
                                 const newBtn = btn.cloneNode(true);
+                                
+                                // Replace the old button with the new one
                                 btn.parentNode.replaceChild(newBtn, btn);
                                 
-                                // Add new click handler that redirects
+                                // Add new click handler that redirects to the dynamic link
+                                // Use capture phase (true) to run before other handlers
                                 newBtn.addEventListener('click', function(e) {
                                     e.preventDefault();
                                     e.stopPropagation();
-                                    window.location.href = '/order-baju.php';
-                                }, true); // Use capture phase to run before other handlers
+                                    
+                                    // Redirect to the link set in admin panel
+                                    window.location.href = buttonLink;
+                                }, true);
                             });
                             
                             // Log mode information for debugging
                             console.log('Buy Now Button Mode:', {
                                 buttonMode: data.button_mode,
                                 toyyibpayMode: data.toyyibpay_mode,
-                                redirecting: true
+                                buttonLink: buttonLink,
+                                redirecting: true,
+                                buttonsFound: buyNowButtons.length
                             });
                         } else {
                             // Coming Soon mode: keep current behavior (opens modal via workshirt.js)

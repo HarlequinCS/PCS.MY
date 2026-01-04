@@ -1,0 +1,872 @@
+<?php
+/**
+ * Main Landing Page - Projek Cuti Sem
+ * Converted from index.html to index.php to support dynamic button link configuration
+ * 
+ * This page displays the WORKSHIRT COLLECTION and handles Buy Now button behavior
+ * based on settings configured in the admin panel.
+ */
+
+// No database connection needed here - JavaScript will fetch button link via API
+// This PHP file allows for future server-side enhancements if needed
+?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta name="robots" content="index, follow">
+    <meta name="description" content="WORKSHIRT COLLECTION by Projek Cuti Sem. Your new everyday outfit for class and beyond. PCS™ - Represent Project Cuti Sem">
+    <title>Projek Cuti Sem (PCS) X WORKSHIRT COLLECTION</title>
+  <link rel="canonical" href="https://projectcutisem.com/">
+  
+    <!-- Resource Hints - Optimize third-party loading -->
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    
+    <!-- Preload critical CSS - Non-blocking load -->
+    <link rel="preload" href="css/workshirt.css?v=29" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="css/workshirt.css?v=29"></noscript>
+    
+    <!-- Google Fonts - Load with display=swap and font-display for better performance -->
+    <link href="https://fonts.googleapis.com/css2?family=Pinyon+Script&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Pinyon+Script&display=swap" rel="stylesheet"></noscript>
+    
+    <!-- Favicons -->
+    <link rel="icon" type="image/x-icon" href="https://projectcutisem.com/favicon.ico">
+    <link rel="shortcut icon" type="image/x-icon" href="https://projectcutisem.com/favicon.ico">
+    <link rel="apple-touch-icon" href="https://projectcutisem.com/apple-touch-icon.png">
+</head>
+<body>
+  <!-- Top Navigation Bar -->
+  <nav class="top-nav">
+    <div class="nav-container">
+      <!-- Left Side: Logo + Brand Name -->
+      <div class="nav-brand">
+        <figure class="nav-logo">
+          <img src="images/PCS logo.svg" alt="Projek Cuti Sem" width="40" height="40" fetchpriority="high">
+        </figure>
+        <span class="nav-brand-text">PROJEK CUTI SEM</span>
+      </div>
+      
+      <!-- Right Side: Action Buttons (Desktop) -->
+      <div class="nav-actions" id="navActions">
+        <button class="nav-btn nav-btn--primary js-buy-now-btn">BUY NOW</button>
+        <a href="/behind-the-product" class="nav-btn nav-btn--secondary">OUR STORY</a>
+        <a href="https://www.instagram.com/pcs.clthng" target="_blank" rel="noopener noreferrer" class="nav-btn nav-btn--secondary">CONTACT</a>
+      </div>
+      
+      <!-- Hamburger Menu Button (Mobile) -->
+      <button class="hamburger-menu js-hamburger" aria-label="Toggle menu">
+        <span class="hamburger-line"></span>
+        <span class="hamburger-line"></span>
+        <span class="hamburger-line"></span>
+      </button>
+    </div>
+    
+    <!-- Mobile Menu Overlay -->
+    <div class="mobile-menu js-mobile-menu">
+      <div class="mobile-menu-content">
+        <button class="nav-btn nav-btn--primary js-buy-now-btn">BUY NOW</button>
+        <a href="/behind-the-product" class="nav-btn nav-btn--secondary">OUR STORY</a>
+        <a href="https://www.instagram.com/pcs.clthng" target="_blank" rel="noopener noreferrer" class="nav-btn nav-btn--secondary">CONTACT</a>
+      </div>
+    </div>
+  </nav>
+  
+  <div class="slider js-slider">
+    <div class="slider__inner js-slider__inner"></div>
+    
+    <div class="slider__slides-wrapper">
+    <!-- Slide 1: WebGL Morph Background -->
+    <div class="slide js-slide">
+      <div class="slide__content">
+        <figure class="slide__img js-slide__img">
+          <img src="images/hijaufront.svg" alt="Forest Green Front" loading="eager" fetchpriority="high">
+        </figure>
+        <figure class="slide__img js-slide__img">
+          <img src="images/hijauback.svg" alt="Forest Green Back" loading="eager" fetchpriority="high">
+        </figure>
+      </div>
+      
+      <div class="slider__text js-slider__text">
+        <div class="slider__text-line js-slider__text-line"><div>Workshirt collection</div></div>
+        <div class="slider__text-line js-slider__text-line"><div>Built for daily wear</div></div>
+        <div class="slider__text-line js-slider__text-line"><div>Beyond class and routine</div></div>
+      </div>
+      
+    </div>
+    
+    <!-- Slide 2: WebGL Morph Background -->
+    <div class="slide js-slide">
+      <div class="slide__content">
+        <figure class="slide__img js-slide__img">
+          <img src="images/hitamdepan.svg" alt="Classic Black Front" loading="eager">
+        </figure>
+        <figure class="slide__img js-slide__img">
+          <img src="images/hitamback.svg" alt="Classic Black Back" loading="eager">
+        </figure>
+      </div>
+      
+      <div class="slider__text js-slider__text">
+        <div class="slider__text-line js-slider__text-line"><div>Heavyweight</div></div>
+        <div class="slider__text-line js-slider__text-line"><div>Japanese drill</div></div>
+        <div class="slider__text-line js-slider__text-line"><div>With raw character</div></div>
+      </div>
+      
+    </div>
+    
+    <!-- Slide 3: WebGL Morph Background -->
+    <div class="slide js-slide">
+      <div class="slide__content">
+        <figure class="slide__img js-slide__img">
+          <img src="images/merahdepan.svg" alt="Royal Red Front" loading="eager">
+        </figure>
+        <figure class="slide__img js-slide__img">
+          <img src="images/merahback.svg" alt="Royal Red Back" loading="eager">
+        </figure>
+      </div>
+      
+      <div class="slider__text js-slider__text">
+        <div class="slider__text-line js-slider__text-line"><div>Relaxed workwear fit</div></div>
+        <div class="slider__text-line js-slider__text-line"><div>Designed for movement</div></div>
+        <div class="slider__text-line js-slider__text-line"><div>Made for everyday wear</div></div>
+      </div>
+      
+    </div>
+    </div>
+    <!-- End slides wrapper -->
+    
+    <!-- Navigation Buttons -->
+    <button class="slider-btn slider-btn--prev js-slider-btn-prev" aria-label="Previous slide">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polyline points="15 18 9 12 15 6"></polyline>
+      </svg>
+    </button>
+    <button class="slider-btn slider-btn--next js-slider-btn-next" aria-label="Next slide">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polyline points="9 18 15 12 9 6"></polyline>
+      </svg>
+    </button>
+    
+    <nav class="slider__nav js-slider__nav">
+      <div class="slider-bullet js-slider-bullet" data-slide="0">
+        <span class="slider-bullet__text js-slider-bullet__text">01</span>
+        <span class="slider-bullet__line js-slider-bullet__line"></span>
+      </div>
+      <div class="slider-bullet js-slider-bullet" data-slide="1">
+        <span class="slider-bullet__text js-slider-bullet__text">02</span>
+        <span class="slider-bullet__line js-slider-bullet__line"></span>
+      </div>
+      <div class="slider-bullet js-slider-bullet" data-slide="2">
+        <span class="slider-bullet__text js-slider-bullet__text">03</span>
+        <span class="slider-bullet__line js-slider-bullet__line"></span>
+      </div>
+    </nav>
+  </div>
+  
+  <div class="vert-text">
+    <span>
+      PROJEK CUTI SEM<br>
+      X WORKSHIRT COLLECTION
+    </span>
+  </div>
+
+  <!-- Additional Content Sections -->
+  <main class="content-wrapper">
+    <!-- Instagram Promotion Section -->
+    <section class="content-section content-section--instagram">
+      <div class="section-container">
+        <h2 class="section-title">Follow Us</h2>
+        <p class="section-subtitle">Stay connected with PCS on Instagram</p>
+        <a href="https://www.instagram.com/pcs.clthng" target="_blank" rel="noopener noreferrer" class="instagram-btn">
+          <svg fill="currentColor" viewBox="0 0 24 24" width="24" height="24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+          </svg>
+          <span>Follow @pcs.clthng</span>
+        </a>
+      </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="content-section content-section--features">
+      <div class="section-container">
+        <h2 class="section-title">Premium Features</h2>
+        <p class="section-subtitle">Crafted with attention to detail and quality</p>
+        
+        <div class="features-grid">
+          <div class="feature-card">
+            <div class="feature-icon">
+              <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="8" y="12" width="48" height="40" rx="2" stroke="currentColor" stroke-width="2" fill="none"/>
+                <path d="M8 24 L56 24 M8 32 L56 32 M8 40 L56 40 M8 48 L56 48" stroke="currentColor" stroke-width="1.5" opacity="0.6"/>
+                <path d="M16 12 L16 52 M24 12 L24 52 M32 12 L32 52 M40 12 L40 52 M48 12 L48 52" stroke="currentColor" stroke-width="1.5" opacity="0.4"/>
+              </svg>
+            </div>
+            <h3 class="feature-card__title">Heavyweight Japanese Drill</h3>
+            <p class="feature-card__text">
+              Sourced from Japan. Raw texture, premium weight built to endure, designed to age with character.
+            </p>
+          </div>
+          
+          <div class="feature-card">
+            <div class="feature-icon">
+              <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="12" y="16" width="40" height="32" rx="1" stroke="currentColor" stroke-width="2" fill="none"/>
+                <path d="M12 24 L52 24 M12 32 L52 32 M12 40 L52 40" stroke="currentColor" stroke-width="2"/>
+                <circle cx="20" cy="24" r="2" fill="currentColor"/>
+                <circle cx="20" cy="32" r="2" fill="currentColor"/>
+                <circle cx="20" cy="40" r="2" fill="currentColor"/>
+                <circle cx="44" cy="24" r="2" fill="currentColor"/>
+                <circle cx="44" cy="32" r="2" fill="currentColor"/>
+                <circle cx="44" cy="40" r="2" fill="currentColor"/>
+                <path d="M32 20 L32 44" stroke="currentColor" stroke-width="2"/>
+                <circle cx="32" cy="20" r="3" fill="currentColor"/>
+              </svg>
+            </div>
+            <h3 class="feature-card__title">Half-Zip Metal Zipper</h3>
+            <p class="feature-card__text">
+              Industrial-grade metal zipper smooth pull, solid feel, no compromise on reliability.
+            </p>
+          </div>
+          
+          <div class="feature-card">
+            <div class="feature-icon">
+              <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="10" y="18" width="44" height="6" rx="1" stroke="currentColor" stroke-width="2" fill="none"/>
+                <rect x="10" y="28" width="44" height="6" rx="1" stroke="currentColor" stroke-width="2" fill="none"/>
+                <rect x="10" y="38" width="44" height="6" rx="1" stroke="currentColor" stroke-width="2" fill="none"/>
+                <path d="M14 21 L14 42 M20 21 L20 42 M26 21 L26 42 M32 21 L32 42 M38 21 L38 42 M44 21 L44 42 M50 21 L50 42" stroke="currentColor" stroke-width="1" opacity="0.5"/>
+                <path d="M12 14 L12 46" stroke="currentColor" stroke-width="2"/>
+                <circle cx="12" cy="12" r="2" fill="currentColor"/>
+                <circle cx="12" cy="48" r="2" fill="currentColor"/>
+              </svg>
+            </div>
+            <h3 class="feature-card__title">Relaxed Workwear Fit</h3>
+            <p class="feature-card__text">
+              Relaxed structure for daily movement clean silhouette with room to layer.
+            </p>
+          </div>
+          
+          <div class="feature-card">
+            <div class="feature-icon">
+              <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M32 10 L42 16 L42 28 C42 35 38 40 32 44 C26 40 22 35 22 28 L22 16 Z" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linejoin="round"/>
+                <path d="M32 18 L32 44" stroke="currentColor" stroke-width="2"/>
+                <path d="M28 26 L36 26 M28 32 L36 32 M28 38 L36 38" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                <circle cx="32" cy="50" r="3" fill="currentColor" opacity="0.6"/>
+                <circle cx="32" cy="50" r="6" stroke="currentColor" stroke-width="1.5" opacity="0.4"/>
+              </svg>
+            </div>
+            <h3 class="feature-card__title">Durable Daily Wear</h3>
+            <p class="feature-card__text">
+              Reinforced where it matters made for everyday wear, built to last beyond trends.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Product Showcase Section -->
+    <section class="content-section content-section--showcase">
+      <div class="section-container">
+        <!-- 1️⃣ Half Zipper (LEFT) -->
+        <div class="showcase-item showcase-item--left">
+          <div class="showcase-images">
+            <div class="showcase-image-main">
+              <img src="images/halfzip.svg" alt="Half Zipper Detail - Main View" loading="lazy">
+            </div>
+            <div class="showcase-image-support">
+              <img src="images/halfzip2.svg" alt="Half Zipper Detail - Supporting View" loading="lazy">
+            </div>
+          </div>
+          <div class="showcase-content">
+            <h3 class="showcase-title">Half Zipper (YKK)</h3>
+            <p class="showcase-text">
+              Finished with a legendary YKK metal zipper trusted across the industry for smooth action, strength, and long-term reliability.
+            </p>
+          </div>
+        </div>
+
+        <!-- 2️⃣ Left Pocket Embroidery (PCS Logo) (RIGHT) -->
+        <div class="showcase-item showcase-item--right">
+          <div class="showcase-content">
+            <h3 class="showcase-title">Left Pocket Embroidery (PCS Logo)</h3>
+            <p class="showcase-text">
+              Every detail carries meaning. The PCS logo is embroidered on the left pocket a quiet mark of Malaysian craftsmanship and pride.
+            </p>
+          </div>
+          <div class="showcase-images">
+            <div class="showcase-image-main">
+              <img src="images/pcs.svg" alt="Left Pocket PCS Logo Embroidery - Main View" loading="lazy">
+            </div>
+            <div class="showcase-image-support">
+              <img src="images/pcs2.svg" alt="Left Pocket PCS Logo Embroidery - Supporting View" loading="lazy">
+            </div>
+          </div>
+        </div>
+
+        <!-- 3️⃣ Right Pocket Embroidery ('We Lead The Future' Emblem) (LEFT) -->
+        <div class="showcase-item showcase-item--left">
+          <div class="showcase-images">
+            <div class="showcase-image-main">
+              <img src="images/lead.svg" alt="Right Pocket 'We Lead The Future' Emblem - Main View" loading="lazy">
+            </div>
+            <div class="showcase-image-support">
+              <img src="images/lead2.svg" alt="Right Pocket 'We Lead The Future' Emblem - Supporting View" loading="lazy">
+            </div>
+          </div>
+          <div class="showcase-content">
+            <h3 class="showcase-title">Right Pocket Embroidery (“We Lead The Future”)</h3>
+            <p class="showcase-text">
+              A message stitched with purpose. “We Lead The Future” reflects ambition, confidence, and the mindset to move forward.
+            </p>
+          </div>
+        </div>
+
+        <!-- 4️⃣ Back Embroidery ('Les Étudiants Mènent le Monde') (RIGHT) -->
+        <div class="showcase-item showcase-item--right">
+          <div class="showcase-content">
+            <h3 class="showcase-title">Back Embroidery (“Les Étudiants Mènent le Monde”)</h3>
+            <p class="showcase-text">
+              A statement without noise. “Les Étudiants Mènent le Monde” stands for students who shape the world calmly, boldly.
+            </p>
+          </div>
+          <div class="showcase-images">
+            <div class="showcase-image-main">
+              <img src="images/etudiants.svg" alt="Back Embroidery 'Les Étudiants Mènent le Monde' - Main View" loading="lazy">
+            </div>
+            <div class="showcase-image-support">
+              <img src="images/etudiants2.svg" alt="Back Embroidery 'Les Étudiants Mènent le Monde' - Supporting View" loading="lazy">
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Product Details Section -->
+    <section class="content-section content-section--details">
+      <div class="section-container">
+        <h2 class="section-title">Product Details</h2>
+        
+        <div class="details-grid">
+          <div class="detail-card">
+            <h4 class="detail-card__label">Fit</h4>
+            <p class="detail-card__value">Relaxed industrial cut built for movement, designed to look sharp.</p>
+          </div>
+          
+          <div class="detail-card">
+            <h4 class="detail-card__label">Fabric</h4>
+            <p class="detail-card__value">Heavyweight Japanese drill raw texture, premium feel, uncompromising durability.</p>
+          </div>
+          
+          <div class="detail-card">
+            <h4 class="detail-card__label">Colors</h4>
+            <p class="detail-card__value">Royal Red · Forest Green · Classic Black</p>
+            <p class="detail-card__value">Muted. Bold. Timeless.</p>
+          </div>
+          <div class="detail-card">
+            <h4 class="detail-card__label">Care</h4>
+            <p class="detail-card__value">Low effort. High standard.</p>
+            <p class="detail-card__value">Cold wash. Hang dry. Repeat.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="content-section content-section--cta">
+      <div class="section-container">
+        <h2 class="cta-title">WORKSHIRT COLLECTION</h2>
+        <p class="cta-text">Your new everyday outfit for class and beyond. PCS™ - Represent Project Cuti Sem</p>
+        <p class="cta-subtext" style="font-size: 0.9rem; color: rgba(255, 255, 255, 0.5); margin-top: 0.5rem; font-style: italic;">(When exactly? We're as unpredictable as Malaysian weather — stay tuned!)</p>
+        <button class="cta-button js-buy-now-btn">Notify Me</button>
+      </div>
+    </section>
+
+    <!-- Story Section -->
+    <section class="content-section content-section--story">
+      <div class="section-container">
+        <div class="story-content">
+          <div class="story-text">
+            <h2 class="section-title">Our Story</h2>
+            <p class="story-paragraph">
+              Setiap karya Projek Cuti Sem lahir daripada satu misi  menghasilkan workshirt premium yang bukan sahaja bergaya, tetapi juga tahan lasak untuk kehidupan moden. Dari setiap jahitan hingga ke setiap butang, semuanya direka dengan penuh perhatian, supaya anda bukan sahaja nampak hebat, tetapi juga rasa selesa sepanjang hari.
+            </p>
+            <p class="story-paragraph">
+              WORKSHIRT COLLECTION ini adalah bukti nyata dedikasi kami. Your new everyday outfit for class and beyond. Menggabungkan kehalusan tekstil tradisi Jepun dengan rekaan moden, setiap helaian kain membawa cerita craftsmanship yang teliti, menegaskan bahawa gaya dan kualiti boleh berjalan seiring. PCS™ - Represent Project Cuti Sem.
+            </p>
+            <a href="/behind-the-product" class="story-link">Learn More</a>
+          </div>
+          <div class="story-image">
+            <img src="images/story.svg" alt="Craftsmanship Detail" loading="lazy" width="600" height="400">
+          </div>
+        </div>
+
+      <!-- Visitor Counter -->
+        <div class="visitor-counter-section">
+          <div class="visitor-counter-box">
+            <span class="visitor-counter-label">Total Visitors</span>
+        <span class="visitor-count" id="visitorCount">0</span>
+          </div>
+      </div>
+
+      <!-- Comments Section -->
+      <div class="comments-section">
+          <h3 class="comments-title">Leave Your Encouragement</h3>
+        
+        <form class="comment-form" id="commentForm">
+          <div class="comment-input-wrapper">
+            <textarea 
+              class="comment-input" 
+              id="commentInput" 
+              placeholder="Share your thoughts, encouragement, or feedback..."
+              required
+              maxlength="1000"
+            ></textarea>
+        </div>
+          <button type="submit" class="comment-submit-btn" id="submitBtn">
+            Submit Comment
+          </button>
+          <div class="comment-message" id="commentMessage"></div>
+            </form>
+
+        <div class="comments-list-wrapper">
+          <div class="comments-list" id="commentsList">
+            <div class="no-comments">Loading comments...</div>
+          </div>
+        </div>
+            </div>
+            </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-container">
+      <div class="footer-content">
+        <div class="footer-social">
+          <a href="https://www.instagram.com/pcs.clthng" target="_blank" rel="noopener noreferrer" class="social-link" aria-label="Follow us on Instagram">
+            <svg fill="currentColor" viewBox="0 0 24 24" width="24" height="24" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+            </svg>
+            <span>Instagram</span>
+          </a>
+          <a href="https://www.instagram.com/pcs.clthng" target="_blank" rel="noopener noreferrer" class="social-link" aria-label="Contact us on Instagram">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="24" height="24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+            </svg>
+            <span>Contact</span>
+          </a>
+          </div>
+        <p class="footer-text">
+          <span class="footer-brand">PCS (Projek Cuti Sem)</span> <span class="footer-year">© 2025</span>
+          <span class="footer-separator">•</span>
+          <span class="footer-rights">All Rights Reserved</span>
+          <span class="footer-separator">•</span>
+          <span class="footer-credit">Developed by <span class="footer-team">Team ChendAwan</span></span>
+        </p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Back to Top Button -->
+  <button id="backToTop" class="back-to-top" aria-label="Back to top">
+    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"></path>
+    </svg>
+  </button>
+
+  <!-- Three.js Library - Using jsDelivr CDN with defer for non-blocking load -->
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js" defer crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  
+  <!-- GSAP Library - Using jsDelivr CDN with defer for non-blocking load -->
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js" defer crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  
+  <!-- Coming Soon Modal -->
+  <div class="coming-soon-modal js-coming-soon-modal">
+    <div class="modal-overlay js-modal-overlay"></div>
+    <div class="modal-content">
+      <button class="modal-close js-modal-close" aria-label="Close modal">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="24" height="24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+      </button>
+      <div class="modal-icon">🚀</div>
+      <h2 class="modal-title">Coming Soon!</h2>
+      <p class="modal-message">
+        We're putting the finishing touches on something special. <br>
+        Meanwhile, our workshirt is practicing its runway walk.
+      </p>
+      <p class="modal-submessage">
+        Enter your email and we'll notify you when we're ready to launch!
+      </p>
+      
+      <!-- Email Form -->
+      <form class="notification-form js-notification-form">
+        <div class="form-group">
+          <input 
+            type="email" 
+            name="email" 
+            class="form-input js-email-input" 
+            placeholder="your.email@example.com" 
+            required
+            autocomplete="email"
+          >
+          <div class="form-error js-form-error" style="display: none;"></div>
+        </div>
+        <div class="modal-actions">
+          <button type="submit" class="modal-btn modal-btn--primary js-submit-btn">
+            <span class="btn-text">Get Notified</span>
+            <span class="btn-loader" style="display: none;">⏳</span>
+          </button>
+          <button type="button" class="modal-btn modal-btn--secondary js-modal-close">Maybe Later</button>
+        </div>
+      </form>
+      
+      <!-- Success Message (hidden by default) -->
+      <div class="form-success js-form-success" style="display: none;">
+        <div class="success-icon">✓</div>
+        <p class="success-message"></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Workshirt JavaScript - Loads after libraries -->
+  <script src="js/workshirt.js?v=29" defer></script>
+  
+  <!-- Visitor Counter & Comments Script -->
+  <script>
+    // Visitor Counter
+    async function trackVisitor() {
+      try {
+        const response = await fetch('api/visitor.php', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+        const data = await response.json();
+        if (data.success) {
+          updateVisitorCount(data.total_visitors);
+        }
+      } catch (error) {
+        console.error('Visitor tracking error:', error);
+        getVisitorCount();
+      }
+    }
+
+    async function getVisitorCount() {
+      try {
+        const response = await fetch('api/visitor.php');
+        const data = await response.json();
+        if (data.success) {
+          updateVisitorCount(data.total_visitors);
+        }
+      } catch (error) {
+        console.error('Error getting visitor count:', error);
+      }
+    }
+
+    function updateVisitorCount(count) {
+      const counter = document.getElementById('visitorCount');
+      if (counter) {
+        const currentCount = parseInt(counter.textContent) || 0;
+        const targetCount = count;
+        const increment = targetCount > currentCount ? 1 : -1;
+        const duration = 1000;
+        const steps = Math.abs(targetCount - currentCount);
+        const stepDuration = duration / steps;
+
+        let current = currentCount;
+        const timer = setInterval(() => {
+          current += increment;
+          counter.textContent = current;
+          
+          if (current === targetCount) {
+            clearInterval(timer);
+          }
+        }, stepDuration);
+      }
+    }
+
+    // Comments
+    async function loadComments() {
+      try {
+        const response = await fetch('api/comments.php');
+        const data = await response.json();
+        
+        if (data.success) {
+          displayComments(data.comments);
+        }
+      } catch (error) {
+        console.error('Error loading comments:', error);
+        const container = document.getElementById('commentsList');
+        if (container) {
+          container.innerHTML = '<div class="no-comments">Unable to load comments. Please try again later.</div>';
+        }
+      }
+    }
+
+    function displayComments(comments) {
+      const container = document.getElementById('commentsList');
+      if (!container) return;
+      
+      if (!comments || comments.length === 0) {
+        container.innerHTML = '<div class="no-comments">No comments yet. Be the first to share your thoughts!</div>';
+        return;
+      }
+
+      container.innerHTML = comments.map((comment, index) => {
+        const date = new Date(comment.created_at);
+        const formattedDate = date.toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'short',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+        
+        const firstLetter = comment.comment.charAt(0).toUpperCase();
+        const avatarColors = [
+          'rgba(255, 255, 255, 0.2)',
+          'rgba(255, 255, 255, 0.15)',
+          'rgba(255, 255, 255, 0.25)',
+          'rgba(255, 255, 255, 0.18)'
+        ];
+        const avatarColor = avatarColors[index % avatarColors.length];
+        const commentId = comment.comment_id || index;
+        
+        return `
+          <div class="comment-item" data-comment-id="${commentId}">
+            <div class="comment-header">
+              <div class="comment-avatar" style="background: ${avatarColor};">
+                ${firstLetter}
+              </div>
+            </div>
+            <div class="comment-text">${escapeHtml(comment.comment)}</div>
+            <div class="comment-footer">
+              <div class="comment-date">${formattedDate}</div>
+              <button class="comment-like" onclick="handleLike(this, ${commentId})" aria-label="Like comment">
+                ❤️ Like
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function showMessage(message, type) {
+      const messageDiv = document.getElementById('commentMessage');
+      if (!messageDiv) return;
+      
+      messageDiv.textContent = message;
+      messageDiv.className = `comment-message ${type}`;
+      messageDiv.style.display = 'block';
+
+      setTimeout(() => {
+        messageDiv.style.display = 'none';
+      }, 5000);
+    }
+
+    function handleLike(button, commentId) {
+      button.style.transform = 'scale(1.2)';
+      button.style.transition = 'transform 0.2s ease';
+      
+      setTimeout(() => {
+        button.style.transform = 'scale(1)';
+      }, 200);
+      
+      const originalText = button.textContent;
+      button.textContent = '❤️ Liked!';
+      
+      setTimeout(() => {
+        button.textContent = originalText;
+      }, 1000);
+    }
+
+    // Initialize when DOM is ready
+    document.addEventListener('DOMContentLoaded', function() {
+    // Handle comment submission
+      const commentForm = document.getElementById('commentForm');
+      if (commentForm) {
+        commentForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const input = document.getElementById('commentInput');
+      const submitBtn = document.getElementById('submitBtn');
+      const messageDiv = document.getElementById('commentMessage');
+          if (!input || !submitBtn || !messageDiv) return;
+          
+      const comment = input.value.trim();
+
+      if (!comment) {
+        showMessage('Please enter a comment', 'error');
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Submitting...';
+      messageDiv.className = 'comment-message';
+      messageDiv.style.display = 'none';
+
+      try {
+            const response = await fetch('api/comments.php', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ comment: comment })
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({ error: 'Unknown error occurred' }));
+              showMessage(errorData.error || 'Failed to submit comment', 'error');
+          return;
+        }
+
+        const data = await response.json();
+
+        if (data.success) {
+          showMessage(data.message || 'Thank you for your comment!', 'success');
+          input.value = '';
+          setTimeout(() => {
+            loadComments();
+          }, 500);
+        } else {
+          if (response.status === 429) {
+            const retryAfter = data.retry_after || 60;
+            showMessage(data.error || `Please wait ${retryAfter} seconds before posting again.`, 'error');
+          } else {
+            showMessage(data.error || 'Failed to submit comment. Please try again.', 'error');
+          }
+        }
+      } catch (error) {
+        console.error('Comment submission error:', error);
+        showMessage('Network error. Please check your connection and try again.', 'error');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Submit Comment';
+      }
+    });
+      }
+
+      // Load initial data
+      trackVisitor();
+      loadComments();
+      
+      // Refresh comments every 30 seconds
+      setInterval(loadComments, 30000);
+    });
+
+    // Back to Top Button
+    const backToTopButton = document.getElementById('backToTop');
+    
+    if (backToTopButton) {
+      // Show/hide button based on scroll position
+      function toggleBackToTop() {
+        if (window.pageYOffset > 200) {
+          backToTopButton.classList.add('visible');
+        } else {
+          backToTopButton.classList.remove('visible');
+        }
+      }
+      
+      // Check on load
+      toggleBackToTop();
+      
+      // Check on scroll
+      window.addEventListener('scroll', toggleBackToTop);
+
+      // Scroll to top functionality
+      backToTopButton.addEventListener('click', () => {
+        window.scrollTo({
+          top: 0,
+          behavior: 'smooth'
+        });
+      });
+    }
+    </script>
+    
+    <!-- Button Mode Check - Update Buy Now Button Behavior -->
+    <script>
+        // Check button mode and update Buy Now button behavior
+        // This runs after DOM loads and workshirt.js is loaded (workshirt.js has defer attribute)
+        window.addEventListener('DOMContentLoaded', function() {
+            // Wait a bit for workshirt.js to load (it has defer attribute)
+            setTimeout(function() {
+                fetch('/api/get_button_mode.php')
+                    .then(response => response.json())
+                    .then(data => {
+                        // Check if button should redirect to order page
+                        // Redirects when button_mode is 'launch' (regardless of payment mode)
+                        if (data.success && data.shouldRedirect) {
+                            // Launch mode: redirect to the link from database
+                            // Get the button link from API response (dynamically set in admin panel)
+                            const buttonLink = data.button_link || '/order-baju.php';
+                            
+                            // Find all Buy Now buttons on the page (supports multiple buttons)
+                            const buyNowButtons = document.querySelectorAll('.js-buy-now-btn');
+                            
+                            buyNowButtons.forEach(btn => {
+                                // Store original button reference to preserve any existing data attributes
+                                const originalBtn = btn;
+                                
+                                // Remove existing click handlers by cloning the button
+                                // This ensures we don't interfere with workshirt.js handlers
+                                const newBtn = btn.cloneNode(true);
+                                
+                                // Replace the old button with the new one
+                                btn.parentNode.replaceChild(newBtn, btn);
+                                
+                                // Add new click handler that redirects to the dynamic link
+                                // Use capture phase (true) to run before other handlers
+                                newBtn.addEventListener('click', function(e) {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    
+                                    // Redirect to the link set in admin panel
+                                    window.location.href = buttonLink;
+                                }, true);
+                            });
+                            
+                            // Log mode information for debugging (only in development)
+                            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                                console.log('Buy Now Button Mode:', {
+                                    buttonMode: data.button_mode,
+                                    toyyibpayMode: data.toyyibpay_mode,
+                                    buttonLink: buttonLink,
+                                    redirecting: true,
+                                    buttonsFound: buyNowButtons.length
+                                });
+                            }
+                        } else {
+                            // Coming Soon mode: keep current behavior (opens modal via workshirt.js)
+                            // Log only in development
+                            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                                console.log('Buy Now Button Mode:', {
+                                    buttonMode: data.button_mode || 'coming_soon',
+                                    toyyibpayMode: data.toyyibpay_mode || 'staging',
+                                    redirecting: false
+                                });
+                            }
+                        }
+                    })
+                    .catch(error => {
+                        // Log errors (always, for debugging production issues)
+                        console.error('Error checking button mode:', error);
+                        // On error, keep default behavior (coming_soon - opens modal)
+                    });
+            }, 100); // Small delay to ensure workshirt.js handlers are attached
+        });
+    </script>
+</body>
+</html>

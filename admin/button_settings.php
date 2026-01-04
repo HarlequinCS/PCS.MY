@@ -30,6 +30,14 @@ $modeStmt->execute();
 $modeResult = $modeStmt->fetch(PDO::FETCH_ASSOC);
 $currentMode = ($modeResult && isset($modeResult['setting_value'])) ? $modeResult['setting_value'] : 'coming_soon';
 
+// Get current button link
+$linkStmt = $pdo->prepare("SELECT setting_value FROM settings WHERE setting_key = 'button_link' LIMIT 1");
+$linkStmt->execute();
+$linkResult = $linkStmt->fetch(PDO::FETCH_ASSOC);
+$currentLink = ($linkResult && isset($linkResult['setting_value']) && !empty($linkResult['setting_value'])) 
+    ? $linkResult['setting_value'] 
+    : '/order-baju.php';
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -207,6 +215,38 @@ $currentMode = ($modeResult && isset($modeResult['setting_value'])) ? $modeResul
                     </ul>
                     <p style="margin: 10px 0 0 0;"><strong>Note:</strong> This setting is independent of payment gateway mode (staging/production).</p>
                 </div>
+                
+                <!-- Button Link Setting Section -->
+                <div class="settings-card" style="margin-top: 20px;">
+                    <h2 style="margin: 0 0 20px 0; color: #333; font-size: 20px;">🔗 Buy Now Button Link</h2>
+                    
+                    <div class="form-group" style="margin-bottom: 20px;">
+                        <label for="buttonLink" style="display: block; margin-bottom: 8px; font-weight: 600; color: #333;">
+                            Target Page/Link
+                        </label>
+                        <input 
+                            type="text" 
+                            id="buttonLink" 
+                            name="buttonLink" 
+                            value="<?php echo htmlspecialchars($currentLink); ?>"
+                            placeholder="/order-baju.php"
+                            style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 6px; font-size: 14px; box-sizing: border-box;"
+                        >
+                        <small style="display: block; margin-top: 5px; color: #666; font-size: 12px;">
+                            Enter the page URL where Buy Now buttons should redirect (e.g., /order-baju.php, /checkout.php, or any relative/absolute URL)
+                        </small>
+                    </div>
+                    
+                    <button 
+                        id="saveLinkBtn" 
+                        class="btn btn-primary"
+                        style="padding: 12px 24px; background: #28a745; color: white; border: none; border-radius: 6px; font-size: 16px; font-weight: 600; cursor: pointer; transition: background 0.3s;"
+                    >
+                        Save Link
+                    </button>
+                    
+                    <div id="linkMessage" style="margin-top: 15px; display: none; padding: 12px; border-radius: 6px; font-size: 14px;"></div>
+                </div>
             </div>
         </div>
     </main>
@@ -260,6 +300,62 @@ $currentMode = ($modeResult && isset($modeResult['setting_value'])) ? $modeResul
                 alert('Error switching mode. Please try again.');
                 btn.disabled = false;
                 btn.textContent = currentMode === 'coming_soon' ? 'Switch to Launch' : 'Switch to Coming Soon';
+            }
+        });
+        
+        // Save button link functionality
+        document.getElementById('saveLinkBtn').addEventListener('click', async function() {
+            const btn = this;
+            const linkInput = document.getElementById('buttonLink');
+            const messageDiv = document.getElementById('linkMessage');
+            const link = linkInput.value.trim();
+            
+            // Validate link
+            if (!link) {
+                messageDiv.textContent = 'Please enter a link';
+                messageDiv.className = 'alert alert-error';
+                messageDiv.style.display = 'block';
+                return;
+            }
+            
+            // Disable button during request
+            btn.disabled = true;
+            btn.textContent = 'Saving...';
+            messageDiv.style.display = 'none';
+            
+            try {
+                const response = await fetch('/admin/api/save_button_link.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ link: link })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    messageDiv.textContent = 'Button link saved successfully!';
+                    messageDiv.className = 'alert alert-success';
+                    messageDiv.style.display = 'block';
+                    
+                    // Hide message after 3 seconds
+                    setTimeout(() => {
+                        messageDiv.style.display = 'none';
+                    }, 3000);
+                } else {
+                    messageDiv.textContent = 'Error: ' + (data.error || 'Failed to save link');
+                    messageDiv.className = 'alert alert-error';
+                    messageDiv.style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                messageDiv.textContent = 'Error saving link. Please try again.';
+                messageDiv.className = 'alert alert-error';
+                messageDiv.style.display = 'block';
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Save Link';
             }
         });
     </script>
