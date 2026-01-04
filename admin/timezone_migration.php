@@ -607,6 +607,7 @@ if ($action === 'dryrun') {
         <div class="action-buttons">
             <a href="?action=analyze" class="btn btn-primary">📊 Run Analysis</a>
             <a href="?action=dryrun" class="btn btn-secondary">🔍 Dry Run (Test)</a>
+            <a href="diagnose_timezone_data.php" class="btn btn-secondary">🔬 Diagnose Data</a>
         </div>
         
         <?php if ($action === 'migrate'): ?>
