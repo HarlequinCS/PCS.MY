@@ -65,9 +65,21 @@ try {
     ]);
     
 } catch (PDOException $e) {
-    error_log('Error toggling ToyyibPay mode: ' . $e->getMessage());
+    $errorMessage = $e->getMessage();
+    error_log('Error toggling ToyyibPay mode: ' . $errorMessage);
+    
+    // Check if it's a table doesn't exist error
+    if (strpos($errorMessage, "doesn't exist") !== false || 
+        strpos($errorMessage, "Table") !== false ||
+        strpos($errorMessage, "Unknown table") !== false) {
+        $errorMessage = 'Settings table does not exist. Please run the database setup script: DB Update/add_toyyibpay_settings_table.php';
+    }
+    
     http_response_code(500);
-    echo json_encode(['success' => false, 'error' => 'Database error']);
+    echo json_encode([
+        'success' => false, 
+        'error' => $errorMessage
+    ]);
 } catch (Exception $e) {
     error_log('Error toggling ToyyibPay mode: ' . $e->getMessage());
     http_response_code(400);
