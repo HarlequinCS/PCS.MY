@@ -58,6 +58,12 @@ try {
         ':mode2' => $newMode
     ]);
     
+    // Clear query cache for this setting
+    if (file_exists(__DIR__ . '/../../includes/db_cache.php')) {
+        require_once __DIR__ . '/../../includes/db_cache.php';
+        clearSettingCache('toyyibpay_mode');
+    }
+    
     // Log the change
     error_log("ToyyibPay mode changed from '{$currentMode}' to '{$newMode}' by admin: " . ($_SESSION['admin_username'] ?? 'unknown'));
     

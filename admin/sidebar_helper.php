@@ -19,7 +19,6 @@ function getMenuIcon($filename) {
         'products' => '🛍️',
         'promotions' => '🎟️',
         'settings' => '⚙️',
-        'button_settings' => '🔘',
         'update_variant_names' => '✏️',
         'flush_sessions' => '🔄',
     ];

@@ -7,10 +7,14 @@
 define('ADMIN_USERNAME', 'admin');
 define('ADMIN_PASSWORD', 'PCSadmin2024!'); // Change this password!
 
-// Session configuration
-ini_set('session.cookie_httponly', 1);
-ini_set('session.use_only_cookies', 1);
-ini_set('session.cookie_secure', 0); // Set to 1 if using HTTPS
+// Session configuration - PRODUCTION SECURITY
+ini_set('session.cookie_httponly', 1);      // Prevent JavaScript access to cookies
+ini_set('session.use_only_cookies', 1);     // Prevent session fixation via URL
+ini_set('session.cookie_secure', 1);        // ✅ REQUIRED: Set to 1 for HTTPS (change to 0 only for localhost)
+ini_set('session.cookie_samesite', 'Strict'); // CSRF protection
+ini_set('session.gc_maxlifetime', 3600);    // 1 hour session timeout
+ini_set('session.gc_probability', 1);        // Garbage collection probability
+ini_set('session.gc_divisor', 100);          // Garbage collection divisor
 
 // Start session
 if (session_status() === PHP_SESSION_NONE) {

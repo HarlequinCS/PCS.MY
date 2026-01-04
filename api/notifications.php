@@ -20,6 +20,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit;
 }
 
+// Rate limiting - prevent spam
+require_once __DIR__ . '/../includes/rate_limit.php';
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    checkRateLimit('notifications', 5, 60); // 5 email subscriptions per minute per IP
+}
+
 // Check if required files exist
 if (!file_exists(__DIR__ . '/../config/database.php')) {
     http_response_code(500);

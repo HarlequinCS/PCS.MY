@@ -1,0 +1,47 @@
+# Environment variables - NEVER commit
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+logs/
+error.log
+access.log
+
+# Test and debug files
+api/test_*.php
+api/debug_*.php
+api/fix_*.php
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE files
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Build files
+css/app.min.css
+js/app.min.js
+build/
+
+# Cache files
+cache/
+tmp/
+*.cache
+
+# Rate limit files
+*.ratelimit
+

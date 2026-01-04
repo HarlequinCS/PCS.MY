@@ -25,16 +25,12 @@ function getToyyibPayConfig() {
     }
     
     try {
-        $pdo = getDBConnection();
+        // Use query cache for better performance
+        require_once __DIR__ . '/db_cache.php';
         
-        // Get current mode (staging or production)
-        $modeStmt = $pdo->prepare("SELECT setting_value FROM settings WHERE setting_key = 'toyyibpay_mode' LIMIT 1");
-        $modeStmt->execute();
-        $modeResult = $modeStmt->fetch(PDO::FETCH_ASSOC);
-        $mode = ($modeResult && isset($modeResult['setting_value'])) ? trim(strtolower($modeResult['setting_value'])) : 'staging';
-        
-        // Debug: Log mode detection
-        error_log('ToyyibPay Mode Detection: Database value = "' . ($modeResult['setting_value'] ?? 'NULL') . '", Normalized mode = "' . $mode . '"');
+        // Get current mode (staging or production) - uses caching
+        $mode = getSetting('toyyibpay_mode', 'staging');
+        $mode = trim(strtolower($mode));
         
         // Staging configuration (default)
         $stagingConfig = [
@@ -104,10 +100,18 @@ function getToyyibPayConfig() {
 
 /**
  * Get current ToyyibPay mode
+ * Uses query caching for better performance
  * 
  * @return string 'staging' or 'production'
  */
 function getToyyibPayMode() {
+    // Use query cache if available
+    if (file_exists(__DIR__ . '/db_cache.php')) {
+        require_once __DIR__ . '/db_cache.php';
+        return getSetting('toyyibpay_mode', 'staging');
+    }
+    
+    // Fallback to direct query if cache not available
     try {
         $pdo = getDBConnection();
         $stmt = $pdo->prepare("SELECT setting_value FROM settings WHERE setting_key = 'toyyibpay_mode' LIMIT 1");

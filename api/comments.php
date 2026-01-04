@@ -14,6 +14,10 @@ header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST');
 header('Access-Control-Allow-Headers: Content-Type');
 
+// Rate limiting - prevent spam and abuse
+require_once __DIR__ . '/../includes/rate_limit.php';
+checkRateLimit('comments', 10, 60); // 10 requests per minute per IP
+
 // Check if required files exist
 if (!file_exists(__DIR__ . '/../config/database.php')) {
     http_response_code(500);

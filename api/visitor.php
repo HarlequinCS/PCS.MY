@@ -9,6 +9,10 @@ header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST');
 header('Access-Control-Allow-Headers: Content-Type');
 
+// Rate limiting - prevent abuse
+require_once __DIR__ . '/../includes/rate_limit.php';
+checkRateLimit('visitor', 30, 60); // 30 requests per minute per IP
+
 define('DB_CONFIG_LOADED', true);
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../includes/db.php';

@@ -796,69 +796,41 @@
     }
     </script>
     
-    <!-- Button Mode Check - Update Buy Now Button Behavior -->
+    <!-- Buy Now Button Redirect Configuration -->
     <script>
-        // Check button mode and update Buy Now button behavior
+        // ============================================
+        // BUTTON REDIRECT CONFIGURATION
+        // ============================================
+        // Change this URL to redirect Buy Now buttons to a different page
+        // Examples: '/order-baju.php', '/checkout.php', '/products.php', etc.
+        // Set to empty string '' to disable redirect (will show modal instead)
+        const BUY_NOW_BUTTON_REDIRECT_URL = '/order-baju.php';
+        // ============================================
+        
+        // Update Buy Now button behavior
         // This runs after DOM loads and workshirt.js is loaded (workshirt.js has defer attribute)
         window.addEventListener('DOMContentLoaded', function() {
             // Wait a bit for workshirt.js to load (it has defer attribute)
             setTimeout(function() {
-                fetch('/api/get_button_mode.php')
-                    .then(response => response.json())
-                    .then(data => {
-                        // Check if button should redirect to order page
-                        // Redirects when button_mode is 'launch' (regardless of payment mode)
-                        if (data.success && data.shouldRedirect) {
-                            // Launch mode: redirect to the link from database
-                            // Get the button link from API response (dynamically set in admin panel)
-                            const buttonLink = data.button_link || '/order-baju.php';
-                            
-                            // Find all Buy Now buttons on the page (supports multiple buttons)
-                            const buyNowButtons = document.querySelectorAll('.js-buy-now-btn');
-                            
-                            buyNowButtons.forEach(btn => {
-                                // Store original button reference to preserve any existing data attributes
-                                const originalBtn = btn;
-                                
-                                // Remove existing click handlers by cloning the button
-                                // This ensures we don't interfere with workshirt.js handlers
-                                const newBtn = btn.cloneNode(true);
-                                
-                                // Replace the old button with the new one
-                                btn.parentNode.replaceChild(newBtn, btn);
-                                
-                                // Add new click handler that redirects to the dynamic link
-                                // Use capture phase (true) to run before other handlers
-                                newBtn.addEventListener('click', function(e) {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    
-                                    // Redirect to the link set in admin panel
-                                    window.location.href = buttonLink;
-                                }, true);
-                            });
-                            
-                            // Log mode information for debugging
-                            console.log('Buy Now Button Mode:', {
-                                buttonMode: data.button_mode,
-                                toyyibpayMode: data.toyyibpay_mode,
-                                buttonLink: buttonLink,
-                                redirecting: true,
-                                buttonsFound: buyNowButtons.length
-                            });
-                        } else {
-                            // Coming Soon mode: keep current behavior (opens modal via workshirt.js)
-                            console.log('Buy Now Button Mode:', {
-                                buttonMode: data.button_mode || 'coming_soon',
-                                toyyibpayMode: data.toyyibpay_mode || 'staging',
-                                redirecting: false
-                            });
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error checking button mode:', error);
-                        // On error, keep default behavior (coming_soon - opens modal)
+                // Only redirect if URL is configured
+                if (BUY_NOW_BUTTON_REDIRECT_URL && BUY_NOW_BUTTON_REDIRECT_URL.trim() !== '') {
+                    // Find all Buy Now buttons on the page
+                    const buyNowButtons = document.querySelectorAll('.js-buy-now-btn');
+                    
+                    buyNowButtons.forEach(btn => {
+                        // Remove existing click handlers by cloning
+                        const newBtn = btn.cloneNode(true);
+                        btn.parentNode.replaceChild(newBtn, btn);
+                        
+                        // Add new click handler that redirects to configured URL
+                        newBtn.addEventListener('click', function(e) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            window.location.href = BUY_NOW_BUTTON_REDIRECT_URL;
+                        }, true); // Use capture phase to run before other handlers
                     });
+                }
+                // If URL is empty, buttons will use default behavior (modal via workshirt.js)
             }, 100); // Small delay to ensure workshirt.js handlers are attached
         });
     </script>

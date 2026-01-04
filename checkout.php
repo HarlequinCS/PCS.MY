@@ -32,6 +32,9 @@ require_once __DIR__ . '/includes/db.php';
 // Include promotion code system
 require_once __DIR__ . '/includes/promotion.php';
 
+// Include CSRF protection
+require_once __DIR__ . '/includes/csrf.php';
+
 // Include version configuration for asset versioning
 require_once __DIR__ . '/config/version.php';
 
@@ -172,6 +175,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 $errors = [];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'checkout') {
+    // CSRF Protection - validate token
+    if (!validateCSRFToken($_POST['csrf_token'] ?? '')) {
+        $errors[] = 'Invalid security token. Please refresh the page and try again.';
+        // Don't process form if CSRF token is invalid
+        $_POST = []; // Clear POST data
+    }
     // Validate and collect all form fields
     $fullname = trim($_POST['fullname'] ?? '');
     $email = trim($_POST['email'] ?? '');
@@ -660,6 +669,7 @@ if ($finalAmount < 0) {
         
         <form method="POST" action="" id="checkoutForm">
             <input type="hidden" name="action" value="checkout">
+            <input type="hidden" name="csrf_token" value="<?php echo generateCSRFToken(); ?>">
             <input type="hidden" name="promo_code_applied" id="promoCodeApplied" value="<?php echo htmlspecialchars($promoCode); ?>">
             <input type="hidden" name="promo_discount" id="promoDiscount" value="<?php echo $discountAmount; ?>">
             
