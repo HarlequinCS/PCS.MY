@@ -17,13 +17,14 @@ if (!defined('DB_CONFIG_LOADED')) {
     define('DB_CONFIG_LOADED', true);
 }
 
-// Use environment variables if available, otherwise use defaults
+// Use environment variables if available and not empty, otherwise use defaults
 // SECURITY: In production, always use .env file, never hardcode credentials
+// FALLBACK: If .env doesn't exist or values are empty, use hardcoded values (for backward compatibility)
 return [
-    'host' => defined('DB_HOST') ? DB_HOST : 'localhost',
-    'database' => defined('DB_NAME') ? DB_NAME : 'u284911514_pcsmy',
-    'username' => defined('DB_USER') ? DB_USER : 'u284911514_pcsadmin',
-    'password' => defined('DB_PASS') ? DB_PASS : 'PCSadmin25',
+    'host' => (defined('DB_HOST') && !empty(DB_HOST)) ? DB_HOST : 'localhost',
+    'database' => (defined('DB_NAME') && !empty(DB_NAME)) ? DB_NAME : 'u284911514_pcsmy',
+    'username' => (defined('DB_USER') && !empty(DB_USER)) ? DB_USER : 'u284911514_pcsadmin',
+    'password' => (defined('DB_PASS') && !empty(DB_PASS)) ? DB_PASS : 'PCSadmin25',
     'charset' => 'utf8mb4',
     'options' => [
         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,

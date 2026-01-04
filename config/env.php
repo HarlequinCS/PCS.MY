@@ -36,12 +36,14 @@ $envPath = __DIR__ . '/../.env';
 $env = loadEnv($envPath);
 
 // Define constants if not already defined
+// Only use .env values if they are actually set and not empty
+// Otherwise, use defaults (which will be overridden by database.php fallbacks)
 if (!defined('DB_HOST')) {
-    define('DB_HOST', $env['DB_HOST'] ?? 'localhost');
-    define('DB_NAME', $env['DB_NAME'] ?? '');
-    define('DB_USER', $env['DB_USER'] ?? '');
-    define('DB_PASS', $env['DB_PASS'] ?? '');
-    define('APP_ENV', $env['APP_ENV'] ?? 'production');
+    define('DB_HOST', !empty($env['DB_HOST']) ? $env['DB_HOST'] : 'localhost');
+    define('DB_NAME', !empty($env['DB_NAME']) ? $env['DB_NAME'] : '');
+    define('DB_USER', !empty($env['DB_USER']) ? $env['DB_USER'] : '');
+    define('DB_PASS', !empty($env['DB_PASS']) ? $env['DB_PASS'] : '');
+    define('APP_ENV', !empty($env['APP_ENV']) ? $env['APP_ENV'] : 'production');
     define('APP_DEBUG', filter_var($env['APP_DEBUG'] ?? 'false', FILTER_VALIDATE_BOOLEAN));
 }
 
