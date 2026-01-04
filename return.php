@@ -224,7 +224,8 @@ require_once __DIR__ . '/config/version.php';
     </main>
     
     <!-- jQuery (must be loaded before orderbutton.js) -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <!-- Using jsdelivr CDN (allowed by CSP) instead of cdnjs -->
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.4.1/dist/jquery.min.js"></script>
     
     <!-- Custom JavaScript: Order Button Animation -->
     <script src="js/orderbutton.js?v=<?php echo ASSETS_VERSION; ?>"></script>
