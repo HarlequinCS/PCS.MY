@@ -2666,3 +2666,72 @@ figure.logo img {
 .notification-form.hidden {
   display: none;
 }
+
+/* ============================================
+   ACCESSIBILITY UTILITIES
+   ============================================ */
+
+/* Visually hidden but accessible to screen readers */
+.visually-hidden,
+.sr-only {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+/* Skip link - visible on focus for keyboard navigation */
+.skip-link:focus {
+  position: fixed !important;
+  left: 1rem !important;
+  top: 1rem !important;
+  width: auto !important;
+  height: auto !important;
+  padding: 1rem 1.5rem !important;
+  background: #111 !important;
+  color: #fff !important;
+  text-decoration: none !important;
+  font-weight: bold !important;
+  z-index: 99999 !important;
+  outline: 3px solid #fff !important;
+  outline-offset: 2px !important;
+  border-radius: 4px !important;
+}
+
+/* Focus visible styles for better keyboard navigation */
+:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.8);
+  outline-offset: 2px;
+}
+
+/* Remove outline for mouse users */
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* High contrast mode improvements */
+@media (prefers-contrast: high) {
+  .nav-btn,
+  .cta-button,
+  .comment-submit-btn,
+  .modal-btn {
+    border: 2px solid currentColor;
+  }
+}

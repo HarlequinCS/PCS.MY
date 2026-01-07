@@ -1,20 +1,60 @@
 # Robots.txt for Projek Cuti Sem
 # https://projectcutisem.com/robots.txt
+# Last updated: 2025-01-07
 
+# Allow all crawlers
 User-agent: *
 Allow: /
 Allow: /css/
 Allow: /js/
 Allow: /images/
 Allow: /favicon.ico
+Allow: /behind-the-product
+Allow: /site.webmanifest
+
+# Disallow sensitive directories
 Disallow: /api/
 Disallow: /admin/
 Disallow: /config/
 Disallow: /includes/
+Disallow: /vendor/
+Disallow: /databasefile/
+Disallow: /DB Update/
+Disallow: /documentation/
+Disallow: /*.php$
+Disallow: /callback.php
+Disallow: /checkout.php
+Disallow: /order-baju.php
+Disallow: /return.php
 
-# Sitemap
+# Allow specific PHP pages that should be indexed
+Allow: /index.html
+
+# Sitemap location
 Sitemap: https://projectcutisem.com/sitemap.xml
 
-# Crawl-delay (optional - adjust if needed)
+# Crawl-delay for respectful crawling
 Crawl-delay: 1
 
+# Google-specific rules
+User-agent: Googlebot
+Allow: /
+Crawl-delay: 0
+
+# Bing-specific rules
+User-agent: Bingbot
+Allow: /
+Crawl-delay: 1
+
+# Block bad bots
+User-agent: AhrefsBot
+Disallow: /
+
+User-agent: SemrushBot
+Disallow: /
+
+User-agent: MJ12bot
+Disallow: /
+
+User-agent: DotBot
+Disallow: /

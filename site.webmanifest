@@ -1,21 +1,68 @@
 {
-  "name": "Projek Cuti Sem",
+  "name": "Projek Cuti Sem - Premium Malaysian Fashion",
   "short_name": "PCS",
-  "description": "Projek Cuti Sem - Premium Fashion Collection Coming Soon",
+  "description": "WORKSHIRT COLLECTION by Projek Cuti Sem. Premium heavyweight Japanese drill workshirts with YKK zippers. Your new everyday outfit for class and beyond.",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#ff0000",
+  "background_color": "#111111",
+  "theme_color": "#111111",
   "orientation": "portrait-primary",
   "icons": [
     {
       "src": "/favicon.ico",
-      "sizes": "any",
+      "sizes": "48x48",
       "type": "image/x-icon"
+    },
+    {
+      "src": "/images/favicon-16x16.png",
+      "sizes": "16x16",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/images/favicon-32x32.png",
+      "sizes": "32x32",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/images/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/images/android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/images/android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ],
-  "categories": ["fashion", "shopping", "lifestyle"],
-  "lang": "en-US",
-  "dir": "ltr"
+  "categories": ["fashion", "shopping", "lifestyle", "clothing"],
+  "lang": "en-MY",
+  "dir": "ltr",
+  "prefer_related_applications": false,
+  "related_applications": [],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Our Story",
+      "short_name": "Story",
+      "description": "Learn about the design journey behind our products",
+      "url": "/behind-the-product",
+      "icons": [
+        {
+          "src": "/images/android-chrome-192x192.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
+  ]
 }
-
