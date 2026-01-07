@@ -130,7 +130,8 @@ class Slider {
       this.state = {
         animating: false,
         text: false,
-        initial: true
+        initial: true,
+        transitioning: false
       }
       
       this.textures = null
@@ -349,37 +350,48 @@ class Slider {
       })
       
       // Load displacement map (can load in parallel with images)
-      this.disp = loader.load(
+      // Create fallback texture immediately for faster initialization
+      const createFallbackDisp = () => {
+        const size = 64 // Smaller for speed
+        const data = new Uint8Array(size * size * 4)
+        for (let i = 0; i < size * size; i++) {
+          const stride = i * 4
+          data[stride] = 128
+          data[stride + 1] = 128
+          data[stride + 2] = 128
+          data[stride + 3] = 255
+        }
+        const fallback = new THREE.DataTexture(data, size, size, THREE.RGBAFormat)
+        fallback.needsUpdate = true
+        fallback.minFilter = THREE.LinearFilter
+        fallback.magFilter = THREE.LinearFilter
+        fallback.wrapS = fallback.wrapT = THREE.RepeatWrapping
+        return fallback
+      }
+      
+      // Use fallback immediately, then try to load real texture
+      this.disp = createFallbackDisp()
+      onTextureLoaded()
+      
+      // Optionally try to load external displacement map (non-blocking)
+      // If it fails or is slow, fallback is already set
+      loader.load(
         'https://s3-us-west-2.amazonaws.com/s.cdpn.io/58281/rock-_disp.png',
         (loadedDisp) => {
-          // Set properties after loading
+          // Replace fallback with real texture
           loadedDisp.magFilter = loadedDisp.minFilter = THREE.LinearFilter
           loadedDisp.wrapS = loadedDisp.wrapT = THREE.RepeatWrapping
           loadedDisp.generateMipmaps = false
-          onTextureLoaded()
-          if (meshCreated) {
+          this.disp = loadedDisp
+          if (meshCreated && this.mat) {
+            this.mat.uniforms.disp.value = loadedDisp
             this.render()
           }
         },
         undefined,
         (error) => {
-          console.error('Error loading displacement map:', error)
-          // Create a simple fallback texture (faster, smaller)
-          const size = 64 // Smaller for speed
-          const data = new Uint8Array(size * size * 4)
-          for (let i = 0; i < size * size; i++) {
-            const stride = i * 4
-            data[stride] = 128
-            data[stride + 1] = 128
-            data[stride + 2] = 128
-            data[stride + 3] = 255
-          }
-          this.disp = new THREE.DataTexture(data, size, size, THREE.RGBAFormat)
-          this.disp.needsUpdate = true
-          this.disp.minFilter = THREE.LinearFilter
-          this.disp.magFilter = THREE.LinearFilter
-          this.disp.wrapS = this.disp.wrapT = THREE.RepeatWrapping
-          onTextureLoaded()
+          // Fallback already set, just log warning
+          console.warn('Could not load external displacement map, using fallback')
         }
       )
     }
@@ -442,12 +454,12 @@ class Slider {
       
       this.scene.add(this.mesh)
       
-      // Update texture size in uniforms and resolution
-      if (this.textures[0].image) {
-        this.mat.uniforms.size.value = new THREE.Vector2(
-          this.textures[0].image.naturalWidth || this.textures[0].image.width,
-          this.textures[0].image.naturalHeight || this.textures[0].image.height
-        )
+      // Update texture size in uniforms and resolution - Guard against undefined
+      if (this.textures[0] && (this.textures[0].image || (this.textures[0].isDataTexture && this.textures[0].width))) {
+        const texture = this.textures[0]
+        const width = texture.image ? (texture.image.naturalWidth || texture.image.width || 1920) : (texture.width || 1920)
+        const height = texture.image ? (texture.image.naturalHeight || texture.image.height || 1080) : (texture.height || 1080)
+        this.mat.uniforms.size.value = new THREE.Vector2(width, height)
       }
       
       // Update resolution uniform for proper scaling
@@ -473,6 +485,8 @@ class Slider {
         // Update isSlide1 uniform based on current slide (texture1)
         this.mat.uniforms.isSlide1.value = this.data.current === 0 ? 1.0 : 0.0
         
+        // Set transitioning state to ensure animation continues
+        this.state.transitioning = true
         gsap.to(this.mat.uniforms.dispPower, {
           value: 1,
           duration: 1.8,
@@ -493,13 +507,14 @@ class Slider {
             const newCrop = this.cropSettings[nextImageIndex] || { horizontal: 0.5, vertical: 0.5 }
             this.mat.uniforms.cropHorizontal.value = newCrop.horizontal
             this.mat.uniforms.cropVertical.value = newCrop.vertical
-            // Update texture size uniform to match new texture
-            if (this.textures[nextImageIndex] && this.textures[nextImageIndex].image) {
-              this.mat.uniforms.size.value = new THREE.Vector2(
-                this.textures[nextImageIndex].image.naturalWidth || this.textures[nextImageIndex].image.width,
-                this.textures[nextImageIndex].image.naturalHeight || this.textures[nextImageIndex].image.height
-              )
+            // Update texture size uniform to match new texture - Guard against undefined
+            if (this.textures[nextImageIndex]) {
+              const texture = this.textures[nextImageIndex]
+              const width = texture.image ? (texture.image.naturalWidth || texture.image.width || 1920) : (texture.width || 1920)
+              const height = texture.image ? (texture.image.naturalHeight || texture.image.height || 1080) : (texture.height || 1080)
+              this.mat.uniforms.size.value = new THREE.Vector2(width, height)
             }
+            this.state.transitioning = false
             if (this.renderer && this.scene && this.camera) {
               this.renderer.render(this.scene, this.camera)
             }
@@ -670,6 +685,8 @@ class Slider {
       // Mark animation as complete when timeline finishes
       tl.eventCallback("onComplete", () => {
         this.state.animating = false
+        // Update bullet states after transition
+        this.updateBulletStates()
         // Ensure isSlide1 is updated after transition completes
         if (this.mat) {
           this.mat.uniforms.isSlide1.value = this.data.current === 0 ? 1.0 : 0.0
@@ -691,6 +708,8 @@ class Slider {
         // Update isSlide1 uniform based on current slide (texture1)
         this.mat.uniforms.isSlide1.value = this.data.current === 0 ? 1.0 : 0.0
         
+        // Set transitioning state to ensure animation continues
+        this.state.transitioning = true
         gsap.to(this.mat.uniforms.dispPower, {
           value: 1,
           duration: 1.8,
@@ -710,13 +729,14 @@ class Slider {
             const newCrop = this.cropSettings[nextImageIndex] || { horizontal: 0.5, vertical: 0.5 }
             this.mat.uniforms.cropHorizontal.value = newCrop.horizontal
             this.mat.uniforms.cropVertical.value = newCrop.vertical
-            // Update texture size uniform to match new texture
-            if (this.textures[nextImageIndex] && this.textures[nextImageIndex].image) {
-              this.mat.uniforms.size.value = new THREE.Vector2(
-                this.textures[nextImageIndex].image.naturalWidth || this.textures[nextImageIndex].image.width,
-                this.textures[nextImageIndex].image.naturalHeight || this.textures[nextImageIndex].image.height
-              )
+            // Update texture size uniform to match new texture - Guard against undefined
+            if (this.textures[nextImageIndex]) {
+              const texture = this.textures[nextImageIndex]
+              const width = texture.image ? (texture.image.naturalWidth || texture.image.width || 1920) : (texture.width || 1920)
+              const height = texture.image ? (texture.image.naturalHeight || texture.image.height || 1080) : (texture.height || 1080)
+              this.mat.uniforms.size.value = new THREE.Vector2(width, height)
             }
+            this.state.transitioning = false
             if (this.renderer && this.scene && this.camera) {
               this.renderer.render(this.scene, this.camera)
             }
@@ -864,6 +884,8 @@ class Slider {
       
       tl.eventCallback("onComplete", () => {
         this.state.animating = false
+        // Update bullet states after transition
+        this.updateBulletStates()
         // Ensure isSlide1 is updated after transition completes (for transitionPrev)
         if (this.mat) {
           this.mat.uniforms.isSlide1.value = this.data.current === 0 ? 1.0 : 0.0
@@ -954,14 +976,19 @@ class Slider {
         })
       }
       
-      // Bullet navigation
-      this.bullets.forEach((bullet, index) => {
-        bullet.addEventListener('click', () => {
-          if (!this.state.animating && this.data.current !== index) {
-            this.goToSlide(index)
+      // Bullet navigation - Use delegated event listener for better performance and reliability
+      if (this.el && !this._bulletListenerAttached) {
+        this.el.addEventListener('click', (e) => {
+          const bullet = e.target.closest('.js-slider-bullet')
+          if (bullet && !this.state.animating) {
+            const slideIndex = parseInt(bullet.dataset.slide, 10)
+            if (!isNaN(slideIndex) && slideIndex !== this.data.current) {
+              this.goToSlide(slideIndex)
+            }
           }
-        })
-      })
+        }, { passive: true })
+        this._bulletListenerAttached = true
+      }
       
       // Keyboard support disabled - only button clicks control navigation
       // Uncomment below if you want keyboard navigation back:
@@ -998,6 +1025,24 @@ class Slider {
         prevBtn.disabled = false
         nextBtn.disabled = false
       }
+      
+      // Update bullet ARIA states for accessibility
+      this.updateBulletStates()
+    }
+    
+    updateBulletStates() {
+      this.bullets.forEach((bullet, index) => {
+        const isActive = index === this.data.current
+        bullet.setAttribute('aria-selected', isActive.toString())
+        bullet.setAttribute('tabindex', isActive ? '0' : '-1')
+        
+        // Update active state class if needed
+        if (isActive) {
+          bullet.classList.add('active')
+        } else {
+          bullet.classList.remove('active')
+        }
+      })
     }
     
     goToSlide(index) {
@@ -1056,33 +1101,52 @@ class Slider {
           // Load textures - mesh will be created when textures are loaded
           this.loadTextures()
           
-          // Handle window resize
-          window.addEventListener('resize', () => {
-            if (this.renderer && this.camera && this.mat) {
-              this.renderer.setSize(window.innerWidth, window.innerHeight)
-              this.cameraSetup()
-              // Update mobile detection and resolution
-              const isMobile = window.innerWidth <= 768 ? 1.0 : 0.0
-              this.mat.uniforms.isMobile.value = isMobile
-              this.mat.uniforms.res.value = new THREE.Vector2(window.innerWidth, window.innerHeight)
-              // Update isSlide1 based on current slide
-              this.mat.uniforms.isSlide1.value = this.data.current === 0 ? 1.0 : 0.0
-              // Update crop settings for current slide
-              const currentCrop = this.cropSettings[this.data.current] || { horizontal: 0.5, vertical: 0.5 }
-              this.mat.uniforms.cropHorizontal.value = currentCrop.horizontal
-              this.mat.uniforms.cropVertical.value = currentCrop.vertical
-              this.render()
-            }
-          })
+          // Handle window resize - Throttled for performance
+          let resizeTimeout
+          const handleResize = () => {
+            clearTimeout(resizeTimeout)
+            resizeTimeout = setTimeout(() => {
+              if (this.renderer && this.camera && this.mat) {
+                this.renderer.setSize(window.innerWidth, window.innerHeight)
+                this.cameraSetup()
+                // Update mobile detection and resolution
+                const isMobile = window.innerWidth <= 768 ? 1.0 : 0.0
+                this.mat.uniforms.isMobile.value = isMobile
+                this.mat.uniforms.res.value = new THREE.Vector2(window.innerWidth, window.innerHeight)
+                // Update isSlide1 based on current slide
+                this.mat.uniforms.isSlide1.value = this.data.current === 0 ? 1.0 : 0.0
+                // Update crop settings for current slide
+                const currentCrop = this.cropSettings[this.data.current] || { horizontal: 0.5, vertical: 0.5 }
+                this.mat.uniforms.cropHorizontal.value = currentCrop.horizontal
+                this.mat.uniforms.cropVertical.value = currentCrop.vertical
+                this.render()
+              }
+            }, 150) // Throttle to ~6.6fps max during resize
+          }
+          window.addEventListener('resize', handleResize, { passive: true })
           
           // Continuously render WebGL scene for smooth animation
+          // Only render when needed (animating or transitioning)
+          let animationFrameId = null
           const animate = () => {
-            requestAnimationFrame(animate)
             if (this.renderer && this.scene && this.camera) {
               this.renderer.render(this.scene, this.camera)
+              // Only continue animation if transitioning or explicitly needed
+              if (this.state.animating || this.state.transitioning) {
+                animationFrameId = requestAnimationFrame(animate)
+              }
             }
           }
-          animate()
+          // Start animation loop
+          animationFrameId = requestAnimationFrame(animate)
+          
+          // Store cleanup function
+          this._stopAnimation = () => {
+            if (animationFrameId !== null) {
+              cancelAnimationFrame(animationFrameId)
+              animationFrameId = null
+            }
+          }
         } catch (error) {
           console.error('Error initializing WebGL features:', error)
           this.webglAvailable = false
@@ -1097,8 +1161,18 @@ class Slider {
     }
   }
   
+  // Prevent duplicate initialization
+  let sliderInstance = null
+  let initializationStarted = false
+  
   // Wait for DOM and libraries to be ready
   function initSlider() {
+    // Prevent duplicate initialization
+    if (initializationStarted) {
+      return
+    }
+    initializationStarted = true
+    
     // Ensure Three.js and GSAP are loaded (with retry)
     if (typeof THREE === 'undefined' || typeof gsap === 'undefined') {
       // Retry after a short delay if libraries aren't loaded yet
@@ -1112,6 +1186,7 @@ class Slider {
         } else if (retries >= maxRetries) {
           clearInterval(checkLibraries)
           console.error('Libraries failed to load after retries. Three.js:', typeof THREE !== 'undefined', 'GSAP:', typeof gsap !== 'undefined')
+          initializationStarted = false // Allow retry
         }
       }, 100)
       return null
@@ -1338,11 +1413,14 @@ class Slider {
     
     // Notify button handler is now handled by js-buy-now-btn class above
     
-    // Init slider
-    if (document.querySelector('.js-slider')) {
+    // Init slider - Prevent duplicate initialization
+    if (document.querySelector('.js-slider') && !sliderInstance) {
       console.log('Initializing slider...')
-      const slider = new Slider()
-      return slider
+      sliderInstance = new Slider()
+      sliderInstance.init()
+      return sliderInstance
+    } else if (sliderInstance) {
+      return sliderInstance
     } else {
       console.error('Slider element not found in DOM')
       return null

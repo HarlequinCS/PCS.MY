@@ -98,9 +98,22 @@
     Header append Vary User-Agent
 </IfModule>
 
-# Brotli compression (if available)
+# Brotli compression (if available) - Preferred over Gzip
 <IfModule mod_brotli.c>
-    AddOutputFilterByType BROTLI_COMPRESS text/html text/plain text/xml text/css text/javascript application/javascript application/json application/xml image/svg+xml
+    # Enable Brotli for all text-based assets
+    AddOutputFilterByType BROTLI_COMPRESS text/html
+    AddOutputFilterByType BROTLI_COMPRESS text/css
+    AddOutputFilterByType BROTLI_COMPRESS text/javascript
+    AddOutputFilterByType BROTLI_COMPRESS application/javascript
+    AddOutputFilterByType BROTLI_COMPRESS application/json
+    AddOutputFilterByType BROTLI_COMPRESS application/xml
+    AddOutputFilterByType BROTLI_COMPRESS text/xml
+    AddOutputFilterByType BROTLI_COMPRESS text/plain
+    AddOutputFilterByType BROTLI_COMPRESS image/svg+xml
+    AddOutputFilterByType BROTLI_COMPRESS font/woff
+    AddOutputFilterByType BROTLI_COMPRESS font/woff2
+    AddOutputFilterByType BROTLI_COMPRESS font/ttf
+    AddOutputFilterByType BROTLI_COMPRESS font/otf
 </IfModule>
 
 # ============================================
@@ -152,8 +165,14 @@
 
 # Cache-Control headers
 <IfModule mod_headers.c>
-    # CSS and JS with versioning
+    # CSS and JS with versioning - Aggressive caching
     <FilesMatch "\.(css|js)$">
+        Header set Cache-Control "public, max-age=31536000, immutable"
+        Header set X-Content-Type-Options "nosniff"
+    </FilesMatch>
+    
+    # SVG images - Long cache
+    <FilesMatch "\.svg$">
         Header set Cache-Control "public, max-age=31536000, immutable"
     </FilesMatch>
     
@@ -256,15 +275,38 @@ ErrorDocument 500 /index.html
 # ============================================
 # 9. PERFORMANCE OPTIMIZATIONS
 # ============================================
-# ETags - Disable for better caching
+# ETags - Disable for better caching (use Last-Modified instead)
 <IfModule mod_headers.c>
     Header unset ETag
 </IfModule>
 FileETag None
 
-# Keep-Alive
+# Enable HTTP/2 Server Push (if available)
+<IfModule mod_http2.c>
+    H2Push on
+    H2PushPriority * After 16
+    H2PushPriority text/css Before
+    H2PushPriority image/jpeg After 32
+    H2PushPriority image/png After 32
+    H2PushPriority application/javascript Interleaved
+</IfModule>
+
+# Keep-Alive for persistent connections
 <IfModule mod_headers.c>
     Header set Connection keep-alive
+</IfModule>
+
+# Enable HTTP/2 or HTTP/3 if available
+<IfModule mod_http2.c>
+    Protocols h2 h2c http/1.1
+</IfModule>
+
+# Preload critical resources
+<IfModule mod_headers.c>
+    # Preload critical CSS
+    <FilesMatch "workshirt\.css">
+        Header add Link "</css/workshirt.css>; rel=preload; as=style"
+    </FilesMatch>
 </IfModule>
 
 # ============================================

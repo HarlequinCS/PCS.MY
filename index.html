@@ -70,6 +70,11 @@
   <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="dns-prefetch" href="https://s3-us-west-2.amazonaws.com">
+  
+  <!-- Preload critical hero images -->
+  <link rel="preload" as="image" href="images/hijaufront.svg" fetchpriority="high">
+  <link rel="preload" as="image" href="images/hijauback.svg" fetchpriority="high">
   
   <!-- Preload critical CSS - Non-blocking load -->
   <link rel="preload" href="css/workshirt.css?v=29" as="style" onload="this.onload=null;this.rel='stylesheet'">
@@ -214,10 +219,10 @@
     <article class="slide js-slide" role="listitem" aria-label="Classic Black Workshirt">
       <div class="slide__content">
         <figure class="slide__img js-slide__img">
-          <img src="images/hitamdepan.svg" alt="Classic Black Workshirt - Front view featuring half-zip YKK zipper" loading="eager" width="400" height="500">
+          <img src="images/hitamdepan.svg" alt="Classic Black Workshirt - Front view featuring half-zip YKK zipper" loading="lazy" width="400" height="500">
         </figure>
         <figure class="slide__img js-slide__img">
-          <img src="images/hitamback.svg" alt="Classic Black Workshirt - Back view with Les Étudiants embroidery" loading="eager" width="400" height="500">
+          <img src="images/hitamback.svg" alt="Classic Black Workshirt - Back view with Les Étudiants embroidery" loading="lazy" width="400" height="500">
         </figure>
       </div>
       
@@ -233,10 +238,10 @@
     <article class="slide js-slide" role="listitem" aria-label="Royal Red Workshirt">
       <div class="slide__content">
         <figure class="slide__img js-slide__img">
-          <img src="images/merahdepan.svg" alt="Royal Red Workshirt - Front view with PCS logo embroidery" loading="eager" width="400" height="500">
+          <img src="images/merahdepan.svg" alt="Royal Red Workshirt - Front view with PCS logo embroidery" loading="lazy" width="400" height="500">
         </figure>
         <figure class="slide__img js-slide__img">
-          <img src="images/merahback.svg" alt="Royal Red Workshirt - Back view with We Lead The Future emblem" loading="eager" width="400" height="500">
+          <img src="images/merahback.svg" alt="Royal Red Workshirt - Back view with We Lead The Future emblem" loading="lazy" width="400" height="500">
         </figure>
       </div>
       
@@ -597,10 +602,10 @@
   </button>
 
   <!-- Three.js Library - Using jsDelivr CDN with defer for non-blocking load -->
-  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js" defer crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js" defer crossorigin="anonymous" referrerpolicy="no-referrer" async></script>
   
   <!-- GSAP Library - Using jsDelivr CDN with defer for non-blocking load -->
-  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js" defer crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js" defer crossorigin="anonymous" referrerpolicy="no-referrer" async></script>
   
   <!-- Coming Soon Modal -->
   <div class="coming-soon-modal js-coming-soon-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" aria-describedby="modal-description" aria-hidden="true">
@@ -880,12 +885,26 @@
     });
       }
 
-      // Load initial data
-      trackVisitor();
-      loadComments();
-      
-      // Refresh comments every 30 seconds
-      setInterval(loadComments, 30000);
+      // Load initial data - Defer non-critical API calls
+      // Use requestIdleCallback with fallback for older browsers
+      if (window.requestIdleCallback) {
+        requestIdleCallback(() => {
+          trackVisitor();
+          loadComments();
+          
+          // Refresh comments every 30 seconds
+          setInterval(loadComments, 30000);
+        }, { timeout: 2000 });
+      } else {
+        // Fallback for browsers without requestIdleCallback
+        setTimeout(() => {
+          trackVisitor();
+          loadComments();
+          
+          // Refresh comments every 30 seconds
+          setInterval(loadComments, 30000);
+        }, 2000);
+      }
     });
 
     // Back to Top Button
@@ -904,8 +923,12 @@
       // Check on load
       toggleBackToTop();
       
-      // Check on scroll
-      window.addEventListener('scroll', toggleBackToTop);
+      // Check on scroll - Throttled for performance
+      let scrollTimeout;
+      window.addEventListener('scroll', () => {
+        clearTimeout(scrollTimeout);
+        scrollTimeout = setTimeout(toggleBackToTop, 100);
+      }, { passive: true });
 
       // Scroll to top functionality
       backToTopButton.addEventListener('click', () => {
