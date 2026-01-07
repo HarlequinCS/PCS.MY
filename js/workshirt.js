@@ -61,7 +61,6 @@ class Slider {
       this.el = document.querySelector('.js-slider')
       this.inner = this.el.querySelector('.js-slider__inner')
       this.slides = [...this.el.querySelectorAll('.js-slide')]
-      this.bullets = [...this.el.querySelectorAll('.js-slider-bullet')]
       
       // Ensure exactly 3 slides for WebGL morph effect
       if (this.slides.length !== 3) {
@@ -173,20 +172,6 @@ class Slider {
         }
       })
       
-      this.bullets.forEach((bullet, index) => {
-        if (index === 0) return
-        
-        const txt = bullet.querySelector('.js-slider-bullet__text')
-        const line = bullet.querySelector('.js-slider-bullet__line')
-        
-        gsap.set(txt, {
-          opacity: 0.25
-        })
-        gsap.set(line, {
-          scaleX: 0,
-          transformOrigin: 'left'
-        })
-      })
     }
     
     cameraSetup() {
@@ -531,15 +516,6 @@ class Slider {
       const currentTextContainer = current.querySelector('.js-slider__text')
       const nextTextContainer = next.querySelector('.js-slider__text')
       
-      const currentBullet = this.bullets[this.data.current]
-      const nextBullet = this.bullets[this.data.next]
-      
-      const currentBulletTxt = currentBullet ? currentBullet.querySelector('.js-slider-bullet__text') : null
-      const nextBulletTxt = nextBullet ? nextBullet.querySelector('.js-slider-bullet__text') : null
-      
-      const currentBulletLine = currentBullet ? currentBullet.querySelector('.js-slider-bullet__line') : null
-      const nextBulletLine = nextBullet ? nextBullet.querySelector('.js-slider-bullet__line') : null
-      
       const tl = gsap.timeline({ paused: true })
       
       if (this.state.initial) {
@@ -600,20 +576,6 @@ class Slider {
         ease: "power3.inOut",
         stagger: 0.06
       }, 0)
-      .to(currentBulletTxt, {
-        opacity: 0.25,
-        duration: 1.8,
-        ease: "none"
-      }, 0)
-      .set(currentBulletLine, {
-        transformOrigin: 'right'
-      }, 0)
-      .to(currentBulletLine, {
-        scaleX: 0,
-        duration: 1.8,
-        ease: "power3.inOut"
-      }, 0)
-      
       tl
       .set(current, {
         autoAlpha: 0
@@ -666,27 +628,11 @@ class Slider {
         ease: "power3.out",
         stagger: 0.06
       }, 1.1)
-      .to(nextBulletTxt, {
-        opacity: 1,
-        duration: 1.8,
-        ease: "none"
-      }, 0.9)
-      .set(nextBulletLine, {
-        transformOrigin: 'left'
-      }, 0.9)
-      .to(nextBulletLine, {
-        scaleX: 1,
-        duration: 1.8,
-        ease: "power3.inOut"
-      }, 0.9)
-      
       tl.play()
       
       // Mark animation as complete when timeline finishes
       tl.eventCallback("onComplete", () => {
         this.state.animating = false
-        // Update bullet states after transition
-        this.updateBulletStates()
         // Ensure isSlide1 is updated after transition completes
         if (this.mat) {
           this.mat.uniforms.isSlide1.value = this.data.current === 0 ? 1.0 : 0.0
@@ -750,12 +696,6 @@ class Slider {
       const nextText = next.querySelectorAll('.js-slider__text-line div')
       const currentTextContainer = current.querySelector('.js-slider__text')
       const nextTextContainer = next.querySelector('.js-slider__text')
-      const currentBullet = this.bullets[this.data.current]
-      const nextBullet = this.bullets[this.data.next]
-      const currentBulletTxt = currentBullet ? currentBullet.querySelector('.js-slider-bullet__text') : null
-      const nextBulletTxt = nextBullet ? nextBullet.querySelector('.js-slider-bullet__text') : null
-      const currentBulletLine = currentBullet ? currentBullet.querySelector('.js-slider-bullet__line') : null
-      const nextBulletLine = nextBullet ? nextBullet.querySelector('.js-slider-bullet__line') : null
       const currentContent = current.querySelector('.slide__content')
       const nextContent = next.querySelector('.slide__content')
       
@@ -803,20 +743,6 @@ class Slider {
         ease: "power3.inOut",
         stagger: 0.06
       }, 0)
-      .to(currentBulletTxt, {
-        opacity: 0.25,
-        duration: 1.8,
-        ease: "none"
-      }, 0)
-      .set(currentBulletLine, {
-        transformOrigin: 'left'
-      }, 0)
-      .to(currentBulletLine, {
-        scaleX: 0,
-        duration: 1.8,
-        ease: "power3.inOut"
-      }, 0)
-      
       tl
       .set(current, {
         autoAlpha: 0
@@ -866,26 +792,10 @@ class Slider {
         ease: "power3.out",
         stagger: 0.06
       }, 1.1)
-      .to(nextBulletTxt, {
-        opacity: 1,
-        duration: 1.8,
-        ease: "none"
-      }, 0.9)
-      .set(nextBulletLine, {
-        transformOrigin: 'right'
-      }, 0.9)
-      .to(nextBulletLine, {
-        scaleX: 1,
-        duration: 1.8,
-        ease: "power3.inOut"
-      }, 0.9)
-      
       tl.play()
       
       tl.eventCallback("onComplete", () => {
         this.state.animating = false
-        // Update bullet states after transition
-        this.updateBulletStates()
         // Ensure isSlide1 is updated after transition completes (for transitionPrev)
         if (this.mat) {
           this.mat.uniforms.isSlide1.value = this.data.current === 0 ? 1.0 : 0.0
@@ -976,19 +886,6 @@ class Slider {
         })
       }
       
-      // Bullet navigation - Use delegated event listener for better performance and reliability
-      if (this.el && !this._bulletListenerAttached) {
-        this.el.addEventListener('click', (e) => {
-          const bullet = e.target.closest('.js-slider-bullet')
-          if (bullet && !this.state.animating) {
-            const slideIndex = parseInt(bullet.dataset.slide, 10)
-            if (!isNaN(slideIndex) && slideIndex !== this.data.current) {
-              this.goToSlide(slideIndex)
-            }
-          }
-        }, { passive: true })
-        this._bulletListenerAttached = true
-      }
       
       // Keyboard support disabled - only button clicks control navigation
       // Uncomment below if you want keyboard navigation back:
@@ -1025,24 +922,6 @@ class Slider {
         prevBtn.disabled = false
         nextBtn.disabled = false
       }
-      
-      // Update bullet ARIA states for accessibility
-      this.updateBulletStates()
-    }
-    
-    updateBulletStates() {
-      this.bullets.forEach((bullet, index) => {
-        const isActive = index === this.data.current
-        bullet.setAttribute('aria-selected', isActive.toString())
-        bullet.setAttribute('tabindex', isActive ? '0' : '-1')
-        
-        // Update active state class if needed
-        if (isActive) {
-          bullet.classList.add('active')
-        } else {
-          bullet.classList.remove('active')
-        }
-      })
     }
     
     goToSlide(index) {
