@@ -7,10 +7,10 @@
 // Load timezone configuration (sets default timezone and provides helper functions)
 require_once __DIR__ . '/config/timezone.php';
 
-// CSP Header Override - form-action removed to prevent blocking
-// Form submissions are now unrestricted by CSP
+// CSP Header Override - Set early with form-action 'self' for security
+// Using only 'self' (no explicit URLs) for maximum browser compatibility
 if (!headers_sent()) {
-    header("Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://fonts.googleapis.com https://static.cloudflareinsights.com https://cdn.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://projectcutisem.com https://static.cloudflareinsights.com; frame-ancestors 'self'; base-uri 'self';", true);
+    header("Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://fonts.googleapis.com https://static.cloudflareinsights.com https://cdn.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://projectcutisem.com https://static.cloudflareinsights.com; frame-ancestors 'self'; base-uri 'self'; form-action 'self';", true);
 }
 
 // ============================================
@@ -626,6 +626,8 @@ if ($finalAmount < 0) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <!-- CSP Meta Tag (backup) - Ensures form-action is set even if headers are modified -->
+    <meta http-equiv="Content-Security-Policy" content="form-action 'self';">
     <title>Checkout - <?php echo htmlspecialchars(PRODUCT_NAME); ?> | Projek Cuti Sem</title>
     <link rel="icon" type="image/x-icon" href="https://projectcutisem.com/favicon.ico">
     <link rel="shortcut icon" type="image/x-icon" href="https://projectcutisem.com/favicon.ico">
