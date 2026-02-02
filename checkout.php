@@ -620,8 +620,6 @@ if ($finalAmount < 0) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
-    <!-- CSP Meta Tag (backup - matches .htaccess header) -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://fonts.googleapis.com https://static.cloudflareinsights.com https://cdn.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://projectcutisem.com https://static.cloudflareinsights.com; frame-ancestors 'self'; base-uri 'self'; form-action https://projectcutisem.com http://projectcutisem.com https://www.projectcutisem.com http://www.projectcutisem.com;">
     <title>Checkout - <?php echo htmlspecialchars(PRODUCT_NAME); ?> | Projek Cuti Sem</title>
     <link rel="icon" type="image/x-icon" href="https://projectcutisem.com/favicon.ico">
     <link rel="shortcut icon" type="image/x-icon" href="https://projectcutisem.com/favicon.ico">
