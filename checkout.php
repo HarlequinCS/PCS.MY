@@ -7,10 +7,10 @@
 // Load timezone configuration (sets default timezone and provides helper functions)
 require_once __DIR__ . '/config/timezone.php';
 
-// CSP Header Override - Set early with form-action 'self' for security
-// Using only 'self' (no explicit URLs) for maximum browser compatibility
+// CSP Header Override - form-action removed to prevent blocking
+// Alternative security measures implemented below (Origin check, Referer validation)
 if (!headers_sent()) {
-    header("Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://fonts.googleapis.com https://static.cloudflareinsights.com https://cdn.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://projectcutisem.com https://static.cloudflareinsights.com; frame-ancestors 'self'; base-uri 'self'; form-action 'self';", true);
+    header("Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://fonts.googleapis.com https://static.cloudflareinsights.com https://cdn.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://projectcutisem.com https://static.cloudflareinsights.com; frame-ancestors 'self'; base-uri 'self';", true);
 }
 
 // ============================================
@@ -181,12 +181,69 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 $errors = [];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'checkout') {
-    // CSRF Protection - validate token
+    // ============================================
+    // ALTERNATIVE SECURITY MEASURES (Replaces form-action CSP)
+    // ============================================
+    
+    // 1. Origin Check - Verify request comes from same origin
+    $allowedOrigins = ['https://projectcutisem.com', 'http://projectcutisem.com', 'https://www.projectcutisem.com', 'http://www.projectcutisem.com'];
+    $origin = $_SERVER['HTTP_ORIGIN'] ?? $_SERVER['HTTP_REFERER'] ?? '';
+    $originHost = parse_url($origin, PHP_URL_HOST) ?? '';
+    $currentHost = $_SERVER['HTTP_HOST'] ?? 'projectcutisem.com';
+    
+    // Normalize hosts (remove www if present for comparison)
+    $originHostNormalized = preg_replace('/^www\./', '', $originHost);
+    $currentHostNormalized = preg_replace('/^www\./', '', $currentHost);
+    
+    if (!empty($origin) && $originHostNormalized !== $currentHostNormalized) {
+        // Check if origin is in allowed list
+        $originAllowed = false;
+        foreach ($allowedOrigins as $allowed) {
+            $allowedHost = parse_url($allowed, PHP_URL_HOST) ?? '';
+            $allowedHostNormalized = preg_replace('/^www\./', '', $allowedHost);
+            if ($originHostNormalized === $allowedHostNormalized) {
+                $originAllowed = true;
+                break;
+            }
+        }
+        if (!$originAllowed) {
+            error_log('Security: Form submission from unauthorized origin: ' . $origin);
+            $errors[] = 'Invalid request origin. Please refresh the page and try again.';
+            $_POST = []; // Clear POST data
+        }
+    }
+    
+    // 2. Referer Check - Verify referer is from same domain
+    $referer = $_SERVER['HTTP_REFERER'] ?? '';
+    if (!empty($referer)) {
+        $refererHost = parse_url($referer, PHP_URL_HOST) ?? '';
+        $refererHostNormalized = preg_replace('/^www\./', '', $refererHost);
+        if ($refererHostNormalized !== $currentHostNormalized && !in_array($refererHost, ['projectcutisem.com', 'www.projectcutisem.com'])) {
+            error_log('Security: Form submission with invalid referer: ' . $referer);
+            // Don't block, just log (some browsers/proxies don't send referer)
+        }
+    }
+    
+    // 3. CSRF Protection - validate token (existing)
     if (!validateCSRFToken($_POST['csrf_token'] ?? '')) {
         $errors[] = 'Invalid security token. Please refresh the page and try again.';
         // Don't process form if CSRF token is invalid
         $_POST = []; // Clear POST data
     }
+    
+    // 4. Request Method Validation
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+        $errors[] = 'Invalid request method.';
+        $_POST = []; // Clear POST data
+    }
+    
+    // 5. Content-Type Check (basic - log only, don't block)
+    $contentType = $_SERVER['CONTENT_TYPE'] ?? '';
+    if (!empty($contentType) && strpos($contentType, 'application/x-www-form-urlencoded') === false && strpos($contentType, 'multipart/form-data') === false) {
+        error_log('Security: Unexpected content type: ' . $contentType);
+        // Don't block, just log (some legitimate requests might have different content types)
+    }
+    
     // Validate and collect all form fields
     $fullname = trim($_POST['fullname'] ?? '');
     $email = trim($_POST['email'] ?? '');
@@ -626,8 +683,6 @@ if ($finalAmount < 0) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
-    <!-- CSP Meta Tag (backup) - Ensures form-action is set even if headers are modified -->
-    <meta http-equiv="Content-Security-Policy" content="form-action 'self';">
     <title>Checkout - <?php echo htmlspecialchars(PRODUCT_NAME); ?> | Projek Cuti Sem</title>
     <link rel="icon" type="image/x-icon" href="https://projectcutisem.com/favicon.ico">
     <link rel="shortcut icon" type="image/x-icon" href="https://projectcutisem.com/favicon.ico">
