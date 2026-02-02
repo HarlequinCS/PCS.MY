@@ -60,6 +60,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     $testOnly = isset($_POST['test_only']);
     $selectedEmails = $_POST['selected_emails'] ?? [];
     
+    // Debug logging (remove in production)
+    error_log("Newsletter Campaign - Recipient Type: " . $recipientType);
+    error_log("Newsletter Campaign - Selected Emails Count: " . count($selectedEmails));
+    if (!empty($selectedEmails)) {
+        error_log("Newsletter Campaign - Selected Email IDs: " . implode(', ', $selectedEmails));
+    }
+    
     // Validation
     if (empty($subject)) {
         $message = 'Subject is required';
@@ -95,12 +102,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             try {
                 $recipients = [];
                 
-                if ($recipientType === 'selected' && !empty($selectedEmails)) {
+                // Validate and sanitize selected emails array
+                if (isset($selectedEmails) && is_array($selectedEmails)) {
+                    $selectedEmails = array_filter(array_map('intval', $selectedEmails)); // Remove empty values and convert to integers
+                } else {
+                    $selectedEmails = [];
+                }
+                
+                if ($recipientType === 'selected') {
                     // Send to selected emails only
-                    $placeholders = str_repeat('?,', count($selectedEmails) - 1) . '?';
-                    $stmt = $pdo->prepare("SELECT email FROM email_notifications WHERE notification_id IN ($placeholders)");
-                    $stmt->execute($selectedEmails);
-                    $recipients = $stmt->fetchAll(PDO::FETCH_COLUMN);
+                    if (empty($selectedEmails)) {
+                        $message = 'Please select at least one recipient when using "Select Specific Recipients"';
+                        $messageType = 'error';
+                        // Stop processing - don't send to anyone
+                        $recipients = [];
+                    } else {
+                        // Log for debugging (remove in production)
+                        error_log("Sending to selected emails: " . implode(', ', $selectedEmails));
+                        $placeholders = str_repeat('?,', count($selectedEmails) - 1) . '?';
+                        $stmt = $pdo->prepare("SELECT email FROM email_notifications WHERE notification_id IN ($placeholders)");
+                        $stmt->execute($selectedEmails);
+                        $recipients = $stmt->fetchAll(PDO::FETCH_COLUMN);
+                        error_log("Found " . count($recipients) . " recipients for selected campaign");
+                    }
                 } elseif ($recipientType === 'active') {
                     // Send to active subscribers
                     $stmt = $pdo->query("SELECT email FROM email_notifications WHERE status = 'active'");
@@ -109,12 +133,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                     // Send to all subscribers
                     $stmt = $pdo->query("SELECT email FROM email_notifications");
                     $recipients = $stmt->fetchAll(PDO::FETCH_COLUMN);
+                } else {
+                    // Fallback: if recipient type is invalid, default to active
+                    $stmt = $pdo->query("SELECT email FROM email_notifications WHERE status = 'active'");
+                    $recipients = $stmt->fetchAll(PDO::FETCH_COLUMN);
                 }
                 
-                if (empty($recipients)) {
-                    $message = 'No recipients found';
-                    $messageType = 'error';
-                } else {
+                // Only proceed if we have recipients and no validation errors
+                if (!empty($recipients) && $messageType !== 'error') {
                     $successCount = 0;
                     $failCount = 0;
                     
@@ -132,6 +158,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                     
                     $message = "Campaign sent! Success: {$successCount}, Failed: {$failCount}";
                     $messageType = 'success';
+                } elseif (empty($recipients) && $messageType !== 'error') {
+                    // Fallback error message if no recipients found and no specific error set
+                    $message = 'No recipients found. Please check your selection.';
+                    $messageType = 'error';
                 }
             } catch (PDOException $e) {
                 error_log("Campaign send error: " . $e->getMessage());
@@ -418,13 +448,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                         <div id="emailListContainer" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 0.5rem;">
                             <?php foreach ($allEmails as $email): ?>
                                 <label class="email-checkbox-label" style="display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem; background: white; border: 1px solid var(--border-color); border-radius: 4px; cursor: pointer; transition: all 0.2s;" data-status="<?php echo htmlspecialchars($email['status']); ?>">
-                                    <input type="checkbox" name="selected_emails[]" value="<?php echo htmlspecialchars($email['notification_id']); ?>" class="email-checkbox" data-email="<?php echo htmlspecialchars($email['email']); ?>" data-status="<?php echo htmlspecialchars($email['status']); ?>">
+                                    <input type="checkbox" name="selected_emails[]" value="<?php echo htmlspecialchars($email['notification_id']); ?>" class="email-checkbox" data-email="<?php echo htmlspecialchars($email['email']); ?>" data-status="<?php echo htmlspecialchars($email['status']); ?>" form="newsletterForm">
                                     <span style="flex: 1; font-size: 0.875rem;"><?php echo htmlspecialchars($email['email']); ?></span>
                                     <span style="font-size: 0.75rem; color: <?php echo $email['status'] === 'active' ? '#10b981' : '#6b7280'; ?>; font-weight: 500;">
                                         <?php echo $email['status'] === 'active' ? '✓' : '○'; ?>
                                     </span>
                                 </label>
                             <?php endforeach; ?>
+                        </div>
+                        <div id="selectionWarning" style="display: none; margin-top: 1rem; padding: 0.75rem; background: #fff3cd; border: 1px solid #ffc107; border-radius: 4px; color: #856404; font-size: 0.875rem;">
+                            ⚠️ Please select at least one recipient before sending.
                         </div>
                     </div>
                 </div>
@@ -501,17 +534,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             });
         }
         
-        // Form submission confirmation
+        // Form submission confirmation and validation
         const newsletterForm = document.getElementById('newsletterForm');
         const sendBtn = document.getElementById('sendBtn');
         
         if (newsletterForm && sendBtn) {
             newsletterForm.addEventListener('submit', function(e) {
                 const testEmail = document.getElementById('testEmail').value;
-                const recipientType = document.querySelector('input[name="recipient_type"]:checked').value;
+                const testOnly = e.submitter?.hasAttribute('name') && e.submitter.getAttribute('name') === 'test_only';
+                const recipientType = document.querySelector('input[name="recipient_type"]:checked')?.value;
                 
-                // If not test email, confirm before sending
-                if (!testEmail && !e.submitter?.hasAttribute('name')) {
+                // If sending test email, allow it
+                if (testOnly || testEmail) {
+                    return true;
+                }
+                
+                // Validate recipient selection
+                if (recipientType === 'selected') {
+                    const selectedCheckboxes = document.querySelectorAll('.email-checkbox:checked');
+                    if (selectedCheckboxes.length === 0) {
+                        e.preventDefault();
+                        alert('Please select at least one recipient before sending the campaign.');
+                        return false;
+                    }
+                    
+                    const recipientCount = selectedCheckboxes.length;
+                    const confirmed = confirm(`Are you sure you want to send this email to ${recipientCount} selected recipient(s)?\n\nThis action cannot be undone.`);
+                    
+                    if (!confirmed) {
+                        e.preventDefault();
+                        return false;
+                    }
+                    
+                    // Show loading state
+                    sendBtn.disabled = true;
+                    sendBtn.textContent = `Sending to ${recipientCount} recipient(s)...`;
+                } else {
+                    // For active/all recipients
                     const recipientCount = recipientType === 'active' ? <?php echo $stats['active']; ?> : <?php echo $stats['total']; ?>;
                     const confirmed = confirm(`Are you sure you want to send this email to ${recipientCount} recipient(s)?\n\nThis action cannot be undone.`);
                     
@@ -549,14 +608,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         function updateSelectedCount() {
             const checked = document.querySelectorAll('.email-checkbox:checked').length;
             selectedCount.textContent = `${checked} selected`;
+            
+            // Show/hide warning
+            const selectionWarning = document.getElementById('selectionWarning');
+            const recipientType = document.querySelector('input[name="recipient_type"]:checked')?.value;
+            if (selectionWarning && recipientType === 'selected') {
+                selectionWarning.style.display = checked === 0 ? 'block' : 'none';
+            }
         }
         
         function toggleEmailList() {
             const selected = document.querySelector('input[name="recipient_type"]:checked');
+            const selectionWarning = document.getElementById('selectionWarning');
+            
             if (selected && selected.value === 'selected') {
                 emailSelectionList.style.display = 'block';
+                // Show warning if no emails selected
+                const checked = document.querySelectorAll('.email-checkbox:checked').length;
+                if (selectionWarning) {
+                    selectionWarning.style.display = checked === 0 ? 'block' : 'none';
+                }
             } else {
                 emailSelectionList.style.display = 'none';
+                if (selectionWarning) {
+                    selectionWarning.style.display = 'none';
+                }
             }
             updateSelectedCount();
         }
