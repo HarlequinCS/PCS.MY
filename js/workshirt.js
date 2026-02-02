@@ -90,11 +90,11 @@ class Slider {
       this.camera = null
       this.mesh = null
       
-      // Use local morph SVG images for WebGL morphing background
+      // Use local morph images for WebGL morphing background (optimized: PNG where available)
       this.images = [
-        'images/morph1.svg',  // Slide 1 background
-        'images/morph2.svg',  // Slide 2 background
-        'images/morph3.svg'   // Slide 3 background
+        'images/morph1.svg',  // Slide 1 background (consider converting to PNG for better performance)
+        'images/morph2.png',  // Slide 2 background (optimized PNG)
+        'images/morph3.png'   // Slide 3 background (optimized PNG)
       ]
       
       // Ensure exactly 3 images for 3 slides
