@@ -355,15 +355,44 @@ foreach ($_SESSION['cart'] as $item) {
 }
 ?>
 <!DOCTYPE html>
-<html lang="ms">
+<html lang="en" dir="ltr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    
+    <!-- Primary Meta Tags -->
     <title>Order - <?php echo htmlspecialchars(PRODUCT_NAME); ?> | Projek Cuti Sem</title>
+    <meta name="title" content="Order <?php echo htmlspecialchars(PRODUCT_NAME); ?> | Projek Cuti Sem">
+    <meta name="description" content="Order your premium workshirt from Projek Cuti Sem. Heavyweight Japanese drill fabric, YKK zipper, available in multiple colors and sizes. Fast shipping across Malaysia.">
+    <meta name="keywords" content="order workshirt, Projek Cuti Sem, PCS workshirt, buy workshirt Malaysia, premium clothing Malaysia">
+    <meta name="robots" content="index, follow">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://projectcutisem.com/order-baju.php">
+    <meta property="og:title" content="Order <?php echo htmlspecialchars(PRODUCT_NAME); ?> | Projek Cuti Sem">
+    <meta property="og:description" content="Order your premium workshirt from Projek Cuti Sem. Heavyweight Japanese drill fabric, YKK zipper, available in multiple colors and sizes.">
+    <meta property="og:image" content="https://projectcutisem.com/images/android-chrome-512x512.png">
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://projectcutisem.com/order-baju.php">
+    <meta property="twitter:title" content="Order <?php echo htmlspecialchars(PRODUCT_NAME); ?> | Projek Cuti Sem">
+    <meta property="twitter:description" content="Order your premium workshirt from Projek Cuti Sem. Heavyweight Japanese drill fabric, YKK zipper, available in multiple colors and sizes.">
+    <meta property="twitter:image" content="https://projectcutisem.com/images/android-chrome-512x512.png">
+    
+    <!-- Favicons -->
     <link rel="icon" type="image/x-icon" href="https://projectcutisem.com/favicon.ico">
     <link rel="shortcut icon" type="image/x-icon" href="https://projectcutisem.com/favicon.ico">
     <link rel="apple-touch-icon" href="https://projectcutisem.com/apple-touch-icon.png">
+    
+    <!-- Stylesheet -->
     <link rel="stylesheet" href="<?php echo getVersionedAsset('css/order-baju.css'); ?>">
+    
+    <!-- Preconnect for Performance -->
+    <link rel="preconnect" href="https://projectcutisem.com">
+    <link rel="dns-prefetch" href="https://projectcutisem.com">
 </head>
 <body>
     <!-- Navigation Bar -->
@@ -404,8 +433,18 @@ foreach ($_SESSION['cart'] as $item) {
                     <div class="order-content">
                         <!-- Product Title -->
                         <div class="product-header">
+                            <div class="product-badge">
+                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                    <path d="M8 0L10.163 5.527L16 6.11L12 9.945L12.944 16L8 13.527L3.056 16L4 9.945L0 6.11L5.837 5.527L8 0Z" fill="currentColor"/>
+                                </svg>
+                                <span>Premium Quality</span>
+                            </div>
                             <h1 class="product-title"><?php echo htmlspecialchars(PRODUCT_NAME); ?></h1>
                             <p class="product-subtitle">Your new everyday outfit for class and beyond.</p>
+                            <div class="product-price-display">
+                                <span class="price-label">Starting from</span>
+                                <span class="price-value">RM <?php echo number_format(PRICE_PER_SHIRT, 2); ?></span>
+                            </div>
                             <p class="product-brand">PCS™ - Represent Project Cuti Sem</p>
                         </div>
 
@@ -422,26 +461,30 @@ foreach ($_SESSION['cart'] as $item) {
                             
                             <!-- Variant Selection -->
                             <div class="form-section">
-                                <label class="form-label">
+                                <label class="form-label" for="variant-selector">
                                     Select Color
-                                    <span class="required-asterisk">*</span>
+                                    <span class="required-asterisk" aria-label="required">*</span>
                                 </label>
-                                <div class="variant-selector" id="variantSelector">
+                                <div class="variant-selector" id="variantSelector" role="radiogroup" aria-labelledby="variant-label">
                                     <?php foreach ($variants as $key => $variant): ?>
-                                        <label class="variant-card" data-variant="<?php echo htmlspecialchars($key); ?>">
+                                        <label class="variant-card" data-variant="<?php echo htmlspecialchars($key); ?>" aria-label="Select <?php echo htmlspecialchars($variant['name']); ?> color">
                                             <input type="radio" name="variant" value="<?php echo htmlspecialchars($key); ?>" 
                                                    data-image="<?php echo htmlspecialchars($variant['image']); ?>"
+                                                   id="variant-<?php echo htmlspecialchars($key); ?>"
+                                                   aria-describedby="variant-<?php echo htmlspecialchars($key); ?>-name"
                                                    required>
                                             <div class="variant-card-content">
                                                 <div class="variant-thumbnail">
                                                     <img src="<?php echo htmlspecialchars($variant['image']); ?>" 
-                                                         alt="<?php echo htmlspecialchars($variant['name']); ?>"
-                                                         loading="lazy">
+                                                         alt="<?php echo htmlspecialchars($variant['name']); ?> workshirt"
+                                                         loading="lazy"
+                                                         width="120"
+                                                         height="120">
                                                 </div>
-                                                <div class="variant-label">
+                                                <div class="variant-label" id="variant-<?php echo htmlspecialchars($key); ?>-name">
                                                     <?php echo htmlspecialchars($variant['name']); ?>
                                                 </div>
-                                                <div class="variant-check">
+                                                <div class="variant-check" aria-hidden="true">
                                                     <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
                                                         <path d="M16.667 5L7.5 14.167 3.333 10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                                                     </svg>
@@ -455,16 +498,18 @@ foreach ($_SESSION['cart'] as $item) {
                             <!-- Size Selection -->
                             <div class="form-section">
                                 <div class="form-label-row">
-                                    <label class="form-label">
+                                    <label class="form-label" for="size-selector">
                                         Size
-                                        <span class="required-asterisk">*</span>
+                                        <span class="required-asterisk" aria-label="required">*</span>
                                     </label>
-                                    <button type="button" class="size-chart-link" id="sizeChartBtn">Size Chart</button>
+                                    <button type="button" class="size-chart-link" id="sizeChartBtn" aria-label="View size chart">Size Chart</button>
                                 </div>
-                                <div class="size-selector" id="sizeSelector">
+                                <div class="size-selector" id="sizeSelector" role="radiogroup" aria-labelledby="size-label">
                                     <?php foreach ($sizes as $size): ?>
-                                        <label class="size-option">
-                                            <input type="radio" name="size" value="<?php echo htmlspecialchars($size); ?>" required>
+                                        <label class="size-option" aria-label="Select size <?php echo htmlspecialchars($size); ?>">
+                                            <input type="radio" name="size" value="<?php echo htmlspecialchars($size); ?>" 
+                                                   id="size-<?php echo htmlspecialchars($size); ?>"
+                                                   required>
                                             <span class="size-label"><?php echo htmlspecialchars($size); ?></span>
                                         </label>
                                     <?php endforeach; ?>
@@ -473,14 +518,14 @@ foreach ($_SESSION['cart'] as $item) {
 
                             <!-- Quantity Selection -->
                             <div class="form-section">
-                                <label class="form-label">
+                                <label class="form-label" for="quantityInput">
                                     Quantity
-                                    <span class="required-asterisk">*</span>
+                                    <span class="required-asterisk" aria-label="required">*</span>
                                 </label>
-                                <div class="quantity-selector">
-                                    <button type="button" class="quantity-btn quantity-btn--decrease" id="quantityDecrease">−</button>
-                                    <input type="number" name="quantity" id="quantityInput" value="1" min="1" max="10" required readonly>
-                                    <button type="button" class="quantity-btn quantity-btn--increase" id="quantityIncrease">+</button>
+                                <div class="quantity-selector" role="group" aria-labelledby="quantity-label">
+                                    <button type="button" class="quantity-btn quantity-btn--decrease" id="quantityDecrease" aria-label="Decrease quantity">−</button>
+                                    <input type="number" name="quantity" id="quantityInput" value="1" min="1" max="10" required readonly aria-label="Quantity">
+                                    <button type="button" class="quantity-btn quantity-btn--increase" id="quantityIncrease" aria-label="Increase quantity">+</button>
                                 </div>
                             </div>
 
@@ -497,10 +542,10 @@ foreach ($_SESSION['cart'] as $item) {
                             </div>
 
                             <!-- Add to Cart Button -->
-                            <button type="submit" class="add-to-cart-btn" id="addToCartBtn">
+                            <button type="submit" class="add-to-cart-btn" id="addToCartBtn" aria-label="Add selected items to shopping cart">
                                 <span class="btn-text">Add to Cart</span>
-                                <span class="btn-loader" style="display: none;">
-                                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                                <span class="btn-loader" style="display: none;" aria-hidden="true">
+                                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-label="Loading">
                                         <circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="2" stroke-dasharray="31.416" stroke-dashoffset="31.416">
                                             <animate attributeName="stroke-dasharray" dur="2s" values="0 31.416;15.708 15.708;0 31.416;0 31.416" repeatCount="indefinite"/>
                                             <animate attributeName="stroke-dashoffset" dur="2s" values="0;-15.708;-31.416;-31.416" repeatCount="indefinite"/>
@@ -512,14 +557,73 @@ foreach ($_SESSION['cart'] as $item) {
 
                         <!-- Product Details -->
                         <div class="product-details">
-                            <div class="detail-item">
-                                <strong>Fabric:</strong> Heavyweight Japanese Drill
+                            <h3 class="details-title">Product Details</h3>
+                            <div class="details-grid">
+                                <div class="detail-item">
+                                    <div class="detail-icon">
+                                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                                            <path d="M10 2L3 7V18H17V7L10 2Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                            <path d="M10 10V18M6 10H14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                                        </svg>
+                                    </div>
+                                    <div class="detail-content">
+                                        <strong>Fabric:</strong> Heavyweight Japanese Drill
+                                    </div>
+                                </div>
+                                <div class="detail-item">
+                                    <div class="detail-icon">
+                                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                                            <path d="M10 2C6.5 2 3.5 5 3.5 8.5C3.5 12 6.5 15 10 15C13.5 15 16.5 12 16.5 8.5C16.5 5 13.5 2 10 2Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                            <path d="M10 5V8.5L12.5 10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                        </svg>
+                                    </div>
+                                    <div class="detail-content">
+                                        <strong>Fit:</strong> Relaxed Workwear Fit
+                                    </div>
+                                </div>
+                                <div class="detail-item">
+                                    <div class="detail-icon">
+                                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                                            <path d="M10 18C14.4183 18 18 14.4183 18 10C18 5.58172 14.4183 2 10 2C5.58172 2 2 5.58172 2 10C2 14.4183 5.58172 18 10 18Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                            <path d="M10 6V10L13 11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                        </svg>
+                                    </div>
+                                    <div class="detail-content">
+                                        <strong>Zipper:</strong> YKK Metal Half-Zip
+                                    </div>
+                                </div>
+                                <div class="detail-item">
+                                    <div class="detail-icon">
+                                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                                            <path d="M10 2L12.163 7.527L18 8.11L14 11.945L14.944 18L10 15.527L5.056 18L6 11.945L2 8.11L7.837 7.527L10 2Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                        </svg>
+                                    </div>
+                                    <div class="detail-content">
+                                        <strong>Made with:</strong> love & craftsmanship
+                                    </div>
+                                </div>
                             </div>
-                            <div class="detail-item">
-                                <strong>Fit:</strong> Relaxed Workwear Fit
-                            </div>
-                            <div class="detail-item">
-                                <strong>Made with:</strong> love
+                            
+                            <!-- Trust Indicators -->
+                            <div class="trust-indicators">
+                                <div class="trust-item">
+                                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                                        <path d="M9 1L11.5 6.5L17.5 7.5L13 11.5L14 17.5L9 14.5L4 17.5L5 11.5L0.5 7.5L6.5 6.5L9 1Z" fill="currentColor"/>
+                                    </svg>
+                                    <span>Premium Quality</span>
+                                </div>
+                                <div class="trust-item">
+                                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                                        <path d="M9 1L11.5 6.5L17.5 7.5L13 11.5L14 17.5L9 14.5L4 17.5L5 11.5L0.5 7.5L6.5 6.5L9 1Z" fill="currentColor"/>
+                                    </svg>
+                                    <span>Fast Shipping</span>
+                                </div>
+                                <div class="trust-item">
+                                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                                        <path d="M9 1L11.5 6.5L17.5 7.5L13 11.5L14 17.5L9 14.5L4 17.5L5 11.5L0.5 7.5L6.5 6.5L9 1Z" fill="currentColor"/>
+                                    </svg>
+                                    <span>Secure Payment</span>
+                                </div>
                             </div>
                         </div>
                     </div>

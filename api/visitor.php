@@ -13,6 +13,9 @@ header('Access-Control-Allow-Headers: Content-Type');
 require_once __DIR__ . '/../includes/rate_limit.php';
 checkRateLimit('visitor', 30, 60); // 30 requests per minute per IP
 
+// Load timezone configuration (required for getCurrentDateTimeUTC function)
+require_once __DIR__ . '/../config/timezone.php';
+
 define('DB_CONFIG_LOADED', true);
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../includes/db.php';

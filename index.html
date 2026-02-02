@@ -77,7 +77,8 @@
   <link rel="preload" as="image" href="images/hijauback.svg" fetchpriority="high">
   
   <!-- Preload critical CSS - Non-blocking load -->
-  <link rel="preload" href="css/workshirt.css?v=29" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <link rel="preload" href="css/workshirt.css?v=29" as="style">
+  <link rel="stylesheet" href="css/workshirt.css?v=29" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="css/workshirt.css?v=29"></noscript>
   
   <!-- Google Fonts - Load with display=swap and font-display for better performance -->
@@ -133,6 +134,13 @@
     "@type": "Product",
     "name": "WORKSHIRT COLLECTION",
     "description": "Premium heavyweight Japanese drill workshirt with YKK half-zipper. Relaxed workwear fit designed for movement. Available in Royal Red, Forest Green, and Classic Black.",
+    "image": [
+      "https://projectcutisem.com/images/hijaufront.svg",
+      "https://projectcutisem.com/images/hijauback.svg",
+      "https://projectcutisem.com/images/hitamdepan.svg",
+      "https://projectcutisem.com/images/merahdepan.svg"
+    ],
+    "url": "https://projectcutisem.com",
     "brand": {
       "@type": "Brand",
       "name": "Projek Cuti Sem"
@@ -146,8 +154,16 @@
     },
     "offers": {
       "@type": "Offer",
+      "url": "https://projectcutisem.com",
+      "priceCurrency": "MYR",
+      "price": "50.00",
+      "priceValidUntil": "2026-12-31",
       "availability": "https://schema.org/PreOrder",
-      "priceCurrency": "MYR"
+      "itemCondition": "https://schema.org/NewCondition",
+      "seller": {
+        "@type": "Organization",
+        "name": "Projek Cuti Sem"
+      }
     }
   }
   </script>
@@ -379,10 +395,10 @@
         <article class="showcase-item showcase-item--left">
           <div class="showcase-images">
             <div class="showcase-image-main">
-              <img src="images/halfzip.svg" alt="Half Zipper Detail - Main View showing YKK metal zipper quality" loading="lazy" width="400" height="300" decoding="async">
+              <img src="images/halfzip.png" alt="Half Zipper Detail - Main View showing YKK metal zipper quality" loading="lazy" width="400" height="300" decoding="async">
             </div>
             <div class="showcase-image-support">
-              <img src="images/halfzip2.svg" alt="Half Zipper Detail - Supporting View of zipper mechanism" loading="lazy" width="200" height="150" decoding="async">
+              <img src="images/halfzip2.png" alt="Half Zipper Detail - Supporting View of zipper mechanism" loading="lazy" width="200" height="150" decoding="async">
             </div>
           </div>
           <div class="showcase-content">
@@ -403,10 +419,10 @@
           </div>
           <div class="showcase-images">
             <div class="showcase-image-main">
-              <img src="images/pcs.svg" alt="Left Pocket PCS Logo Embroidery - Main View showing detailed stitching" loading="lazy" width="400" height="300" decoding="async">
+              <img src="images/pcs.png" alt="Left Pocket PCS Logo Embroidery - Main View showing detailed stitching" loading="lazy" width="400" height="300" decoding="async">
             </div>
             <div class="showcase-image-support">
-              <img src="images/pcs2.svg" alt="Left Pocket PCS Logo Embroidery - Supporting View close-up" loading="lazy" width="200" height="150" decoding="async">
+              <img src="images/pcs2.png" alt="Left Pocket PCS Logo Embroidery - Supporting View close-up" loading="lazy" width="200" height="150" decoding="async">
             </div>
           </div>
         </article>
@@ -415,10 +431,10 @@
         <article class="showcase-item showcase-item--left">
           <div class="showcase-images">
             <div class="showcase-image-main">
-              <img src="images/lead.svg" alt="Right Pocket 'We Lead The Future' Emblem - Main View showing embroidered text" loading="lazy" width="400" height="300" decoding="async">
+              <img src="images/lead.png" alt="Right Pocket 'We Lead The Future' Emblem - Main View showing embroidered text" loading="lazy" width="400" height="300" decoding="async">
             </div>
             <div class="showcase-image-support">
-              <img src="images/lead2.svg" alt="Right Pocket 'We Lead The Future' Emblem - Supporting View detail" loading="lazy" width="200" height="150" decoding="async">
+              <img src="images/lead2.png" alt="Right Pocket 'We Lead The Future' Emblem - Supporting View detail" loading="lazy" width="200" height="150" decoding="async">
             </div>
           </div>
           <div class="showcase-content">
@@ -439,10 +455,10 @@
           </div>
           <div class="showcase-images">
             <div class="showcase-image-main">
-              <img src="images/etudiants.svg" alt="Back Embroidery 'Les Étudiants Mènent le Monde' - Main View showing French text" loading="lazy" width="400" height="300" decoding="async">
+              <img src="images/etudiants.png" alt="Back Embroidery 'Les Étudiants Mènent le Monde' - Main View showing French text" loading="lazy" width="400" height="300" decoding="async">
             </div>
             <div class="showcase-image-support">
-              <img src="images/etudiants2.svg" alt="Back Embroidery 'Les Étudiants Mènent le Monde' - Supporting View close-up" loading="lazy" width="200" height="150" decoding="async">
+              <img src="images/etudiants2.png" alt="Back Embroidery 'Les Étudiants Mènent le Monde' - Supporting View close-up" loading="lazy" width="200" height="150" decoding="async">
             </div>
           </div>
         </article>
@@ -660,12 +676,25 @@
             'Content-Type': 'application/json'
           }
         });
-        const data = await response.json();
+        
+        if (!response.ok) {
+          // If POST fails, try GET instead
+          getVisitorCount();
+          return;
+        }
+        
+        const text = await response.text();
+        if (!text) {
+          getVisitorCount();
+          return;
+        }
+        
+        const data = JSON.parse(text);
         if (data.success) {
           updateVisitorCount(data.total_visitors);
         }
       } catch (error) {
-        console.error('Visitor tracking error:', error);
+        // Silently fail - don't show errors in console for visitor tracking
         getVisitorCount();
       }
     }
@@ -673,12 +702,22 @@
     async function getVisitorCount() {
       try {
         const response = await fetch('api/visitor.php');
-        const data = await response.json();
+        
+        if (!response.ok) {
+          return; // Silently fail
+        }
+        
+        const text = await response.text();
+        if (!text) {
+          return;
+        }
+        
+        const data = JSON.parse(text);
         if (data.success) {
           updateVisitorCount(data.total_visitors);
         }
       } catch (error) {
-        console.error('Error getting visitor count:', error);
+        // Silently fail - visitor count is not critical
       }
     }
 
@@ -934,7 +973,7 @@
         // Change this URL to redirect Buy Now buttons to a different page
         // Examples: '/order-baju.php', '/checkout.php', '/products.php', etc.
         // Set to empty string '' to disable redirect (will show modal instead)
-        const BUY_NOW_BUTTON_REDIRECT_URL = ''; // Empty = Coming Soon modal mode
+        const BUY_NOW_BUTTON_REDIRECT_URL = 'order-baju.php'; // Redirect to order page
         // ============================================
         
         // Update Buy Now button behavior
