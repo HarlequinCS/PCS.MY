@@ -668,7 +668,7 @@ if ($finalAmount < 0) {
                 </div>
             <?php endif; ?>
         
-        <form method="POST" action="https://projectcutisem.com/checkout.php" id="checkoutForm">
+        <form method="POST" action="/checkout.php" id="checkoutForm">
             <input type="hidden" name="action" value="checkout">
             <input type="hidden" name="csrf_token" value="<?php echo generateCSRFToken(); ?>">
             <input type="hidden" name="promo_code_applied" id="promoCodeApplied" value="<?php echo htmlspecialchars($promoCode); ?>">
