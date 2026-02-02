@@ -7,15 +7,11 @@
 // Load timezone configuration (sets default timezone and provides helper functions)
 require_once __DIR__ . '/config/timezone.php';
 
-// CSP Header Override - REMOVED to avoid conflicts
-// If Cloudflare or server-level CSP is interfering, configure it there instead
-// Multiple CSP headers can cause conflicts - using only .htaccess now
-// Uncomment below if you need PHP-level override:
-/*
+// CSP Header Override - Set early to ensure browser sees it before form evaluation
+// This must be set BEFORE any output to ensure it's in the response headers
 if (!headers_sent()) {
-    header("Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://fonts.googleapis.com https://static.cloudflareinsights.com https://cdn.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://projectcutisem.com https://static.cloudflareinsights.com; frame-ancestors 'self'; base-uri 'self'; form-action 'self' https://projectcutisem.com/checkout.php http://projectcutisem.com/checkout.php;", true);
+    header("Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://fonts.googleapis.com https://static.cloudflareinsights.com https://cdn.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://projectcutisem.com https://static.cloudflareinsights.com; frame-ancestors 'self'; base-uri 'self'; form-action 'self' https://projectcutisem.com/checkout.php http://projectcutisem.com/checkout.php https://www.projectcutisem.com/checkout.php http://www.projectcutisem.com/checkout.php;", true);
 }
-*/
 
 // ============================================
 // STEP 1: Start Session
@@ -678,7 +674,7 @@ if ($finalAmount < 0) {
                 </div>
             <?php endif; ?>
         
-        <form method="POST" action="/checkout.php" id="checkoutForm">
+        <form method="POST" action="https://projectcutisem.com/checkout.php" id="checkoutForm">
             <input type="hidden" name="action" value="checkout">
             <input type="hidden" name="csrf_token" value="<?php echo generateCSRFToken(); ?>">
             <input type="hidden" name="promo_code_applied" id="promoCodeApplied" value="<?php echo htmlspecialchars($promoCode); ?>">
