@@ -15,12 +15,11 @@ function getMenuIcon($filename) {
     $iconMap = [
         'dashboard' => '📝',
         'emails' => '📧',
+        'newsletter' => '📮',
         'orders' => '📦',
         'products' => '🛍️',
         'promotions' => '🎟️',
         'settings' => '⚙️',
-        'update_variant_names' => '✏️',
-        'flush_sessions' => '🔄',
     ];
     
     // Check if we have a specific icon for this file
@@ -81,6 +80,15 @@ function shouldExcludeFromMenu($filename) {
         '.gitignore',
     ];
     
+    // Technical/debugging pages to exclude (not business-related)
+    $technicalPages = [
+        'diagnose_timezone_data.php',
+        'fix_timezone_data.php',
+        'timezone_migration.php',
+        'flush_sessions.php',
+        'update_variant_names.php',
+    ];
+    
     // Directories to exclude
     $excludedDirs = [
         'css',
@@ -93,6 +101,11 @@ function shouldExcludeFromMenu($filename) {
     
     // Check if file is in excluded list
     if (in_array($filename, $excluded)) {
+        return true;
+    }
+    
+    // Check if it's a technical/debugging page
+    if (in_array($filename, $technicalPages)) {
         return true;
     }
     
