@@ -23,12 +23,14 @@ if (isset($_GET['logout'])) {
 $pdo = getDBConnection();
 $currentPage = basename(__FILE__);
 
-// Get email statistics
+// Get email statistics and list
 $stats = [
     'total' => 0,
     'active' => 0,
     'inactive' => 0
 ];
+
+$allEmails = [];
 
 try {
     $totalStmt = $pdo->query("SELECT COUNT(*) as total FROM email_notifications");
@@ -38,6 +40,10 @@ try {
     $stats['active'] = (int)$activeStmt->fetch(PDO::FETCH_ASSOC)['total'];
     
     $stats['inactive'] = $stats['total'] - $stats['active'];
+    
+    // Get all emails for selection
+    $emailsStmt = $pdo->query("SELECT notification_id, email, status FROM email_notifications ORDER BY email ASC");
+    $allEmails = $emailsStmt->fetchAll(PDO::FETCH_ASSOC);
 } catch (PDOException $e) {
     error_log("Stats error: " . $e->getMessage());
 }
@@ -52,6 +58,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     $recipientType = $_POST['recipient_type'] ?? 'active';
     $testEmail = trim($_POST['test_email'] ?? '');
     $testOnly = isset($_POST['test_only']);
+    $selectedEmails = $_POST['selected_emails'] ?? [];
     
     // Validation
     if (empty($subject)) {
@@ -84,15 +91,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                 }
             }
         } else {
-            // Send to all recipients
+            // Determine recipients
             try {
-                $query = "SELECT email FROM email_notifications WHERE status = 'active'";
-                if ($recipientType === 'all') {
-                    $query = "SELECT email FROM email_notifications";
-                }
+                $recipients = [];
                 
-                $stmt = $pdo->query($query);
-                $recipients = $stmt->fetchAll(PDO::FETCH_COLUMN);
+                if ($recipientType === 'selected' && !empty($selectedEmails)) {
+                    // Send to selected emails only
+                    $placeholders = str_repeat('?,', count($selectedEmails) - 1) . '?';
+                    $stmt = $pdo->prepare("SELECT email FROM email_notifications WHERE notification_id IN ($placeholders)");
+                    $stmt->execute($selectedEmails);
+                    $recipients = $stmt->fetchAll(PDO::FETCH_COLUMN);
+                } elseif ($recipientType === 'active') {
+                    // Send to active subscribers
+                    $stmt = $pdo->query("SELECT email FROM email_notifications WHERE status = 'active'");
+                    $recipients = $stmt->fetchAll(PDO::FETCH_COLUMN);
+                } elseif ($recipientType === 'all') {
+                    // Send to all subscribers
+                    $stmt = $pdo->query("SELECT email FROM email_notifications");
+                    $recipients = $stmt->fetchAll(PDO::FETCH_COLUMN);
+                }
                 
                 if (empty($recipients)) {
                     $message = 'No recipients found';
@@ -201,6 +218,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             font-size: 0.875rem;
             color: var(--text-secondary);
             margin-top: 0.25rem;
+        }
+        
+        #emailSelectionList label:hover {
+            background: #e9ecef !important;
+            border-color: var(--primary-color);
+        }
+        
+        #emailSelectionList input[type="checkbox"]:checked + span {
+            font-weight: 600;
+            color: var(--primary-color);
         }
         
         .test-email-section {
@@ -365,6 +392,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                                 <span class="recipient-count"><?php echo $stats['total']; ?> recipients</span>
                             </label>
                         </div>
+                        <div class="recipient-option">
+                            <input type="radio" name="recipient_type" value="selected" id="recipient_selected">
+                            <label for="recipient_selected">
+                                Select Specific Recipients
+                                <span class="recipient-count" id="selectedCount">0 selected</span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <!-- Email Selection List (shown when "Select Specific" is chosen) -->
+                    <div id="emailSelectionList" style="display: none; margin-top: 1.5rem; max-height: 500px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 8px; padding: 1rem; background: #f8f9fa;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 1rem;">
+                            <strong>Select Recipients:</strong>
+                            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                                <select id="emailFilter" style="padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 4px; font-size: 0.875rem;">
+                                    <option value="all">All Emails</option>
+                                    <option value="active">Active Only</option>
+                                    <option value="inactive">Inactive Only</option>
+                                </select>
+                                <button type="button" id="selectAllBtn" class="btn btn-sm btn-secondary">Select All</button>
+                                <button type="button" id="deselectAllBtn" class="btn btn-sm btn-secondary">Deselect All</button>
+                            </div>
+                        </div>
+                        <div id="emailListContainer" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 0.5rem;">
+                            <?php foreach ($allEmails as $email): ?>
+                                <label class="email-checkbox-label" style="display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem; background: white; border: 1px solid var(--border-color); border-radius: 4px; cursor: pointer; transition: all 0.2s;" data-status="<?php echo htmlspecialchars($email['status']); ?>">
+                                    <input type="checkbox" name="selected_emails[]" value="<?php echo htmlspecialchars($email['notification_id']); ?>" class="email-checkbox" data-email="<?php echo htmlspecialchars($email['email']); ?>" data-status="<?php echo htmlspecialchars($email['status']); ?>">
+                                    <span style="flex: 1; font-size: 0.875rem;"><?php echo htmlspecialchars($email['email']); ?></span>
+                                    <span style="font-size: 0.75rem; color: <?php echo $email['status'] === 'active' ? '#10b981' : '#6b7280'; ?>; font-weight: 500;">
+                                        <?php echo $email['status'] === 'active' ? '✓' : '○'; ?>
+                                    </span>
+                                </label>
+                            <?php endforeach; ?>
+                        </div>
                     </div>
                 </div>
                 
@@ -478,6 +539,80 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                 }, 500);
             });
         }
+        
+        // Show/hide email selection list based on recipient type
+        const recipientRadios = document.querySelectorAll('input[name="recipient_type"]');
+        const emailSelectionList = document.getElementById('emailSelectionList');
+        const selectedCount = document.getElementById('selectedCount');
+        const emailCheckboxes = document.querySelectorAll('.email-checkbox');
+        
+        function updateSelectedCount() {
+            const checked = document.querySelectorAll('.email-checkbox:checked').length;
+            selectedCount.textContent = `${checked} selected`;
+        }
+        
+        function toggleEmailList() {
+            const selected = document.querySelector('input[name="recipient_type"]:checked');
+            if (selected && selected.value === 'selected') {
+                emailSelectionList.style.display = 'block';
+            } else {
+                emailSelectionList.style.display = 'none';
+            }
+            updateSelectedCount();
+        }
+        
+        recipientRadios.forEach(radio => {
+            radio.addEventListener('change', toggleEmailList);
+        });
+        
+        emailCheckboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', updateSelectedCount);
+        });
+        
+        // Select All / Deselect All buttons
+        const selectAllBtn = document.getElementById('selectAllBtn');
+        const deselectAllBtn = document.getElementById('deselectAllBtn');
+        const emailFilter = document.getElementById('emailFilter');
+        const emailListContainer = document.getElementById('emailSelectionList');
+        
+        if (selectAllBtn) {
+            selectAllBtn.addEventListener('click', function() {
+                const visibleCheckboxes = document.querySelectorAll('.email-checkbox-label:not([style*="display: none"]) .email-checkbox');
+                visibleCheckboxes.forEach(cb => cb.checked = true);
+                updateSelectedCount();
+            });
+        }
+        
+        if (deselectAllBtn) {
+            deselectAllBtn.addEventListener('click', function() {
+                emailCheckboxes.forEach(cb => cb.checked = false);
+                updateSelectedCount();
+            });
+        }
+        
+        // Email filter functionality
+        if (emailFilter) {
+            emailFilter.addEventListener('change', function() {
+                const filterValue = this.value;
+                const emailLabels = document.querySelectorAll('.email-checkbox-label');
+                
+                emailLabels.forEach(label => {
+                    const status = label.getAttribute('data-status');
+                    if (filterValue === 'all') {
+                        label.style.display = 'flex';
+                    } else if (filterValue === 'active' && status === 'active') {
+                        label.style.display = 'flex';
+                    } else if (filterValue === 'inactive' && status === 'inactive') {
+                        label.style.display = 'flex';
+                    } else {
+                        label.style.display = 'none';
+                    }
+                });
+            });
+        }
+        
+        // Initialize
+        toggleEmailList();
     </script>
 </body>
 </html>

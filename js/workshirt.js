@@ -1167,9 +1167,24 @@ class Slider {
     }
     
     // Buy Now button handler (both desktop and mobile)
+    // Only open modal for buttons, not for links (anchor tags with href)
     const buyNowBtns = document.querySelectorAll('.js-buy-now-btn')
     buyNowBtns.forEach(btn => {
       btn.addEventListener('click', (e) => {
+        // If it's a link (anchor tag) with href, let it navigate naturally
+        if (btn.tagName === 'A' && btn.hasAttribute('href') && btn.getAttribute('href') !== '#' && btn.getAttribute('href') !== '') {
+          // Allow natural navigation - don't prevent default
+          // Close mobile menu if open
+          const mobileMenu = document.querySelector('.js-mobile-menu')
+          const hamburger = document.querySelector('.js-hamburger')
+          if (mobileMenu && mobileMenu.classList.contains('active')) {
+            mobileMenu.classList.remove('active')
+            hamburger?.classList.remove('active')
+          }
+          return // Let the link navigate naturally
+        }
+        
+        // For buttons without href, show modal
         e.preventDefault()
         openModal()
         // Close mobile menu if open
