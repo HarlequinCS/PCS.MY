@@ -7,11 +7,15 @@
 // Load timezone configuration (sets default timezone and provides helper functions)
 require_once __DIR__ . '/config/timezone.php';
 
-// Override CSP header to ensure form-action allows same-origin submissions
-// This is needed in case server-level CSP (Cloudflare, cPanel, etc.) overrides .htaccess
+// CSP Header Override - REMOVED to avoid conflicts
+// If Cloudflare or server-level CSP is interfering, configure it there instead
+// Multiple CSP headers can cause conflicts - using only .htaccess now
+// Uncomment below if you need PHP-level override:
+/*
 if (!headers_sent()) {
     header("Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://fonts.googleapis.com https://static.cloudflareinsights.com https://cdn.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://projectcutisem.com https://static.cloudflareinsights.com; frame-ancestors 'self'; base-uri 'self'; form-action 'self' https://projectcutisem.com/checkout.php http://projectcutisem.com/checkout.php;", true);
 }
+*/
 
 // ============================================
 // STEP 1: Start Session
