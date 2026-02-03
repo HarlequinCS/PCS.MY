@@ -253,6 +253,7 @@
     RewriteRule ^databasefile/ - [F,L]
     RewriteRule ^vendor/ - [F,L]
     RewriteRule ^documentation/ - [F,L]
+    RewriteRule ^_private/ - [F,L]
 </IfModule>
 
 # ============================================

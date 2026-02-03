@@ -45,3 +45,5 @@ tmp/
 # Rate limit files
 *.ratelimit
 
+# Private folder - test/debug files and temporary documentation
+_private/
