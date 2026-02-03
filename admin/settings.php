@@ -45,7 +45,7 @@ $productionCategory = 'lfhcsj8w'; // Hardcoded in config file
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Settings - ToyyibPay Configuration | Admin Panel</title>
-    <link rel="stylesheet" href="/admin/css/admin.css?v=30">
+    <link rel="stylesheet" href="<?php echo getAdminAsset('css/admin.css'); ?>">
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
     <style>
         .settings-container {
@@ -273,7 +273,7 @@ $productionCategory = 'lfhcsj8w'; // Hardcoded in config file
         </div>
     </main>
     
-    <script src="/admin/js/admin.js"></script>
+    <script src="<?php echo getAdminAsset('js/admin.js'); ?>"></script>
     <script>
         // Toggle mode functionality
         document.getElementById('toggleModeBtn').addEventListener('click', async function() {

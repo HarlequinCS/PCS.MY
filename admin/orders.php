@@ -78,7 +78,7 @@ foreach ($stats as $stat) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Orders Management - Admin Panel | Projek Cuti Sem</title>
-    <link rel="stylesheet" href="/admin/css/admin.css?v=30">
+    <link rel="stylesheet" href="<?php echo getAdminAsset('css/admin.css'); ?>">
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
     <style>
         .orders-table { width: 100%; border-collapse: collapse; margin-top: 1.5rem; }
@@ -331,8 +331,8 @@ foreach ($stats as $stat) {
         </div>
     </div>
     
-    <script src="/admin/js/admin.js"></script>
-    <script src="/admin/js/orders.js"></script>
+    <script src="<?php echo getAdminAsset('js/admin.js'); ?>"></script>
+    <script src="<?php echo getAdminAsset('js/orders.js'); ?>"></script>
 </body>
 </html>
 

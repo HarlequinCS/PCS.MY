@@ -67,7 +67,7 @@ $sizes = ['S', 'M', 'L', 'XL', 'XXL'];
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Products Management - Admin Panel</title>
-    <link rel="stylesheet" href="/admin/css/admin.css?v=30">
+    <link rel="stylesheet" href="<?php echo getAdminAsset('css/admin.css'); ?>">
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
     <style>
         .product-header {
@@ -441,8 +441,8 @@ $sizes = ['S', 'M', 'L', 'XL', 'XXL'];
         </div>
     </main>
 
-    <script src="/admin/js/admin.js?v=30"></script>
-    <script src="/admin/js/products.js?v=30"></script>
+    <script src="<?php echo getAdminAsset('js/admin.js'); ?>"></script>
+    <script src="<?php echo getAdminAsset('js/products.js'); ?>"></script>
 </body>
 </html>
 

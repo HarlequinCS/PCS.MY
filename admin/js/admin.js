@@ -17,62 +17,83 @@ function setupMobileMenu() {
     const sidebar = document.getElementById('sidebar');
     const sidebarOverlay = document.getElementById('sidebarOverlay');
     
-    if (mobileMenuToggle && sidebar && sidebarOverlay) {
-        // Toggle sidebar - use 'open' class to match CSS
-        const toggleMenu = function(e) {
-            if (e) {
-                e.preventDefault();
-                e.stopPropagation();
-            }
-            sidebar.classList.toggle('open');
-            sidebarOverlay.classList.toggle('open');
-            mobileMenuToggle.classList.toggle('active');
-        };
-        
-        // Use both click and touchstart for better mobile support
-        mobileMenuToggle.addEventListener('click', toggleMenu);
-        mobileMenuToggle.addEventListener('touchstart', function(e) {
+    if (!mobileMenuToggle || !sidebar || !sidebarOverlay) {
+        console.error('Mobile menu elements not found');
+        return;
+    }
+    
+    // Toggle sidebar - use 'open' class to match CSS
+    const toggleMenu = function(e) {
+        if (e) {
             e.preventDefault();
-            toggleMenu(e);
-        }, { passive: false });
-        
-        // Close sidebar when clicking overlay
-        const closeMenu = function(e) {
-            if (e) {
-                e.preventDefault();
-                e.stopPropagation();
-            }
+            e.stopPropagation();
+        }
+        const isOpen = sidebar.classList.contains('open');
+        if (isOpen) {
             sidebar.classList.remove('open');
             sidebarOverlay.classList.remove('open');
             mobileMenuToggle.classList.remove('active');
-        };
-        
-        sidebarOverlay.addEventListener('click', closeMenu);
-        sidebarOverlay.addEventListener('touchstart', function(e) {
+        } else {
+            sidebar.classList.add('open');
+            sidebarOverlay.classList.add('open');
+            mobileMenuToggle.classList.add('active');
+        }
+    };
+    
+    // Use multiple event types for maximum compatibility
+    mobileMenuToggle.addEventListener('click', toggleMenu, true);
+    mobileMenuToggle.addEventListener('touchend', function(e) {
+        e.preventDefault();
+        toggleMenu(e);
+    }, { passive: false });
+    mobileMenuToggle.addEventListener('touchstart', function(e) {
+        // Prevent double-firing, but allow touch
+        e.stopPropagation();
+    }, { passive: true });
+    
+    // Close sidebar when clicking overlay
+    const closeMenu = function(e) {
+        if (e) {
             e.preventDefault();
-            closeMenu(e);
-        }, { passive: false });
-        
-        // Close sidebar when clicking outside on mobile
-        document.addEventListener('click', function(e) {
-            if (window.innerWidth <= 768) {
-                if (!sidebar.contains(e.target) && 
-                    !mobileMenuToggle.contains(e.target) && 
-                    sidebar.classList.contains('open')) {
-                    closeMenu(e);
-                }
+            e.stopPropagation();
+        }
+        sidebar.classList.remove('open');
+        sidebarOverlay.classList.remove('open');
+        mobileMenuToggle.classList.remove('active');
+    };
+    
+    sidebarOverlay.addEventListener('click', closeMenu);
+    sidebarOverlay.addEventListener('touchend', function(e) {
+        e.preventDefault();
+        closeMenu(e);
+    }, { passive: false });
+    
+    // Close sidebar when clicking outside on mobile
+    document.addEventListener('click', function(e) {
+        if (window.innerWidth <= 768) {
+            if (!sidebar.contains(e.target) && 
+                !mobileMenuToggle.contains(e.target) && 
+                sidebar.classList.contains('open')) {
+                closeMenu(e);
             }
-        });
-        
-        // Handle window resize
-        window.addEventListener('resize', function() {
-            if (window.innerWidth > 768) {
-                sidebar.classList.remove('open');
-                sidebarOverlay.classList.remove('open');
-                mobileMenuToggle.classList.remove('active');
-            }
-        });
-    }
+        }
+    });
+    
+    // Handle window resize
+    window.addEventListener('resize', function() {
+        if (window.innerWidth > 768) {
+            sidebar.classList.remove('open');
+            sidebarOverlay.classList.remove('open');
+            mobileMenuToggle.classList.remove('active');
+        }
+    });
+    
+    // Force button to be interactive
+    mobileMenuToggle.style.pointerEvents = 'auto';
+    mobileMenuToggle.style.cursor = 'pointer';
+    
+    // Debug: Log when button is initialized
+    console.log('Mobile menu button initialized');
 }
 
 function setupEventListeners() {

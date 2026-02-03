@@ -7,7 +7,8 @@
 
 // Version number - increment this when deploying CSS/JS changes
 // Production version: Update this number whenever you deploy CSS/JS changes to force cache refresh
-define('ASSETS_VERSION', '1.0.2');
+// Note: Admin panel now uses automatic file modification time for cache busting
+define('ASSETS_VERSION', '1.0.3');
 
 /**
  * Get versioned asset URL

@@ -54,3 +54,25 @@ function adminLogout() {
     session_destroy();
 }
 
+// Include version configuration
+require_once __DIR__ . '/../config/version.php';
+
+/**
+ * Get versioned admin asset URL with automatic cache busting
+ * Uses file modification time for automatic versioning
+ * 
+ * @param string $path Relative path from admin root (e.g., 'css/admin.css' or 'js/admin.js')
+ * @return string URL with version parameter
+ */
+function getAdminAsset($path) {
+    $filePath = __DIR__ . '/' . $path;
+    
+    // If file exists, use modification time for cache busting
+    if (file_exists($filePath)) {
+        $mtime = filemtime($filePath);
+        return '/admin/' . $path . '?v=' . $mtime;
+    }
+    
+    // Fallback to version constant if file doesn't exist
+    return '/admin/' . $path . '?v=' . ASSETS_VERSION;
+}

@@ -178,7 +178,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Newsletter - Admin Dashboard - Projek Cuti Sem</title>
-    <link rel="stylesheet" href="/admin/css/admin.css?v=30">
+    <link rel="stylesheet" href="<?php echo getAdminAsset('css/admin.css'); ?>">
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
     <style>
         .newsletter-form {
@@ -504,7 +504,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         </div>
     </main>
     
-    <script src="/admin/js/admin.js"></script>
+    <script src="<?php echo getAdminAsset('js/admin.js'); ?>"></script>
     <script>
         // Preview functionality
         const previewBtn = document.getElementById('previewBtn');
