@@ -807,6 +807,27 @@
         padding: 1.125rem 2rem;
         font-size: 0.8125rem;
     }
+    
+    /* Promotion Code Section - Mobile Responsive */
+    .promo-section {
+        padding: 1.25rem;
+    }
+    
+    .promo-input-group {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+    
+    .promo-input-group input {
+        width: 100%;
+        padding: 0.875rem 1rem;
+    }
+    
+    .promo-input-group button {
+        width: 100%;
+        padding: 0.875rem 1.5rem;
+        justify-content: center;
+    }
 }
 
 @media (max-width: 480px) {
@@ -820,5 +841,24 @@
     
     .pre-order-banner {
         padding: 1.5rem;
+    }
+    
+    /* Promotion Code Section - Extra Small Screens */
+    .promo-section {
+        padding: 1rem;
+    }
+    
+    .promo-input-group {
+        gap: 0.625rem;
+    }
+    
+    .promo-input-group input {
+        padding: 0.75rem 0.875rem;
+        font-size: 0.8125rem;
+    }
+    
+    .promo-input-group button {
+        padding: 0.75rem 1.25rem;
+        font-size: 0.8125rem;
     }
 }

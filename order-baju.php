@@ -87,6 +87,7 @@ try {
     if ($product) {
         define('PRODUCT_NAME', $product['name']);
         define('PRICE_PER_SHIRT', floatval($product['price']));
+        define('ORIGINAL_PRICE', 120.00); // Marketing original price for strikethrough display
         $productStockStatus = $product['stock_status'];
         
         // Get variants from database
@@ -138,6 +139,7 @@ try {
         // Fallback to defaults if no product found
         define('PRODUCT_NAME', 'WORKSHIRT COLLECTION');
         define('PRICE_PER_SHIRT', 50.00);
+        define('ORIGINAL_PRICE', 120.00); // Marketing original price for strikethrough display
         $productStockStatus = 'pre_order';
         $inventoryData = [];
         
@@ -164,6 +166,7 @@ try {
     error_log('Error loading product from database: ' . $e->getMessage());
     define('PRODUCT_NAME', 'WORKSHIRT COLLECTION');
     define('PRICE_PER_SHIRT', 50.00);
+    define('ORIGINAL_PRICE', 120.00); // Marketing original price for strikethrough display
     $productStockStatus = 'pre_order';
     $inventoryData = [];
     
@@ -443,7 +446,14 @@ foreach ($_SESSION['cart'] as $item) {
                             <p class="product-subtitle">Your new everyday outfit for class and beyond.</p>
                             <div class="product-price-display">
                                 <span class="price-label">Starting from</span>
-                                <span class="price-value">RM <?php echo number_format(PRICE_PER_SHIRT, 2); ?></span>
+                                <span class="price-value">
+                                    <?php if (PRICE_PER_SHIRT < ORIGINAL_PRICE): ?>
+                                        <span class="original-price">RM <?php echo number_format(ORIGINAL_PRICE, 2); ?></span>
+                                        <span class="current-price">RM <?php echo number_format(PRICE_PER_SHIRT, 2); ?></span>
+                                    <?php else: ?>
+                                        <span class="current-price">RM <?php echo number_format(PRICE_PER_SHIRT, 2); ?></span>
+                                    <?php endif; ?>
+                                </span>
                             </div>
                             <p class="product-brand">PCS™ - Represent Project Cuti Sem</p>
                         </div>
@@ -533,11 +543,25 @@ foreach ($_SESSION['cart'] as $item) {
                             <div class="price-summary">
                                 <div class="price-row">
                                     <span>Price Per Unit:</span>
-                                    <span>RM <?php echo number_format(PRICE_PER_SHIRT, 2); ?></span>
+                                    <span class="price-per-unit-display">
+                                        <?php if (PRICE_PER_SHIRT < ORIGINAL_PRICE): ?>
+                                            <span class="original-price">RM <?php echo number_format(ORIGINAL_PRICE, 2); ?></span>
+                                            <span class="current-price">RM <?php echo number_format(PRICE_PER_SHIRT, 2); ?></span>
+                                        <?php else: ?>
+                                            <span class="current-price">RM <?php echo number_format(PRICE_PER_SHIRT, 2); ?></span>
+                                        <?php endif; ?>
+                                    </span>
                                 </div>
                                 <div class="price-row price-row--total">
                                     <span>Total:</span>
-                                    <span class="total-price">RM <span id="totalPriceDisplay"><?php echo number_format(PRICE_PER_SHIRT, 2); ?></span></span>
+                                    <span class="total-price">
+                                        <?php if (PRICE_PER_SHIRT < ORIGINAL_PRICE): ?>
+                                            <span class="original-price-total">RM <span id="originalTotalPriceDisplay"><?php echo number_format(ORIGINAL_PRICE, 2); ?></span></span>
+                                            <span class="current-price-total">RM <span id="totalPriceDisplay"><?php echo number_format(PRICE_PER_SHIRT, 2); ?></span></span>
+                                        <?php else: ?>
+                                            <span class="current-price-total">RM <span id="totalPriceDisplay"><?php echo number_format(PRICE_PER_SHIRT, 2); ?></span></span>
+                                        <?php endif; ?>
+                                    </span>
                                 </div>
                             </div>
 
@@ -770,6 +794,8 @@ foreach ($_SESSION['cart'] as $item) {
     <script>
         // Constants
         const PRICE_PER_SHIRT = <?php echo PRICE_PER_SHIRT; ?>;
+        const ORIGINAL_PRICE = <?php echo ORIGINAL_PRICE; ?>;
+        const SHOW_ORIGINAL_PRICE = PRICE_PER_SHIRT < ORIGINAL_PRICE;
         
         // DOM Elements
         const orderForm = document.getElementById('orderForm');
@@ -777,6 +803,7 @@ foreach ($_SESSION['cart'] as $item) {
         const quantityDecrease = document.getElementById('quantityDecrease');
         const quantityIncrease = document.getElementById('quantityIncrease');
         const totalPriceDisplay = document.getElementById('totalPriceDisplay');
+        const originalTotalPriceDisplay = document.getElementById('originalTotalPriceDisplay');
         const variantRadios = document.querySelectorAll('input[name="variant"]');
         const mainProductImage = document.getElementById('mainProductImage');
         const imagePlaceholder = document.getElementById('imagePlaceholder');
@@ -807,6 +834,12 @@ foreach ($_SESSION['cart'] as $item) {
             const quantity = parseInt(quantityInput.value) || 1;
             const total = PRICE_PER_SHIRT * quantity;
             totalPriceDisplay.textContent = total.toFixed(2);
+            
+            // Update original price total if strikethrough is shown
+            if (SHOW_ORIGINAL_PRICE && originalTotalPriceDisplay) {
+                const originalTotal = ORIGINAL_PRICE * quantity;
+                originalTotalPriceDisplay.textContent = originalTotal.toFixed(2);
+            }
         }
 
         // Quantity Controls

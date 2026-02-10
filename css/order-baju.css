@@ -272,6 +272,26 @@ body {
     font-weight: 700;
     color: #fff;
     letter-spacing: -0.02em;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.original-price {
+    font-size: 1.25rem;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.5);
+    text-decoration: line-through;
+    text-decoration-thickness: 2px;
+    letter-spacing: -0.01em;
+}
+
+.current-price {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: -0.02em;
 }
 
 .product-brand {
@@ -571,6 +591,27 @@ body {
     margin-bottom: 0.75rem;
 }
 
+.price-per-unit-display {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    flex-wrap: wrap;
+}
+
+.price-per-unit-display .original-price {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.5);
+    text-decoration: line-through;
+    text-decoration-thickness: 1.5px;
+}
+
+.price-per-unit-display .current-price {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.9);
+}
+
 .price-row:last-child {
     margin-bottom: 0;
 }
@@ -587,6 +628,24 @@ body {
 .total-price {
     font-size: 1.5rem;
     font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.original-price-total {
+    font-size: 1.125rem;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.5);
+    text-decoration: line-through;
+    text-decoration-thickness: 2px;
+}
+
+.current-price-total {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #fff;
 }
 
 /* Add to Cart Button */
@@ -1435,6 +1494,22 @@ body {
     
     .price-value {
         font-size: 1.5rem;
+    }
+    
+    .price-value .original-price {
+        font-size: 1rem;
+    }
+    
+    .price-value .current-price {
+        font-size: 1.5rem;
+    }
+    
+    .total-price .original-price-total {
+        font-size: 1rem;
+    }
+    
+    .total-price .current-price-total {
+        font-size: 1.25rem;
     }
     
     .details-grid {
