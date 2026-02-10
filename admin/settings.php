@@ -33,6 +33,12 @@ $modeStmt->execute();
 $modeResult = $modeStmt->fetch(PDO::FETCH_ASSOC);
 $currentMode = ($modeResult && isset($modeResult['setting_value'])) ? $modeResult['setting_value'] : 'staging';
 
+// Get current orders closed status
+$ordersClosedStmt = $pdo->prepare("SELECT setting_value FROM settings WHERE setting_key = 'orders_closed' LIMIT 1");
+$ordersClosedStmt->execute();
+$ordersClosedResult = $ordersClosedStmt->fetch(PDO::FETCH_ASSOC);
+$ordersClosed = ($ordersClosedResult && isset($ordersClosedResult['setting_value']) && ($ordersClosedResult['setting_value'] === '1' || $ordersClosedResult['setting_value'] === 'true')) ? true : false;
+
 // Production credentials are hardcoded in includes/toyyibpay_config.php
 // Database storage is optional/fallback only
 $productionSecret = '58bq974i-wcu2-ypkz-4mbn-cvjuxtpil8kr'; // Hardcoded in config file
@@ -270,6 +276,54 @@ $productionCategory = 'lfhcsj8w'; // Hardcoded in config file
                     </div>
                 </div>
             </div>
+            
+            <!-- Orders Access Control Card -->
+            <div class="settings-card">
+                <h2>🛒 Orders Access Control</h2>
+                
+                <!-- Orders Toggle Section -->
+                <div class="mode-toggle-section">
+                    <div class="mode-info">
+                        <h3>Order Page Access</h3>
+                        <p style="margin: 5px 0; color: #666;">
+                            Current status: 
+                            <span class="mode-status <?php echo $ordersClosed ? 'production' : 'staging'; ?>" id="ordersStatus">
+                                <?php echo $ordersClosed ? 'CLOSED' : 'OPEN'; ?>
+                            </span>
+                        </p>
+                        <p style="margin: 5px 0 0 0; font-size: 14px; color: #999;">
+                            <?php if ($ordersClosed): ?>
+                                Users cannot access the order page. They will see a "Closed" message instead.
+                            <?php else: ?>
+                                Users can access the order page and place orders normally.
+                            <?php endif; ?>
+                        </p>
+                    </div>
+                    <button 
+                        id="toggleOrdersBtn" 
+                        class="toggle-btn <?php echo $ordersClosed ? 'production' : 'staging'; ?>"
+                        data-orders-closed="<?php echo $ordersClosed ? '1' : '0'; ?>"
+                    >
+                        <?php if ($ordersClosed): ?>
+                            Open Orders
+                        <?php else: ?>
+                            Close Orders
+                        <?php endif; ?>
+                    </button>
+                </div>
+                
+                <?php if ($ordersClosed): ?>
+                <div class="warning-box" style="background: #fff3cd; border: 1px solid #ffc107; color: #856404;">
+                    <strong>🔒 Orders Currently Closed</strong>
+                    The order-baju.php page is currently inaccessible to users. They will see an "Exclusive Access Closed" message.
+                </div>
+                <?php else: ?>
+                <div class="warning-box" style="background: #d4edda; border: 1px solid #28a745; color: #155724;">
+                    <strong>✅ Orders Currently Open</strong>
+                    Users can access the order page and place orders normally.
+                </div>
+                <?php endif; ?>
+            </div>
         </div>
     </main>
     
@@ -325,6 +379,56 @@ $productionCategory = 'lfhcsj8w'; // Hardcoded in config file
                 alert('Error switching mode. Please try again.');
                 btn.disabled = false;
                 btn.textContent = currentMode === 'staging' ? 'Switch to Production' : 'Switch to Staging';
+            }
+        });
+        
+        // Toggle orders closed functionality
+        document.getElementById('toggleOrdersBtn').addEventListener('click', async function() {
+            const btn = this;
+            const currentStatus = btn.dataset.ordersClosed === '1';
+            const newStatus = !currentStatus;
+            
+            // Confirm before closing orders
+            if (newStatus) {
+                const confirmed = confirm(
+                    '⚠️ Close Order Access?\n\n' +
+                    'This will prevent users from accessing the order page (order-baju.php).\n\n' +
+                    'Users will see an "Exclusive Access Closed" message instead.\n\n' +
+                    'Do you want to close orders?'
+                );
+                
+                if (!confirmed) {
+                    return;
+                }
+            }
+            
+            // Disable button during request
+            btn.disabled = true;
+            btn.textContent = 'Updating...';
+            
+            try {
+                const response = await fetch('/admin/api/toggle_orders_closed.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Reload page to show updated status
+                    window.location.reload();
+                } else {
+                    alert('Error: ' + (data.error || 'Failed to update orders status'));
+                    btn.disabled = false;
+                    btn.textContent = currentStatus ? 'Open Orders' : 'Close Orders';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error updating orders status. Please try again.');
+                btn.disabled = false;
+                btn.textContent = currentStatus ? 'Open Orders' : 'Close Orders';
             }
         });
     </script>

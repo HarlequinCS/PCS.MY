@@ -29,6 +29,299 @@ require_once __DIR__ . '/includes/db.php';
 // Include version configuration for asset versioning
 require_once __DIR__ . '/config/version.php';
 
+// ============================================
+// CHECK IF ORDERS ARE CLOSED
+// ============================================
+try {
+    $pdo = getDBConnection();
+    $ordersClosedStmt = $pdo->prepare("SELECT setting_value FROM settings WHERE setting_key = 'orders_closed' LIMIT 1");
+    $ordersClosedStmt->execute();
+    $ordersClosedResult = $ordersClosedStmt->fetch(PDO::FETCH_ASSOC);
+    $ordersClosed = ($ordersClosedResult && isset($ordersClosedResult['setting_value']) && ($ordersClosedResult['setting_value'] === '1' || $ordersClosedResult['setting_value'] === 'true'));
+    
+    // If orders are closed, show closed page and exit
+    if ($ordersClosed) {
+        // Display closed page
+        ?>
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Exclusive Access Closed | Projek Cuti Sem (PCS)</title>
+    <meta name="description" content="The exclusive early access for PCS X WORKSHIRT COLLECTION is now closed. Stay tuned for future releases.">
+    <meta name="robots" content="noindex, follow">
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="canonical" href="https://projectcutisem.com/order-baju.php">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #111111 0%, #1a1a1a 50%, #111111 100%);
+            color: #ffffff;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            line-height: 1.6;
+            position: relative;
+            overflow-x: hidden;
+        }
+        
+        /* Animated background pattern */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                radial-gradient(circle at 20% 50%, rgba(255, 255, 255, 0.03) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(255, 255, 255, 0.03) 0%, transparent 50%);
+            animation: backgroundMove 20s ease-in-out infinite;
+            z-index: 0;
+        }
+        
+        @keyframes backgroundMove {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(-20px, -20px) scale(1.1); }
+        }
+        
+        .container {
+            max-width: 700px;
+            width: 100%;
+            text-align: center;
+            position: relative;
+            z-index: 1;
+            animation: fadeInUp 0.8s ease-out;
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .logo {
+            margin-bottom: 40px;
+            animation: fadeIn 1s ease-out 0.2s both;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .logo img {
+            width: 80px;
+            height: 80px;
+            filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+        }
+        
+        .badge {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 8px 20px;
+            border-radius: 30px;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: 30px;
+            animation: fadeIn 1s ease-out 0.4s both;
+            backdrop-filter: blur(10px);
+        }
+        
+        h1 {
+            font-size: clamp(32px, 5vw, 48px);
+            font-weight: 700;
+            margin-bottom: 20px;
+            letter-spacing: -1px;
+            background: linear-gradient(135deg, #ffffff 0%, #cccccc 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: fadeIn 1s ease-out 0.6s both;
+        }
+        
+        .message {
+            font-size: clamp(16px, 2.5vw, 20px);
+            color: rgba(255, 255, 255, 0.85);
+            margin-bottom: 40px;
+            line-height: 1.8;
+            animation: fadeIn 1s ease-out 0.8s both;
+        }
+        
+        .quote {
+            font-size: clamp(18px, 3vw, 24px);
+            font-style: italic;
+            color: rgba(255, 255, 255, 0.7);
+            margin: 50px 0;
+            padding: 30px;
+            border-left: 3px solid rgba(255, 255, 255, 0.3);
+            text-align: left;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 8px;
+            animation: fadeIn 1s ease-out 1s both;
+            position: relative;
+        }
+        
+        .quote::before {
+            content: '"';
+            font-size: 60px;
+            position: absolute;
+            top: -10px;
+            left: 15px;
+            color: rgba(255, 255, 255, 0.1);
+            font-family: Georgia, serif;
+        }
+        
+        .info {
+            font-size: clamp(14px, 2vw, 16px);
+            color: rgba(255, 255, 255, 0.6);
+            margin-bottom: 50px;
+            line-height: 1.8;
+            animation: fadeIn 1s ease-out 1.2s both;
+        }
+        
+        .signature {
+            margin-top: 60px;
+            padding-top: 30px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            animation: fadeIn 1s ease-out 1.4s both;
+        }
+        
+        .signature p {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.5);
+            margin-top: 10px;
+        }
+        
+        .back-link {
+            display: inline-block;
+            margin-top: 40px;
+            padding: 14px 32px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #ffffff;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            animation: fadeIn 1s ease-out 1.6s both;
+        }
+        
+        .back-link:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        .back-link:active {
+            transform: translateY(0);
+        }
+        
+        /* Decorative elements */
+        .decorative-line {
+            width: 60px;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            margin: 30px auto;
+            animation: fadeIn 1s ease-out 1s both;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+            
+            h1 {
+                font-size: 32px;
+            }
+            
+            .message {
+                font-size: 16px;
+            }
+            
+            .quote {
+                font-size: 18px;
+                padding: 20px;
+            }
+        }
+        
+        /* Loading animation */
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.5;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">
+            <img src="/images/PCS logo.svg" alt="Projek Cuti Sem Logo" width="80" height="80">
+        </div>
+        
+        <div class="badge">Exclusive Access</div>
+        
+        <h1>EXCLUSIVE ACCESS CLOSED</h1>
+        
+        <div class="message">
+            Thank you for your interest in the <strong>PCS X WORKSHIRT COLLECTION</strong>.
+            <br><br>
+            This exclusive early access is now closed.
+        </div>
+        
+        <div class="decorative-line"></div>
+        
+        <div class="quote">
+            "You don't follow trends. You set them."
+        </div>
+        
+        <div class="info">
+            If you missed this round, don't worry – we'll be back with more limited releases in the future.
+            <br><br>
+            Stay tuned and make sure you're on our circle to get first access next time.
+        </div>
+        
+        <div class="signature">
+            <p>Sincerely,<br>projectcutisem.com</p>
+        </div>
+        
+        <a href="/" class="back-link">← Back to Home</a>
+    </div>
+</body>
+</html>
+        <?php
+        exit;
+    }
+} catch (Exception $e) {
+    // If there's an error checking the setting, log it but continue normally
+    error_log('Error checking orders_closed setting: ' . $e->getMessage());
+    // Continue to show order page if check fails (fail open)
+}
+
 // Auto-create orders table if not exists
 function createOrdersTableIfNotExists() {
     try {
