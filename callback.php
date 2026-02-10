@@ -59,6 +59,10 @@ if ($statusId == 1) {
         $pdo = getDBConnection();
         
         // Update order status to paid
+        // IMPORTANT: Only update status, NEVER modify amounts (final_amount, pushed_amount, etc.)
+        // Amounts are set during checkout and must remain unchanged
+        // TEMPORARY WORKAROUND: Gateway fee absorption is handled in checkout.php
+        // This callback only confirms payment and updates status
         $updateStmt = $pdo->prepare("
             UPDATE orders 
             SET status = 'paid' 

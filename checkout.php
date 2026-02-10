@@ -353,6 +353,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             $pdo = getDBConnection();
             
             // Prepare insert statement with all new fields including order_type, delivery_fee, final_amount
+            // NOTE: gateway_fee, pushed_amount, net_received will be updated after order creation
+            // This is part of TEMPORARY WORKAROUND for gateway fee absorption
             $stmt = $pdo->prepare("
                 INSERT INTO orders (
                     name, fullname, email, phone, 
@@ -422,31 +424,73 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             // ============================================
             // STEP 8: Prepare Bill Data for ToyyibPay
             // ============================================
+            // TEMPORARY WORKAROUND: Gateway Fee Absorption
+            // Company absorbs RM1.00 ToyyibPay gateway fee
+            // Customer sees and pays original price, but we deduct RM1 when pushing to gateway
+            // TODO: Remove this workaround when implementing proper fee handling system
+            // ============================================
+            
             // Validate final amount
             if ($finalAmount <= 0) {
                 throw new Exception('Invalid order amount. Final amount must be greater than 0.');
             }
             
-            // Convert RM to sen (RM50.00 = 5000 sen)
-            // IMPORTANT: Use finalAmount which includes discount
-            $billAmount = (int)round($finalAmount * 100);
+            // Gateway fee constant (RM1.00)
+            $gatewayFee = 1.00;
             
-            // Log bill amount for debugging
-            error_log('=== CHECKOUT PAYMENT CALCULATION ===');
+            // Calculate pushed amount (amount sent to ToyyibPay)
+            // This is the amount customer will actually pay (original - gateway fee)
+            $pushedAmount = round($finalAmount - $gatewayFee, 2);
+            
+            // Validation: Prevent zero or negative payment amounts
+            if ($pushedAmount <= 0) {
+                throw new Exception('Invalid payment amount after gateway fee deduction. Final amount: RM ' . number_format($finalAmount, 2) . ', Pushed amount: RM ' . number_format($pushedAmount, 2) . '. Order total must be greater than RM1.00.');
+            }
+            
+            // Net received is same as pushed amount (company absorbs the fee)
+            $netReceived = $pushedAmount;
+            
+            // Update all orders with gateway fee information
+            // Store gateway_fee, pushed_amount, net_received for internal reference
+            $updateGatewayFeeStmt = $pdo->prepare("
+                UPDATE orders 
+                SET gateway_fee = :gateway_fee,
+                    pushed_amount = :pushed_amount,
+                    net_received = :net_received
+                WHERE billExternalReferenceNo = :ref_no
+            ");
+            $updateGatewayFeeStmt->execute([
+                ':gateway_fee' => $gatewayFee,
+                ':pushed_amount' => $pushedAmount,
+                ':net_received' => $netReceived,
+                ':ref_no' => $billExternalReferenceNo
+            ]);
+            
+            // Convert RM to sen (RM50.00 = 5000 sen)
+            // IMPORTANT: Use pushedAmount (not finalAmount) when sending to ToyyibPay
+            // This is the TEMPORARY WORKAROUND - we deduct RM1 here
+            $billAmount = (int)round($pushedAmount * 100);
+            
+            // Log payment calculation for debugging
+            error_log('=== CHECKOUT PAYMENT CALCULATION (WITH GATEWAY FEE ABSORPTION) ===');
             error_log('Cart Subtotal: RM ' . number_format($cartSubtotal, 2));
             error_log('Discount Amount: RM ' . number_format($discountAmount, 2));
-            error_log('Final Amount (after discount): RM ' . number_format($finalAmount, 2));
-            error_log('Bill Amount (sen): ' . $billAmount);
+            error_log('Final Amount (original, shown to customer): RM ' . number_format($finalAmount, 2));
+            error_log('Gateway Fee (absorbed by company): RM ' . number_format($gatewayFee, 2));
+            error_log('Pushed Amount (sent to ToyyibPay): RM ' . number_format($pushedAmount, 2));
+            error_log('Net Received (actual amount): RM ' . number_format($netReceived, 2));
+            error_log('Bill Amount (sen, sent to gateway): ' . $billAmount);
             error_log('Promo Code: ' . ($promoCode ?: 'none'));
+            error_log('⚠️  TEMPORARY WORKAROUND: Company absorbing RM1 gateway fee');
             error_log('====================================');
             
             // Validate bill amount
             if ($billAmount <= 0) {
-                throw new Exception('Invalid bill amount. Amount must be greater than 0. Final amount: ' . $finalAmount);
+                throw new Exception('Invalid bill amount. Amount must be greater than 0. Pushed amount: ' . $pushedAmount);
             }
             
-            // Double-check: Ensure billAmount matches finalAmount
-            $expectedBillAmount = (int)round($finalAmount * 100);
+            // Double-check: Ensure billAmount matches pushedAmount
+            $expectedBillAmount = (int)round($pushedAmount * 100);
             if ($billAmount !== $expectedBillAmount) {
                 error_log('WARNING: Bill amount mismatch! Calculated: ' . $billAmount . ', Expected: ' . $expectedBillAmount);
                 $billAmount = $expectedBillAmount; // Use correct value
@@ -803,9 +847,6 @@ if ($finalAmount < 0) {
                         <div class="order-total-row final">
                             <span>Total Amount to Pay:</span>
                             <span id="finalTotalDisplay">RM <?php echo number_format($finalAmount, 2); ?></span>
-                        </div>
-                        <div class="order-summary-note">
-                            <p><strong>Note:</strong> A RM 1.00 transaction fee will be added for online banking payments. This fee is not included in the total above and will be shown during payment.</p>
                         </div>
                     </div>
                 </div>
