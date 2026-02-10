@@ -56,7 +56,7 @@ require_once __DIR__ . '/includes/toyyibpay_config.php';
 $baseUrl = 'https://projectcutisem.com';
 
 // Product Configuration
-define('PRODUCT_NAME', 'WORKSHIRT COLLECTION');
+define('PRODUCT_NAME', 'PCS Half-Zip Workshirt');
 define('PRICE_PER_SHIRT', 50.00); // RM50 per baju
 
 // Delivery Configuration
@@ -463,18 +463,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             
             // Create short description within 100 character limit
             if ($totalItems == 1) {
-                // Single item: "WORKSHIRT COLLECTION - Classic Black, Size M, Qty 2"
+                // Single item: "PCS Half-Zip Workshirt - Classic Black, Size M, Qty 2"
                 $item = $cart[0];
                 $billDescription = sprintf(
-                    "WORKSHIRT COLLECTION - %s, Size %s, Qty %d",
+                    "PCS Half-Zip Workshirt - %s, Size %s, Qty %d",
                     $item['variant_name'],
                     $item['size'],
                     $item['quantity']
                 );
             } else {
-                // Multiple items: "WORKSHIRT COLLECTION - 3 items, Total Qty 5"
+                // Multiple items: "PCS Half-Zip Workshirt - 3 items, Total Qty 5"
                 $billDescription = sprintf(
-                    "WORKSHIRT COLLECTION - %d items, Total Qty %d",
+                    "PCS Half-Zip Workshirt - %d items, Total Qty %d",
                     $totalItems,
                     $totalQuantity
                 );
@@ -503,7 +503,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                 'categoryCode' => $toyyibpayConfig['category_code'],
                 
                 // Bill information
-                'billName' => 'WORKSHIRT COLLECTION Order',
+                'billName' => 'PCS Half-Zip Workshirt Order',
                 'billDescription' => $billDescription,
                 
                 // Price setting: 1 = Fixed amount, 2 = Multiple options

@@ -85,7 +85,8 @@ try {
     $product = $productStmt->fetch();
     
     if ($product) {
-        define('PRODUCT_NAME', $product['name']);
+        // Override product name to always display "PCS Half-Zip Workshirt"
+        define('PRODUCT_NAME', 'PCS Half-Zip Workshirt');
         define('PRICE_PER_SHIRT', floatval($product['price']));
         define('ORIGINAL_PRICE', 120.00); // Marketing original price for strikethrough display
         $productStockStatus = $product['stock_status'];
@@ -137,7 +138,7 @@ try {
         }
     } else {
         // Fallback to defaults if no product found
-        define('PRODUCT_NAME', 'WORKSHIRT COLLECTION');
+        define('PRODUCT_NAME', 'PCS Half-Zip Workshirt');
         define('PRICE_PER_SHIRT', 50.00);
         define('ORIGINAL_PRICE', 120.00); // Marketing original price for strikethrough display
         $productStockStatus = 'pre_order';
@@ -164,7 +165,7 @@ try {
 } catch (PDOException $e) {
     // Fallback to defaults on database error
     error_log('Error loading product from database: ' . $e->getMessage());
-    define('PRODUCT_NAME', 'WORKSHIRT COLLECTION');
+    define('PRODUCT_NAME', 'PCS Half-Zip Workshirt');
     define('PRICE_PER_SHIRT', 50.00);
     define('ORIGINAL_PRICE', 120.00); // Marketing original price for strikethrough display
     $productStockStatus = 'pre_order';
