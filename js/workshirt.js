@@ -92,7 +92,7 @@ class Slider {
       
       // Use local morph images for WebGL morphing background (optimized: PNG where available)
       this.images = [
-        'images/morph1.svg',  // Slide 1 background (consider converting to PNG for better performance)
+        'images/morph1.png',  // Slide 1 background (optimized PNG)
         'images/morph2.png',  // Slide 2 background (optimized PNG)
         'images/morph3.png'   // Slide 3 background (optimized PNG)
       ]

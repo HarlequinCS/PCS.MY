@@ -79,9 +79,10 @@
   <link rel="preload" as="image" href="images/hijaufront.svg" fetchpriority="high" type="image/svg+xml">
   <link rel="preload" as="image" href="images/hijauback.svg" fetchpriority="high" type="image/svg+xml">
   
-  <!-- Preload WebGL morph backgrounds (PNG optimized) - Only first two for faster initial load -->
+  <!-- Preload WebGL morph backgrounds (PNG optimized) -->
+  <link rel="preload" as="image" href="images/morph1.png" fetchpriority="high">
   <link rel="preload" as="image" href="images/morph2.png" fetchpriority="high">
-  <link rel="preload" as="image" href="images/morph3.png" fetchpriority="low">
+  <link rel="preload" as="image" href="images/morph3.png" fetchpriority="high">
   
   <!-- Preload critical CSS - Non-blocking load with instant swap -->
   <link rel="preload" href="css/workshirt.css?v=29" as="style" onload="this.onload=null;this.rel='stylesheet'">
