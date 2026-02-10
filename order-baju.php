@@ -187,7 +187,7 @@ try {
 }
 
 // Size Options
-$sizes = ['S', 'M', 'L', 'XL', 'XXL'];
+$sizes = ['S', 'M', 'L', 'XL', '2XL', '3XL'];
 
 // ============================================
 // STEP 3: Handle Add to Cart
@@ -640,47 +640,50 @@ foreach ($_SESSION['cart'] as $item) {
                 <h2>Size Chart</h2>
                 <button class="size-chart-close" id="sizeChartClose">&times;</button>
             </div>
+            <div class="size-chart-illustration">
+                <img src="images/MockUp size.svg" alt="Size chart illustration showing pit (width) and length measurements" class="size-chart-image">
+            </div>
             <div class="size-chart-table-wrapper">
                 <table class="size-chart-table">
                     <thead>
                         <tr>
                             <th>Size</th>
-                            <th>Chest (cm)</th>
+                            <th>Pit(Width) (cm)</th>
                             <th>Length (cm)</th>
-                            <th>Shoulder (cm)</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr>
                             <td><strong>S</strong></td>
-                            <td>98-102</td>
-                            <td>68</td>
-                            <td>45</td>
+                            <td>50</td>
+                            <td>66</td>
                         </tr>
                         <tr>
                             <td><strong>M</strong></td>
-                            <td>106-110</td>
-                            <td>70</td>
-                            <td>47</td>
+                            <td>52</td>
+                            <td>68</td>
                         </tr>
                         <tr>
                             <td><strong>L</strong></td>
-                            <td>114-118</td>
-                            <td>72</td>
-                            <td>49</td>
+                            <td>54</td>
+                            <td>71</td>
                         </tr>
                         <tr>
                             <td><strong>XL</strong></td>
-                            <td>122-126</td>
+                            <td>56</td>
                             <td>74</td>
-                            <td>51</td>
                         </tr>
                         <tr>
-                            <td><strong>XXL</strong></td>
-                            <td>130-134</td>
-                            <td>76</td>
-                            <td>53</td>
+                            <td><strong>2XL</strong></td>
+                            <td>58</td>
+                            <td>77</td>
                         </tr>
+                        <tr>
+                            <td><strong>3XL</strong></td>
+                            <td>60</td>
+                            <td>80</td>
+                        </tr>
+
                     </tbody>
                 </table>
             </div>

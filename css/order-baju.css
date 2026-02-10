@@ -845,6 +845,20 @@ body {
     color: #fff;
 }
 
+.size-chart-illustration {
+    padding: 1.5rem 2rem 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.size-chart-image {
+    max-width: 100%;
+    height: auto;
+    max-height: 300px;
+    object-fit: contain;
+}
+
 .size-chart-table-wrapper {
     padding: 2rem;
     overflow-x: auto;
@@ -1388,6 +1402,14 @@ body {
     .size-chart-header,
     .cart-popup-header {
         padding: 1.5rem;
+    }
+    
+    .size-chart-illustration {
+        padding: 1rem 1.5rem 0;
+    }
+    
+    .size-chart-image {
+        max-height: 200px;
     }
     
     .size-chart-table-wrapper {
