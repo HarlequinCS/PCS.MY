@@ -118,16 +118,25 @@ foreach ($stats as $stat) {
         <!-- Statistics -->
         <div class="stats-grid">
             <?php 
-            $totalOrders = array_sum(array_column($statusCounts, 'count'));
-            $totalRevenue = array_sum(array_column($statusCounts, 'total'));
+            // Calculate totals excluding cancelled orders
+            $totalOrders = 0;
+            $totalRevenue = 0;
+            foreach ($statusCounts as $status => $data) {
+                if ($status !== 'cancelled') {
+                    $totalOrders += $data['count'];
+                    $totalRevenue += $data['total'];
+                }
+            }
             ?>
             <div class="stat-card">
                 <h3>Total Orders</h3>
                 <div class="stat-value"><?php echo number_format($totalOrders); ?></div>
+                <small style="color: #6b7280; font-size: 0.75rem;">(Excluding cancelled)</small>
             </div>
             <div class="stat-card">
                 <h3>Total Revenue</h3>
                 <div class="stat-value">RM <?php echo number_format($totalRevenue, 2); ?></div>
+                <small style="color: #6b7280; font-size: 0.75rem;">(Excluding cancelled)</small>
             </div>
             <div class="stat-card">
                 <h3>Pending</h3>
@@ -136,6 +145,11 @@ foreach ($stats as $stat) {
             <div class="stat-card">
                 <h3>Paid</h3>
                 <div class="stat-value"><?php echo number_format($statusCounts['paid']['count'] ?? 0); ?></div>
+            </div>
+            <div class="stat-card" style="border-left-color: #ef4444;">
+                <h3>Cancelled</h3>
+                <div class="stat-value" style="color: #ef4444;"><?php echo number_format($statusCounts['cancelled']['count'] ?? 0); ?></div>
+                <small style="color: #6b7280; font-size: 0.75rem;">Excluded from totals</small>
             </div>
         </div>
         

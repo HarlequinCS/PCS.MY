@@ -682,6 +682,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         });
         $_SESSION['cart'] = array_values($_SESSION['cart']); // Re-index array
         
+        // If cart is now empty, ensure it's an empty array (not null or false)
+        if (empty($_SESSION['cart'])) {
+            $_SESSION['cart'] = [];
+        }
+        
         // Calculate new cart total
         $newCartTotal = 0;
         foreach ($_SESSION['cart'] as $item) {
@@ -1304,6 +1309,12 @@ foreach ($_SESSION['cart'] as $item) {
                 return;
             }
 
+            // Prevent double submission
+            if (addToCartBtn.disabled) {
+                e.preventDefault();
+                return;
+            }
+
             // Show loading state
             addToCartBtn.disabled = true;
             btnText.style.display = 'none';
@@ -1314,6 +1325,12 @@ foreach ($_SESSION['cart'] as $item) {
         function removeFromCart(itemId) {
             if (!confirm('Adakah anda pasti mahu membuang item ini?')) {
                 return;
+            }
+            
+            // Disable form submission temporarily to prevent adding items back
+            if (orderForm) {
+                orderForm.style.pointerEvents = 'none';
+                orderForm.style.opacity = '0.6';
             }
             
             const formData = new FormData();
@@ -1359,18 +1376,79 @@ foreach ($_SESSION['cart'] as $item) {
                                     badge.textContent = data.cart_count;
                                     cartFab.appendChild(badge);
                                 }
+                                
+                                // Re-enable form
+                                if (orderForm) {
+                                    orderForm.style.pointerEvents = '';
+                                    orderForm.style.opacity = '';
+                                }
                             } else {
-                                // Cart is empty - reload to show empty cart message
+                                // Cart is empty - show empty cart message without reloading
                                 if (cartFabBadge) cartFabBadge.remove();
-                                setTimeout(() => location.reload(), 300);
+                                
+                                // Get cart popup elements
+                                const cartItemsList = document.getElementById('cartItemsList');
+                                const cartSummary = cartItemsList ? cartItemsList.nextElementSibling : null;
+                                const checkoutBtn = cartSummary ? cartSummary.nextElementSibling : null;
+                                
+                                // Remove cart items list, summary, and checkout button
+                                if (cartItemsList) cartItemsList.remove();
+                                if (cartSummary) cartSummary.remove();
+                                if (checkoutBtn) checkoutBtn.remove();
+                                
+                                // Create and insert empty cart message
+                                const cartPopupContent = document.querySelector('.cart-popup-content');
+                                if (cartPopupContent) {
+                                    const emptyCartDiv = document.createElement('div');
+                                    emptyCartDiv.className = 'cart-empty';
+                                    emptyCartDiv.innerHTML = `
+                                        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.3">
+                                            <path d="M9 2L7 6M17 2l2 4M3 10h18l-2 8H5l-2-8zM10 18a1 1 0 11-2 0 1 1 0 012 0zM20 18a1 1 0 11-2 0 1 1 0 012 0z"/>
+                                        </svg>
+                                        <p>Your cart is empty</p>
+                                    `;
+                                    
+                                    // Insert after header
+                                    const cartHeader = cartPopupContent.querySelector('.cart-popup-header');
+                                    if (cartHeader && cartHeader.nextSibling) {
+                                        cartPopupContent.insertBefore(emptyCartDiv, cartHeader.nextSibling);
+                                    } else {
+                                        cartPopupContent.appendChild(emptyCartDiv);
+                                    }
+                                }
+                                
+                                // Re-enable form after a short delay
+                                setTimeout(() => {
+                                    if (orderForm) {
+                                        orderForm.style.pointerEvents = '';
+                                        orderForm.style.opacity = '';
+                                    }
+                                }, 500);
                             }
                         }, 300);
+                    } else {
+                        // Item element not found, re-enable form anyway
+                        if (orderForm) {
+                            orderForm.style.pointerEvents = '';
+                            orderForm.style.opacity = '';
+                        }
+                    }
+                } else {
+                    // Re-enable form on error
+                    if (orderForm) {
+                        orderForm.style.pointerEvents = '';
+                        orderForm.style.opacity = '';
                     }
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
                 alert('Error removing item. Please try again.');
+                // Re-enable form on error
+                if (orderForm) {
+                    orderForm.style.pointerEvents = '';
+                    orderForm.style.opacity = '';
+                }
             });
         }
 

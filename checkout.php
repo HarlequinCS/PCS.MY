@@ -96,29 +96,40 @@ $malaysiaStates = [
 // STEP 3: Calculate Cart Totals
 // ============================================
 // Size Addon Prices (for sizes 3XL and above)
+// IMPORTANT: Must match order-baju.php exactly
 function getSizeAddonPrice($size) {
     $addonPrices = [
         '3XL' => 3.00,
-        '4XL' => 3.00,
+        '4XL' => 5.00,
         '5XL' => 5.00,
         '6XL' => 5.00
     ];
     return isset($addonPrices[$size]) ? $addonPrices[$size] : 0.00;
 }
 
-$cart = $_SESSION['cart'];
+$cart = $_SESSION['cart'] ?? [];
+// Safety check: ensure cart is an array
+if (!is_array($cart)) {
+    $cart = [];
+}
+
 $cartCount = count($cart);
 $cartSubtotal = 0;
 $totalBasePrice = 0;
 $totalSizeAddons = 0;
 
 foreach ($cart as $item) {
-    $cartSubtotal += $item['subtotal'];
+    // Safety check: ensure item has required fields
+    if (!isset($item['subtotal']) || !is_numeric($item['subtotal'])) {
+        continue; // Skip invalid items
+    }
+    
+    $cartSubtotal += floatval($item['subtotal']);
     
     // Calculate base price and size addons for detailed breakdown
     $itemSize = $item['size'] ?? '';
-    $itemQuantity = $item['quantity'] ?? 1;
-    $itemSizeAddon = isset($item['size_addon']) ? $item['size_addon'] : getSizeAddonPrice($itemSize);
+    $itemQuantity = isset($item['quantity']) ? intval($item['quantity']) : 1;
+    $itemSizeAddon = isset($item['size_addon']) ? floatval($item['size_addon']) : getSizeAddonPrice($itemSize);
     $itemBasePrice = PRICE_PER_SHIRT * $itemQuantity;
     $itemSizeAddonTotal = $itemSizeAddon * $itemQuantity;
     
@@ -399,17 +410,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             
             // Insert each cart item as a separate order record
             foreach ($cart as $item) {
-                // Calculate item amount (proportional discount if applicable)
-                $itemAmount = $item['subtotal'];
-                $itemDiscount = 0;
-                if ($discountAmount > 0) {
-                    // Apply proportional discount to each item
-                    $itemDiscount = ($item['subtotal'] / $cartSubtotal) * $discountAmount;
-                    $itemAmount = $item['subtotal'] - $itemDiscount;
+                // Safety check: ensure item has required fields
+                if (!isset($item['subtotal']) || !is_numeric($item['subtotal']) || $item['subtotal'] <= 0) {
+                    error_log('Invalid cart item skipped: ' . json_encode($item));
+                    continue; // Skip invalid items
                 }
                 
-                // Calculate item final amount (proportional delivery fee + item amount - item discount)
-                $itemDeliveryFee = ($item['subtotal'] / $cartSubtotal) * $deliveryFee;
+                // Prevent division by zero
+                if ($cartSubtotal <= 0) {
+                    throw new Exception('Invalid cart subtotal. Cannot process order.');
+                }
+                
+                // Calculate item amount (proportional discount if applicable)
+                $itemSubtotal = floatval($item['subtotal']);
+                $itemAmount = $itemSubtotal;
+                $itemDiscount = 0;
+                if ($discountAmount > 0) {
+                    // Apply proportional discount to each item (based on original subtotal)
+                    $itemDiscount = ($itemSubtotal / $cartSubtotal) * $discountAmount;
+                    $itemAmount = $itemSubtotal - $itemDiscount;
+                }
+                
+                // Calculate item final amount (proportional delivery fee + item amount after discount)
+                // Delivery fee is proportional to original subtotal, not discounted amount
+                $itemDeliveryFee = ($itemSubtotal / $cartSubtotal) * $deliveryFee;
                 $itemFinalAmount = $itemAmount + $itemDeliveryFee;
                 
                 $stmt->execute([
