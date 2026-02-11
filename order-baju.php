@@ -490,7 +490,7 @@ $sizes = ['S', 'M', 'L', 'XL', '2XL', '3XL', '4XL', '5XL', '6XL'];
 function getSizeAddonPrice($size) {
     $addonPrices = [
         '3XL' => 3.00,
-        '4XL' => 3.00,
+        '4XL' => 5.00,
         '5XL' => 5.00,
         '6XL' => 5.00
     ];
@@ -506,7 +506,7 @@ function getSizeChartData() {
         'XL' => ['width' => 56, 'length' => 74, 'addon' => 0.00],
         '2XL' => ['width' => 58, 'length' => 77, 'addon' => 0.00],
         '3XL' => ['width' => 60, 'length' => 80, 'addon' => 3.00],
-        '4XL' => ['width' => 62, 'length' => 83, 'addon' => 3.00],
+        '4XL' => ['width' => 62, 'length' => 83, 'addon' => 5.00],
         '5XL' => ['width' => 64, 'length' => 85, 'addon' => 5.00],
         '6XL' => ['width' => 66, 'length' => 87, 'addon' => 5.00]
     ];
