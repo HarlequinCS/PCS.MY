@@ -95,11 +95,35 @@ $malaysiaStates = [
 // ============================================
 // STEP 3: Calculate Cart Totals
 // ============================================
+// Size Addon Prices (for sizes 3XL and above)
+function getSizeAddonPrice($size) {
+    $addonPrices = [
+        '3XL' => 3.00,
+        '4XL' => 3.00,
+        '5XL' => 5.00,
+        '6XL' => 5.00
+    ];
+    return isset($addonPrices[$size]) ? $addonPrices[$size] : 0.00;
+}
+
 $cart = $_SESSION['cart'];
 $cartCount = count($cart);
 $cartSubtotal = 0;
+$totalBasePrice = 0;
+$totalSizeAddons = 0;
+
 foreach ($cart as $item) {
     $cartSubtotal += $item['subtotal'];
+    
+    // Calculate base price and size addons for detailed breakdown
+    $itemSize = $item['size'] ?? '';
+    $itemQuantity = $item['quantity'] ?? 1;
+    $itemSizeAddon = isset($item['size_addon']) ? $item['size_addon'] : getSizeAddonPrice($itemSize);
+    $itemBasePrice = PRICE_PER_SHIRT * $itemQuantity;
+    $itemSizeAddonTotal = $itemSizeAddon * $itemQuantity;
+    
+    $totalBasePrice += $itemBasePrice;
+    $totalSizeAddons += $itemSizeAddonTotal;
 }
 
 // Get order type from session or default to 'delivery'
@@ -800,7 +824,13 @@ if ($finalAmount < 0) {
                     </div>
                     
                     <div class="cart-items-summary">
-                        <?php foreach ($cart as $item): ?>
+                        <?php foreach ($cart as $item): 
+                            $itemSize = $item['size'] ?? '';
+                            $itemQuantity = $item['quantity'] ?? 1;
+                            $itemSizeAddon = isset($item['size_addon']) ? $item['size_addon'] : getSizeAddonPrice($itemSize);
+                            $itemBasePrice = PRICE_PER_SHIRT * $itemQuantity;
+                            $itemSizeAddonTotal = $itemSizeAddon * $itemQuantity;
+                        ?>
                             <div class="cart-summary-item">
                                 <img src="<?php echo htmlspecialchars($item['variant_image']); ?>" 
                                      alt="<?php echo htmlspecialchars($item['variant_name']); ?>"
@@ -808,6 +838,12 @@ if ($finalAmount < 0) {
                                 <div class="cart-summary-item-details">
                                     <h4><?php echo htmlspecialchars($item['variant_name']); ?></h4>
                                     <p>Size: <?php echo htmlspecialchars($item['size']); ?> | Quantity: <?php echo $item['quantity']; ?></p>
+                                    <?php if ($itemSizeAddon > 0): ?>
+                                        <p style="font-size: 0.85rem; color: #666; margin-top: 0.25rem;">
+                                            Base: RM <?php echo number_format(PRICE_PER_SHIRT, 2); ?> × <?php echo $itemQuantity; ?> 
+                                            + Size Addon: RM <?php echo number_format($itemSizeAddon, 2); ?> × <?php echo $itemQuantity; ?>
+                                        </p>
+                                    <?php endif; ?>
                                 </div>
                                 <div class="cart-summary-item-price">
                                     RM <?php echo number_format($item['subtotal'], 2); ?>
@@ -830,6 +866,22 @@ if ($finalAmount < 0) {
                     </div>
                     
                     <div class="order-total">
+                        <div style="margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid #e0e0e0;">
+                            <h3 style="font-size: 1rem; font-weight: 600; margin-bottom: 0.75rem; color: #333;">Order Breakdown</h3>
+                            
+                            <div class="order-total-row" style="font-size: 0.9rem; color: #666;">
+                                <span>Base Price (<?php echo $cartCount; ?> item(s)):</span>
+                                <span>RM <?php echo number_format($totalBasePrice, 2); ?></span>
+                            </div>
+                            
+                            <?php if ($totalSizeAddons > 0): ?>
+                            <div class="order-total-row" style="font-size: 0.9rem; color: #666;">
+                                <span>Size Addons (3XL+):</span>
+                                <span>+ RM <?php echo number_format($totalSizeAddons, 2); ?></span>
+                            </div>
+                            <?php endif; ?>
+                        </div>
+                        
                         <div class="order-total-row">
                             <span>Subtotal:</span>
                             <span>RM <?php echo number_format($cartSubtotal, 2); ?></span>
@@ -847,6 +899,15 @@ if ($finalAmount < 0) {
                         <div class="order-total-row final">
                             <span>Total Amount to Pay:</span>
                             <span id="finalTotalDisplay">RM <?php echo number_format($finalAmount, 2); ?></span>
+                        </div>
+                        
+                        <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #e0e0e0; font-size: 0.85rem; color: #999;">
+                            <p style="margin: 0.25rem 0;">
+                                <strong>Note:</strong> Payment gateway fee (RM 1.00) is absorbed by the company.
+                            </p>
+                            <p style="margin: 0.25rem 0;">
+                                Amount sent to payment gateway: RM <?php echo number_format(max(0, $finalAmount - 1.00), 2); ?>
+                            </p>
                         </div>
                     </div>
                 </div>

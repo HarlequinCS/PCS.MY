@@ -484,7 +484,33 @@ try {
 }
 
 // Size Options
-$sizes = ['S', 'M', 'L', 'XL', '2XL', '3XL'];
+$sizes = ['S', 'M', 'L', 'XL', '2XL', '3XL', '4XL', '5XL', '6XL'];
+
+// Size Addon Prices (for sizes 3XL and above)
+function getSizeAddonPrice($size) {
+    $addonPrices = [
+        '3XL' => 3.00,
+        '4XL' => 3.00,
+        '5XL' => 5.00,
+        '6XL' => 5.00
+    ];
+    return isset($addonPrices[$size]) ? $addonPrices[$size] : 0.00;
+}
+
+// Size Chart Data (width and length in cm)
+function getSizeChartData() {
+    return [
+        'S' => ['width' => 50, 'length' => 66, 'addon' => 0.00],
+        'M' => ['width' => 52, 'length' => 68, 'addon' => 0.00],
+        'L' => ['width' => 54, 'length' => 71, 'addon' => 0.00],
+        'XL' => ['width' => 56, 'length' => 74, 'addon' => 0.00],
+        '2XL' => ['width' => 58, 'length' => 77, 'addon' => 0.00],
+        '3XL' => ['width' => 60, 'length' => 80, 'addon' => 3.00],
+        '4XL' => ['width' => 62, 'length' => 83, 'addon' => 3.00],
+        '5XL' => ['width' => 64, 'length' => 85, 'addon' => 5.00],
+        '6XL' => ['width' => 66, 'length' => 87, 'addon' => 5.00]
+    ];
+}
 
 // ============================================
 // STEP 3: Handle Add to Cart
@@ -540,7 +566,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                     $messageType = 'error';
                 } else {
                     // Inventory check passed, proceed with adding to cart
-                    $itemTotal = PRICE_PER_SHIRT * $quantity;
+                    // Calculate price with size addon
+                    $sizeAddon = getSizeAddonPrice($size);
+                    $itemPrice = PRICE_PER_SHIRT + $sizeAddon;
+                    $itemTotal = $itemPrice * $quantity;
                     
                     $cartItem = [
                         'id' => uniqid('item_'),
@@ -549,7 +578,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                         'variant_image' => $variants[$variant]['image'],
                         'size' => $size,
                         'quantity' => $quantity,
-                        'price' => PRICE_PER_SHIRT,
+                        'price' => $itemPrice,
+                        'size_addon' => $sizeAddon,
                         'subtotal' => $itemTotal
                     ];
                     
@@ -560,7 +590,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             } catch (PDOException $e) {
                 error_log('Inventory check error: ' . $e->getMessage());
                 // Fail open - allow order if inventory check fails
-                $itemTotal = PRICE_PER_SHIRT * $quantity;
+                // Calculate price with size addon
+                $sizeAddon = getSizeAddonPrice($size);
+                $itemPrice = PRICE_PER_SHIRT + $sizeAddon;
+                $itemTotal = $itemPrice * $quantity;
                 
                 $cartItem = [
                     'id' => uniqid('item_'),
@@ -569,7 +602,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                     'variant_image' => $variants[$variant]['image'],
                     'size' => $size,
                     'quantity' => $quantity,
-                    'price' => PRICE_PER_SHIRT,
+                    'price' => $itemPrice,
+                    'size_addon' => $sizeAddon,
                     'subtotal' => $itemTotal
                 ];
                 
@@ -579,7 +613,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             }
         } else {
             // pre_order status - allow ordering without inventory check
-            $itemTotal = PRICE_PER_SHIRT * $quantity;
+            // Calculate price with size addon
+            $sizeAddon = getSizeAddonPrice($size);
+            $itemPrice = PRICE_PER_SHIRT + $sizeAddon;
+            $itemTotal = $itemPrice * $quantity;
             
             $cartItem = [
                 'id' => uniqid('item_'),
@@ -588,7 +625,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                 'variant_image' => $variants[$variant]['image'],
                 'size' => $size,
                 'quantity' => $quantity,
-                'price' => PRICE_PER_SHIRT,
+                'price' => $itemPrice,
+                'size_addon' => $sizeAddon,
                 'subtotal' => $itemTotal
             ];
             
@@ -968,40 +1006,28 @@ foreach ($_SESSION['cart'] as $item) {
                             <th>Size</th>
                             <th>Pit(Width) (cm)</th>
                             <th>Length (cm)</th>
+                            <th>Addon Price</th>
                         </tr>
                     </thead>
                     <tbody>
+                        <?php 
+                        $sizeChartData = getSizeChartData();
+                        foreach ($sizes as $size): 
+                            $data = $sizeChartData[$size] ?? ['width' => 0, 'length' => 0, 'addon' => 0.00];
+                        ?>
                         <tr>
-                            <td><strong>S</strong></td>
-                            <td>50</td>
-                            <td>66</td>
+                            <td><strong><?php echo htmlspecialchars($size); ?></strong></td>
+                            <td><?php echo $data['width']; ?></td>
+                            <td><?php echo $data['length']; ?></td>
+                            <td>
+                                <?php if ($data['addon'] > 0): ?>
+                                    <strong>+RM <?php echo number_format($data['addon'], 2); ?></strong>
+                                <?php else: ?>
+                                    <span style="color: #999;">-</span>
+                                <?php endif; ?>
+                            </td>
                         </tr>
-                        <tr>
-                            <td><strong>M</strong></td>
-                            <td>52</td>
-                            <td>68</td>
-                        </tr>
-                        <tr>
-                            <td><strong>L</strong></td>
-                            <td>54</td>
-                            <td>71</td>
-                        </tr>
-                        <tr>
-                            <td><strong>XL</strong></td>
-                            <td>56</td>
-                            <td>74</td>
-                        </tr>
-                        <tr>
-                            <td><strong>2XL</strong></td>
-                            <td>58</td>
-                            <td>77</td>
-                        </tr>
-                        <tr>
-                            <td><strong>3XL</strong></td>
-                            <td>60</td>
-                            <td>80</td>
-                        </tr>
-
+                        <?php endforeach; ?>
                     </tbody>
                 </table>
             </div>
@@ -1091,6 +1117,19 @@ foreach ($_SESSION['cart'] as $item) {
         const ORIGINAL_PRICE = <?php echo ORIGINAL_PRICE; ?>;
         const SHOW_ORIGINAL_PRICE = PRICE_PER_SHIRT < ORIGINAL_PRICE;
         
+        // Size Addon Prices
+        const SIZE_ADDON_PRICES = {
+            'S': 0.00,
+            'M': 0.00,
+            'L': 0.00,
+            'XL': 0.00,
+            '2XL': 0.00,
+            '3XL': 3.00,
+            '4XL': 3.00,
+            '5XL': 5.00,
+            '6XL': 5.00
+        };
+        
         // DOM Elements
         const orderForm = document.getElementById('orderForm');
         const quantityInput = document.getElementById('quantityInput');
@@ -1099,6 +1138,7 @@ foreach ($_SESSION['cart'] as $item) {
         const totalPriceDisplay = document.getElementById('totalPriceDisplay');
         const originalTotalPriceDisplay = document.getElementById('originalTotalPriceDisplay');
         const variantRadios = document.querySelectorAll('input[name="variant"]');
+        const sizeRadios = document.querySelectorAll('input[name="size"]');
         const mainProductImage = document.getElementById('mainProductImage');
         const imagePlaceholder = document.getElementById('imagePlaceholder');
         const productImageWrapper = document.getElementById('productImageWrapper');
@@ -1126,7 +1166,10 @@ foreach ($_SESSION['cart'] as $item) {
         // Update Total Price
         function updateTotalPrice() {
             const quantity = parseInt(quantityInput.value) || 1;
-            const total = PRICE_PER_SHIRT * quantity;
+            const selectedSize = document.querySelector('input[name="size"]:checked');
+            const sizeAddon = selectedSize ? (SIZE_ADDON_PRICES[selectedSize.value] || 0) : 0;
+            const itemPrice = PRICE_PER_SHIRT + sizeAddon;
+            const total = itemPrice * quantity;
             totalPriceDisplay.textContent = total.toFixed(2);
             
             // Update original price total if strikethrough is shown
@@ -1135,6 +1178,11 @@ foreach ($_SESSION['cart'] as $item) {
                 originalTotalPriceDisplay.textContent = originalTotal.toFixed(2);
             }
         }
+        
+        // Update price when size changes
+        sizeRadios.forEach(radio => {
+            radio.addEventListener('change', updateTotalPrice);
+        });
 
         // Quantity Controls
         quantityDecrease.addEventListener('click', () => {
