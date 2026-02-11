@@ -294,6 +294,13 @@ foreach ($stats as $stat) {
                                 <td>
                                     <a href="#" onclick="openPriceAdjust(<?php echo $firstItem['id']; ?>, <?php echo $totalAmount; ?>); return false;" 
                                        class="price-adjust-link">Adjust Price</a>
+                                    <br>
+                                    <button type="button" 
+                                            onclick="deleteOrder('<?php echo htmlspecialchars($refNo, ENT_QUOTES); ?>'); return false;" 
+                                            class="btn btn-sm btn-danger" 
+                                            style="margin-top: 0.5rem; padding: 0.375rem 0.75rem; font-size: 0.875rem;">
+                                        Delete Order
+                                    </button>
                                 </td>
                             </tr>
                         <?php endforeach; ?>

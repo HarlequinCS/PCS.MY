@@ -473,7 +473,7 @@ ul, li {
   position: absolute;
   bottom: calc(1rem + 1.5vw);
   left: calc(2rem + 3vw);
-  z-index: 15; /* Lower z-index so it doesn't block images */
+  z-index: 25; /* Higher z-index so text appears above images */
   font-size: clamp(24px, calc(2rem + 2vw), 42px); /* Bigger: 24-32px mobile, 32-42px desktop */
   font-family: 'Pinyon Script', cursive; /* Elegant script font */
   text-transform: none; /* Keep original case for signature style */

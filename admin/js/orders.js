@@ -228,6 +228,60 @@ function updatePricePreview() {
     }
 }
 
+// Delete Order Function
+function deleteOrder(orderRef) {
+    if (!confirm(`Are you sure you want to delete order "${orderRef}"?\n\nThis action cannot be undone and will delete all items in this order.`)) {
+        return;
+    }
+    
+    // Find the button that was clicked and disable it
+    const buttons = document.querySelectorAll('button[onclick*="deleteOrder"]');
+    buttons.forEach(btn => {
+        if (btn.getAttribute('onclick').includes(orderRef)) {
+            btn.disabled = true;
+            btn.textContent = 'Deleting...';
+        }
+    });
+    
+    const formData = new FormData();
+    formData.append('order_ref', orderRef);
+    
+    fetch('/admin/ajax/delete_order.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification(`Order "${orderRef}" deleted successfully`, 'success');
+            // Reload page after a short delay to show the notification
+            setTimeout(() => {
+                location.reload();
+            }, 1000);
+        } else {
+            // Re-enable button on error
+            buttons.forEach(btn => {
+                if (btn.getAttribute('onclick').includes(orderRef)) {
+                    btn.disabled = false;
+                    btn.textContent = 'Delete Order';
+                }
+            });
+            showNotification(data.error || 'Failed to delete order', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        // Re-enable button on error
+        buttons.forEach(btn => {
+            if (btn.getAttribute('onclick').includes(orderRef)) {
+                btn.disabled = false;
+                btn.textContent = 'Delete Order';
+            }
+        });
+        showNotification('Error deleting order', 'error');
+    });
+}
+
 // Notification function (simple implementation)
 function showNotification(message, type) {
     // Create notification element
