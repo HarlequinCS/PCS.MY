@@ -668,14 +668,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     $itemId = $_POST['item_id'] ?? '';
     
     if (!empty($itemId) && isset($_SESSION['cart'])) {
+        // Find the item to get its subtotal before removing
+        $removedItemSubtotal = 0;
+        foreach ($_SESSION['cart'] as $item) {
+            if ($item['id'] === $itemId) {
+                $removedItemSubtotal = $item['subtotal'];
+                break;
+            }
+        }
+        
         $_SESSION['cart'] = array_filter($_SESSION['cart'], function($item) use ($itemId) {
             return $item['id'] !== $itemId;
         });
         $_SESSION['cart'] = array_values($_SESSION['cart']); // Re-index array
         
+        // Calculate new cart total
+        $newCartTotal = 0;
+        foreach ($_SESSION['cart'] as $item) {
+            $newCartTotal += $item['subtotal'];
+        }
+        
         // Return JSON response for AJAX
         header('Content-Type: application/json');
-        echo json_encode(['success' => true, 'cart_count' => count($_SESSION['cart'])]);
+        echo json_encode([
+            'success' => true, 
+            'cart_count' => count($_SESSION['cart']),
+            'cart_total' => round($newCartTotal, 2),
+            'removed_subtotal' => $removedItemSubtotal
+        ]);
         exit;
     }
 }
@@ -1314,8 +1334,22 @@ foreach ($_SESSION['cart'] as $item) {
                         setTimeout(() => {
                             itemElement.remove();
                             
-                            // Update badge
+                            // Update cart summary
+                            const totalItemsElement = document.querySelector('.cart-summary-row:first-child span:last-child');
+                            const totalAmountElement = document.querySelector('.cart-total-amount');
+                            
                             if (data.cart_count > 0) {
+                                // Update total items count
+                                if (totalItemsElement) {
+                                    totalItemsElement.textContent = data.cart_count + ' item(s)';
+                                }
+                                
+                                // Update total amount
+                                if (totalAmountElement) {
+                                    totalAmountElement.textContent = 'RM ' + parseFloat(data.cart_total).toFixed(2);
+                                }
+                                
+                                // Update badge
                                 if (cartFabBadge) {
                                     cartFabBadge.textContent = data.cart_count;
                                 } else {
@@ -1326,9 +1360,9 @@ foreach ($_SESSION['cart'] as $item) {
                                     cartFab.appendChild(badge);
                                 }
                             } else {
+                                // Cart is empty - reload to show empty cart message
                                 if (cartFabBadge) cartFabBadge.remove();
-                                // Reload after a moment to show empty cart
-                                setTimeout(() => location.reload(), 500);
+                                setTimeout(() => location.reload(), 300);
                             }
                         }, 300);
                     }
