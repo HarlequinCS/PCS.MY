@@ -657,8 +657,10 @@ ul, li {
   position: absolute;
   left: 0;
   top: 0;
-  width: 100%;
-  height: 100%;
+  width: 100% !important;
+  height: 100% !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
   object-fit: contain;
   object-position: center;
   opacity: 1;
@@ -1634,8 +1636,10 @@ figure.logo img {
   }
   
   .slide__img img {
-    width: 100%;
-    height: 100%;
+    width: 100% !important;
+    height: 100% !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
     object-fit: contain; /* Maintain aspect ratio and full resolution */
     object-position: center;
   }
@@ -1926,8 +1930,10 @@ figure.logo img {
   }
   
   .slide__img img {
-    width: 100%;
-    height: 100%;
+    width: 100% !important;
+    height: 100% !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
     object-fit: contain; /* Maintain aspect ratio and full resolution */
     object-position: center;
   }

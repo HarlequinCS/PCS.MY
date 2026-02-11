@@ -368,10 +368,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         $finalAmount = 0.00;
     }
     
-    // Log discount calculation for debugging
-    error_log('Checkout - Cart Subtotal: ' . $cartSubtotal);
-    error_log('Checkout - Discount Amount: ' . $discountAmount);
-    error_log('Checkout - Final Amount: ' . $finalAmount);
+    // Debug logging (only in debug mode)
+    if (DEBUG_MODE) {
+        error_log('Checkout - Cart Subtotal: ' . $cartSubtotal);
+        error_log('Checkout - Discount Amount: ' . $discountAmount);
+        error_log('Checkout - Final Amount: ' . $finalAmount);
+    }
     error_log('Checkout - Promo Code: ' . ($promoCode ?? 'none'));
     
     // If no errors, process checkout
@@ -475,7 +477,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             // TEMPORARY WORKAROUND: Gateway Fee Absorption
             // Company absorbs RM1.00 ToyyibPay gateway fee
             // Customer sees and pays original price, but we deduct RM1 when pushing to gateway
-            // TODO: Remove this workaround when implementing proper fee handling system
+            // Note: Gateway fee absorption workaround - company absorbs RM1.00 fee
             // ============================================
             
             // Validate final amount
@@ -519,18 +521,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             // This is the TEMPORARY WORKAROUND - we deduct RM1 here
             $billAmount = (int)round($pushedAmount * 100);
             
-            // Log payment calculation for debugging
-            error_log('=== CHECKOUT PAYMENT CALCULATION (WITH GATEWAY FEE ABSORPTION) ===');
-            error_log('Cart Subtotal: RM ' . number_format($cartSubtotal, 2));
-            error_log('Discount Amount: RM ' . number_format($discountAmount, 2));
-            error_log('Final Amount (original, shown to customer): RM ' . number_format($finalAmount, 2));
-            error_log('Gateway Fee (absorbed by company): RM ' . number_format($gatewayFee, 2));
-            error_log('Pushed Amount (sent to ToyyibPay): RM ' . number_format($pushedAmount, 2));
-            error_log('Net Received (actual amount): RM ' . number_format($netReceived, 2));
-            error_log('Bill Amount (sen, sent to gateway): ' . $billAmount);
-            error_log('Promo Code: ' . ($promoCode ?: 'none'));
-            error_log('⚠️  TEMPORARY WORKAROUND: Company absorbing RM1 gateway fee');
-            error_log('====================================');
+            // Debug logging (only in debug mode)
+            if (DEBUG_MODE) {
+                error_log('=== CHECKOUT PAYMENT CALCULATION (WITH GATEWAY FEE ABSORPTION) ===');
+                error_log('Cart Subtotal: RM ' . number_format($cartSubtotal, 2));
+                error_log('Discount Amount: RM ' . number_format($discountAmount, 2));
+                error_log('Final Amount (original, shown to customer): RM ' . number_format($finalAmount, 2));
+                error_log('Gateway Fee (absorbed by company): RM ' . number_format($gatewayFee, 2));
+                error_log('Pushed Amount (sent to ToyyibPay): RM ' . number_format($pushedAmount, 2));
+                error_log('Net Received (actual amount): RM ' . number_format($netReceived, 2));
+                error_log('Bill Amount (sen, sent to gateway): ' . $billAmount);
+                error_log('Promo Code: ' . ($promoCode ?: 'none'));
+                error_log('⚠️  TEMPORARY WORKAROUND: Company absorbing RM1 gateway fee');
+                error_log('====================================');
+            }
             
             // Validate bill amount
             if ($billAmount <= 0) {
@@ -630,10 +634,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                 'billChargeToCustomer' => 0
             ];
             
-            // Log configuration and bill data for debugging
-            error_log('ToyyibPay Config Used - Endpoint: ' . $toyyibpayConfig['endpoint']);
-            error_log('ToyyibPay Config Used - Category Code: ' . $toyyibpayConfig['category_code']);
-            error_log('ToyyibPay Bill Data: ' . json_encode($billData, JSON_PRETTY_PRINT));
+            // Debug logging (only in debug mode)
+            if (DEBUG_MODE) {
+                error_log('ToyyibPay Config Used - Endpoint: ' . $toyyibpayConfig['endpoint']);
+                error_log('ToyyibPay Config Used - Category Code: ' . $toyyibpayConfig['category_code']);
+                error_log('ToyyibPay Bill Data: ' . json_encode($billData, JSON_PRETTY_PRINT));
+            }
             
             // ============================================
             // STEP 9: Call ToyyibPay API to Create Bill
@@ -680,8 +686,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                 throw new Exception('Invalid JSON response: ' . json_last_error_msg() . '. Response: ' . htmlspecialchars($response));
             }
             
-            // Log full response for debugging
-            error_log('ToyyibPay API Response: ' . json_encode($result, JSON_PRETTY_PRINT));
+            // Debug logging (only in debug mode)
+            if (DEBUG_MODE) {
+                error_log('ToyyibPay API Response: ' . json_encode($result, JSON_PRETTY_PRINT));
+            }
             
             // Check if result is empty or not an array
             if (empty($result) || !is_array($result)) {
@@ -698,9 +706,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             
             // Check if response contains BillCode (check both 'BillCode' and 'billcode' keys)
             if (!isset($result[0]['BillCode']) && !isset($result[0]['billcode'])) {
+                // Always log critical errors
                 error_log('BillCode Missing: Full Response: ' . json_encode($result, JSON_PRETTY_PRINT));
-                error_log('Response structure: ' . print_r($result, true));
-                error_log('Raw Response: ' . $response);
+                if (DEBUG_MODE) {
+                    error_log('Response structure: ' . print_r($result, true));
+                    error_log('Raw Response: ' . $response);
+                }
                 
                 // Show detailed error in debug mode
                 $errorMsg = 'BillCode not returned in response.';
@@ -729,7 +740,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             // ============================================
             // STEP 11: Redirect User to Payment Page
             // ============================================
-            // Log success
+            // Log success (always log critical operations)
             error_log('Bill created successfully: BillCode = ' . $billCode);
             
             // Get dynamic base URL based on current mode (staging/production)
@@ -1226,10 +1237,8 @@ if ($finalAmount < 0) {
         
         // Form validation
         document.getElementById('checkoutForm').addEventListener('submit', function(e) {
-            // Log promo code values before submit
             const promoCodeApplied = document.getElementById('promoCodeApplied').value;
             const promoDiscount = document.getElementById('promoDiscount').value;
-            // Form submission (logging removed for production)
             
             const fullname = document.getElementById('fullname').value.trim();
             const email = document.getElementById('email').value.trim();

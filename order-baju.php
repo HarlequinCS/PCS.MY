@@ -29,10 +29,7 @@ if (!headers_sent()) {
     header('Referrer-Policy: strict-origin-when-cross-origin');
 }
 
-
 // Session security configuration
-$isLocalhost = in_array($_SERVER['HTTP_HOST'] ?? '', ['localhost', '127.0.0.1', '::1']) || 
-               (isset($_SERVER['SERVER_ADDR']) && in_array($_SERVER['SERVER_ADDR'], ['127.0.0.1', '::1']));
 
 ini_set('session.cookie_httponly', 1);
 ini_set('session.use_only_cookies', 1);
@@ -571,38 +568,61 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             $message = 'Please select a size';
             $messageType = 'error';
         } elseif ($quantity < 1) {
-        $message = 'Quantity must be at least 1';
-        $messageType = 'error';
-    } else {
-        // Check product stock status and inventory
-        if (isset($productStockStatus) && $productStockStatus === 'out_of_stock') {
-            $message = 'This product is currently out of stock. Please check back later.';
+            $message = 'Quantity must be at least 1';
             $messageType = 'error';
-        } elseif (isset($productStockStatus) && $productStockStatus === 'in_stock') {
-            try {
-                $pdo = getDBConnection();
-                $inventoryStmt = $pdo->prepare("
-                    SELECT pi.quantity 
-                    FROM product_inventory pi
-                    JOIN product_variants pv ON pi.variant_id = pv.id
-                    WHERE pv.variant_key = :variant_key AND pi.size = :size
-                ");
-                $inventoryStmt->execute([
-                    ':variant_key' => $variant,
-                    ':size' => $size
-                ]);
-                $inventory = $inventoryStmt->fetch();
-                
-                $availableQty = $inventory ? intval($inventory['quantity']) : 0;
-                
-                if ($availableQty < $quantity) {
-                    if ($availableQty === 0) {
-                        $message = 'This variant and size combination is currently out of stock.';
+        } else {
+            // Check product stock status and inventory
+            if (isset($productStockStatus) && $productStockStatus === 'out_of_stock') {
+                $message = 'This product is currently out of stock. Please check back later.';
+                $messageType = 'error';
+            } elseif (isset($productStockStatus) && $productStockStatus === 'in_stock') {
+                try {
+                    $pdo = getDBConnection();
+                    $inventoryStmt = $pdo->prepare("
+                        SELECT pi.quantity 
+                        FROM product_inventory pi
+                        JOIN product_variants pv ON pi.variant_id = pv.id
+                        WHERE pv.variant_key = :variant_key AND pi.size = :size
+                    ");
+                    $inventoryStmt->execute([
+                        ':variant_key' => $variant,
+                        ':size' => $size
+                    ]);
+                    $inventory = $inventoryStmt->fetch();
+                    
+                    $availableQty = $inventory ? intval($inventory['quantity']) : 0;
+                    
+                    if ($availableQty < $quantity) {
+                        if ($availableQty === 0) {
+                            $message = 'This variant and size combination is currently out of stock.';
+                        } else {
+                            $message = "Only {$availableQty} unit(s) available for this variant and size. Please adjust your quantity.";
+                        }
+                        $messageType = 'error';
                     } else {
-                        $message = "Only {$availableQty} unit(s) available for this variant and size. Please adjust your quantity.";
+                        $sizeAddon = getSizeAddonPrice($size);
+                        $itemPrice = PRICE_PER_SHIRT + $sizeAddon;
+                        $itemTotal = $itemPrice * $quantity;
+                        
+                        $cartItem = [
+                            'id' => uniqid('item_'),
+                            'variant' => $variant,
+                            'variant_name' => $variants[$variant]['name'],
+                            'variant_image' => $variants[$variant]['image'],
+                            'size' => $size,
+                            'quantity' => $quantity,
+                            'price' => $itemPrice,
+                            'size_addon' => $sizeAddon,
+                            'subtotal' => $itemTotal
+                        ];
+                        
+                        $_SESSION['cart'][] = $cartItem;
+                        $message = 'Item successfully added to cart!';
+                        $messageType = 'success';
+                        regenerateCSRFToken();
                     }
-                    $messageType = 'error';
-                } else {
+                } catch (PDOException $e) {
+                    error_log('Inventory check error: ' . $e->getMessage());
                     $sizeAddon = getSizeAddonPrice($size);
                     $itemPrice = PRICE_PER_SHIRT + $sizeAddon;
                     $itemTotal = $itemPrice * $quantity;
@@ -622,9 +642,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                     $_SESSION['cart'][] = $cartItem;
                     $message = 'Item successfully added to cart!';
                     $messageType = 'success';
+                    regenerateCSRFToken();
                 }
-            } catch (PDOException $e) {
-                error_log('Inventory check error: ' . $e->getMessage());
+            } else {
                 $sizeAddon = getSizeAddonPrice($size);
                 $itemPrice = PRICE_PER_SHIRT + $sizeAddon;
                 $itemTotal = $itemPrice * $quantity;
@@ -644,27 +664,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                 $_SESSION['cart'][] = $cartItem;
                 $message = 'Item successfully added to cart!';
                 $messageType = 'success';
+                regenerateCSRFToken();
             }
-        } else {
-            $sizeAddon = getSizeAddonPrice($size);
-            $itemPrice = PRICE_PER_SHIRT + $sizeAddon;
-            $itemTotal = $itemPrice * $quantity;
-            
-            $cartItem = [
-                'id' => uniqid('item_'),
-                'variant' => $variant,
-                'variant_name' => $variants[$variant]['name'],
-                'variant_image' => $variants[$variant]['image'],
-                'size' => $size,
-                'quantity' => $quantity,
-                'price' => $itemPrice,
-                'size_addon' => $sizeAddon,
-                'subtotal' => $itemTotal
-            ];
-            
-            $_SESSION['cart'][] = $cartItem;
-            $message = 'Item successfully added to cart!';
-            $messageType = 'success';
         }
     }
 }
@@ -1171,6 +1172,9 @@ foreach ($_SESSION['cart'] as $item) {
         </div>
     </div>
 
+    <!-- Production-safe console wrapper -->
+    <script src="<?php echo getVersionedAsset('js/console-safe.js'); ?>"></script>
+    
     <!-- Image Lazy Loader - Enhanced with WebP support and preloading -->
     <script src="<?php echo getVersionedAsset('js/image-lazy-loader.js'); ?>"></script>
 

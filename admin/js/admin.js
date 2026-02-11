@@ -92,8 +92,7 @@ function setupMobileMenu() {
     mobileMenuToggle.style.pointerEvents = 'auto';
     mobileMenuToggle.style.cursor = 'pointer';
     
-    // Debug: Log when button is initialized
-    console.log('Mobile menu button initialized');
+    // Mobile menu button initialized
 }
 
 function setupEventListeners() {

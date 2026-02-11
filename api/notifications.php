@@ -4,8 +4,8 @@
  * Handles email subscription for "Coming Soon" notifications
  */
 
-// Enable error reporting for debugging
-error_reporting(E_ALL);
+// Production error handling
+error_reporting(0);
 ini_set('display_errors', 0);
 ini_set('log_errors', 1);
 
