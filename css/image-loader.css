@@ -1,0 +1,245 @@
+/**
+ * Image Lazy Loader Styles
+ * 
+ * Provides smooth fade-in animations and placeholder states
+ * for lazy-loaded images throughout the application.
+ */
+
+/* Base lazy image styles */
+.lazy-image {
+    width: 100%;
+    height: auto;
+    display: block;
+    transition: opacity 0.4s ease-in-out, transform 0.4s ease-in-out;
+    opacity: 0;
+    transform: translateY(10px); /* Subtle slide-up effect */
+}
+
+/* Loading state - show subtle opacity */
+.lazy-image.loading {
+    opacity: 0.3;
+    transform: translateY(5px);
+}
+
+/* Loaded state - full opacity with fade-in */
+.lazy-image.loaded {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Main product image specific - override for dynamic loading */
+.main-product-image.lazy-image {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.main-product-image.lazy-image.loaded {
+    opacity: 1;
+    display: block;
+}
+
+/**
+ * Placeholder Styles
+ * 
+ * Provides visual feedback while images are loading.
+ * Uses gradient background and animated spinner.
+ */
+.placeholder {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 50%, #2a2a2a 100%);
+    background-size: 200% 200%;
+    animation: gradientShift 3s ease infinite;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255, 255, 255, 0.3);
+    font-size: 14px;
+    z-index: -1;
+    transition: opacity 0.3s ease;
+}
+
+/* Animated gradient background */
+@keyframes gradientShift {
+    0%, 100% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+}
+
+/* Loading spinner */
+.placeholder::after {
+    content: '';
+    width: 40px;
+    height: 40px;
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-top-color: rgba(255, 255, 255, 0.4);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Variant thumbnail specific */
+.variant-thumbnail {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+.variant-thumbnail .lazy-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.variant-thumbnail .placeholder {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+/* Cart item image specific */
+.cart-item-image-wrapper {
+    position: relative;
+    width: 80px;
+    height: 80px;
+    flex-shrink: 0;
+    overflow: hidden;
+    border-radius: 8px;
+}
+
+.cart-item-image-wrapper .lazy-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.cart-item-image-wrapper .placeholder {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+/* Size chart image */
+.size-chart-illustration {
+    position: relative;
+    width: 100%;
+    min-height: 300px;
+    margin-bottom: 2rem;
+}
+
+.size-chart-illustration .lazy-image {
+    width: 100%;
+    height: auto;
+}
+
+.size-chart-illustration .placeholder {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    min-height: 300px;
+}
+
+/* Slider images (index page) */
+.slide__img {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+.slide__img .lazy-image {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.slide__img .placeholder {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+/* Showcase images (index page) */
+.showcase-image-main,
+.showcase-image-support {
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+}
+
+.showcase-image-main .lazy-image,
+.showcase-image-support .lazy-image {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+.showcase-image-main .placeholder,
+.showcase-image-support .placeholder {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+/* Story image (index page) */
+.story-image {
+    position: relative;
+    width: 100%;
+}
+
+.story-image .lazy-image {
+    width: 100%;
+    height: auto;
+}
+
+.story-image .placeholder {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    min-height: 400px;
+}
+
+/* Timeline media container (behind-the-product page) */
+.media-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+.media-container .lazy-image {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.media-container .placeholder {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}

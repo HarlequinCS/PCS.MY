@@ -87,6 +87,7 @@
   <!-- Preload critical CSS - Non-blocking load with instant swap -->
   <link rel="preload" href="css/workshirt.css?v=29" as="style" onload="this.onload=null;this.rel='stylesheet'">
   <noscript><link rel="stylesheet" href="css/workshirt.css?v=29"></noscript>
+  <link rel="stylesheet" href="css/image-loader.css?v=1">
   <script>
     // Fallback for browsers that don't support onload on link
     (function() {
@@ -253,10 +254,12 @@
     <article class="slide js-slide" role="listitem" aria-label="Classic Black Workshirt">
       <div class="slide__content">
         <figure class="slide__img js-slide__img">
-          <img src="images/hitamdepan.svg" alt="Classic Black Workshirt - Front view featuring half-zip YKK zipper" loading="lazy" width="400" height="500" decoding="async" fetchpriority="low">
+          <img class="lazy-image" data-src="images/hitamdepan.svg" alt="Classic Black Workshirt - Front view featuring half-zip YKK zipper" width="400" height="500" decoding="async">
+          <div class="placeholder"></div>
         </figure>
         <figure class="slide__img js-slide__img">
-          <img src="images/hitamback.svg" alt="Classic Black Workshirt - Back view with Les Étudiants embroidery" loading="lazy" width="400" height="500" decoding="async" fetchpriority="low">
+          <img class="lazy-image" data-src="images/hitamback.svg" alt="Classic Black Workshirt - Back view with Les Étudiants embroidery" width="400" height="500" decoding="async">
+          <div class="placeholder"></div>
         </figure>
       </div>
       
@@ -272,10 +275,12 @@
     <article class="slide js-slide" role="listitem" aria-label="Royal Red Workshirt">
       <div class="slide__content">
         <figure class="slide__img js-slide__img">
-          <img src="images/merahdepan.svg" alt="Royal Red Workshirt - Front view with PCS logo embroidery" loading="lazy" width="400" height="500" decoding="async" fetchpriority="low">
+          <img class="lazy-image" data-src="images/merahdepan.svg" alt="Royal Red Workshirt - Front view with PCS logo embroidery" width="400" height="500" decoding="async">
+          <div class="placeholder"></div>
         </figure>
         <figure class="slide__img js-slide__img">
-          <img src="images/merahback.svg" alt="Royal Red Workshirt - Back view with We Lead The Future emblem" loading="lazy" width="400" height="500" decoding="async" fetchpriority="low">
+          <img class="lazy-image" data-src="images/merahback.svg" alt="Royal Red Workshirt - Back view with We Lead The Future emblem" width="400" height="500" decoding="async">
+          <div class="placeholder"></div>
         </figure>
       </div>
       
@@ -413,10 +418,12 @@
         <article class="showcase-item showcase-item--left">
           <div class="showcase-images">
             <div class="showcase-image-main">
-              <img src="images/halfzip.png" alt="Half Zipper Detail - Main View showing YKK metal zipper quality" loading="lazy" width="400" height="300" decoding="async" fetchpriority="low">
+              <img class="lazy-image" data-src="images/halfzip.png" alt="Half Zipper Detail - Main View showing YKK metal zipper quality" width="400" height="300" decoding="async">
+              <div class="placeholder"></div>
             </div>
             <div class="showcase-image-support">
-              <img src="images/halfzip2.png" alt="Half Zipper Detail - Supporting View of zipper mechanism" loading="lazy" width="200" height="150" decoding="async" fetchpriority="low">
+              <img class="lazy-image" data-src="images/halfzip2.png" alt="Half Zipper Detail - Supporting View of zipper mechanism" width="200" height="150" decoding="async">
+              <div class="placeholder"></div>
             </div>
           </div>
           <div class="showcase-content">
@@ -437,10 +444,12 @@
           </div>
           <div class="showcase-images">
             <div class="showcase-image-main">
-              <img src="images/pcs.png" alt="Left Pocket PCS Logo Embroidery - Main View showing detailed stitching" loading="lazy" width="400" height="300" decoding="async" fetchpriority="low">
+              <img class="lazy-image" data-src="images/pcs.png" alt="Left Pocket PCS Logo Embroidery - Main View showing detailed stitching" width="400" height="300" decoding="async">
+              <div class="placeholder"></div>
             </div>
             <div class="showcase-image-support">
-              <img src="images/pcs2.png" alt="Left Pocket PCS Logo Embroidery - Supporting View close-up" loading="lazy" width="200" height="150" decoding="async" fetchpriority="low">
+              <img class="lazy-image" data-src="images/pcs2.png" alt="Left Pocket PCS Logo Embroidery - Supporting View close-up" width="200" height="150" decoding="async">
+              <div class="placeholder"></div>
             </div>
           </div>
         </article>
@@ -449,10 +458,12 @@
         <article class="showcase-item showcase-item--left">
           <div class="showcase-images">
             <div class="showcase-image-main">
-              <img src="images/lead.png" alt="Right Pocket 'We Lead The Future' Emblem - Main View showing embroidered text" loading="lazy" width="400" height="300" decoding="async" fetchpriority="low">
+              <img class="lazy-image" data-src="images/lead.png" alt="Right Pocket 'We Lead The Future' Emblem - Main View showing embroidered text" width="400" height="300" decoding="async">
+              <div class="placeholder"></div>
             </div>
             <div class="showcase-image-support">
-              <img src="images/lead2.png" alt="Right Pocket 'We Lead The Future' Emblem - Supporting View detail" loading="lazy" width="200" height="150" decoding="async" fetchpriority="low">
+              <img class="lazy-image" data-src="images/lead2.png" alt="Right Pocket 'We Lead The Future' Emblem - Supporting View detail" width="200" height="150" decoding="async">
+              <div class="placeholder"></div>
             </div>
           </div>
           <div class="showcase-content">
@@ -473,10 +484,12 @@
           </div>
           <div class="showcase-images">
             <div class="showcase-image-main">
-              <img src="images/etudiants.png" alt="Back Embroidery 'Les Étudiants Mènent le Monde' - Main View showing French text" loading="lazy" width="400" height="300" decoding="async" fetchpriority="low">
+              <img class="lazy-image" data-src="images/etudiants.png" alt="Back Embroidery 'Les Étudiants Mènent le Monde' - Main View showing French text" width="400" height="300" decoding="async">
+              <div class="placeholder"></div>
             </div>
             <div class="showcase-image-support">
-              <img src="images/etudiants2.png" alt="Back Embroidery 'Les Étudiants Mènent le Monde' - Supporting View close-up" loading="lazy" width="200" height="150" decoding="async" fetchpriority="low">
+              <img class="lazy-image" data-src="images/etudiants2.png" alt="Back Embroidery 'Les Étudiants Mènent le Monde' - Supporting View close-up" width="200" height="150" decoding="async">
+              <div class="placeholder"></div>
             </div>
           </div>
         </article>
@@ -538,7 +551,8 @@
             <a href="/behind-the-product" class="story-link">Learn More</a>
           </div>
           <div class="story-image">
-            <img src="images/story.svg" alt="Craftsmanship Detail" loading="lazy" width="600" height="400" decoding="async" fetchpriority="low">
+            <img class="lazy-image" data-src="images/story.svg" alt="Craftsmanship Detail" width="600" height="400" decoding="async">
+            <div class="placeholder"></div>
           </div>
         </div>
 
@@ -686,34 +700,8 @@
   <!-- Page Prefetcher - Preloads next pages in background for instant navigation -->
   <script src="js/page-prefetcher.js?v=1" defer></script>
   
-  <!-- Enhanced Lazy Loading for Images - Intersection Observer -->
-  <script>
-    // Enhanced lazy loading for better performance
-    if ('IntersectionObserver' in window) {
-      document.addEventListener('DOMContentLoaded', function() {
-        const imageObserver = new IntersectionObserver((entries, observer) => {
-          entries.forEach(entry => {
-            if (entry.isIntersecting) {
-              const img = entry.target;
-              // Preload image before it becomes visible
-              if (img.dataset.src) {
-                img.src = img.dataset.src;
-                img.removeAttribute('data-src');
-              }
-              observer.unobserve(img);
-            }
-          });
-        }, {
-          rootMargin: '50px' // Start loading 50px before image enters viewport
-        });
-        
-        // Observe all lazy-loaded images
-        document.querySelectorAll('img[loading="lazy"]').forEach(img => {
-          imageObserver.observe(img);
-        });
-      });
-    }
-  </script>
+  <!-- Image Lazy Loader -->
+  <script src="js/image-lazy-loader.js?v=1" defer></script>
   
   <!-- Visitor Counter & Comments Script -->
   <script>

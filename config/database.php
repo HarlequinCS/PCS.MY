@@ -20,6 +20,34 @@ if (!defined('DB_CONFIG_LOADED')) {
 // Use environment variables if available and not empty, otherwise use defaults
 // SECURITY: In production, always use .env file, never hardcode credentials
 // FALLBACK: If .env doesn't exist or values are empty, use hardcoded values (for backward compatibility)
+
+// Detect if using hardcoded credentials (security warning)
+$usingHardcodedCredentials = false;
+$missingEnvVars = [];
+
+if (!defined('DB_HOST') || empty(DB_HOST)) {
+    $usingHardcodedCredentials = true;
+    $missingEnvVars[] = 'DB_HOST';
+}
+if (!defined('DB_NAME') || empty(DB_NAME)) {
+    $usingHardcodedCredentials = true;
+    $missingEnvVars[] = 'DB_NAME';
+}
+if (!defined('DB_USER') || empty(DB_USER)) {
+    $usingHardcodedCredentials = true;
+    $missingEnvVars[] = 'DB_USER';
+}
+if (!defined('DB_PASS') || empty(DB_PASS)) {
+    $usingHardcodedCredentials = true;
+    $missingEnvVars[] = 'DB_PASS';
+}
+
+// SECURITY WARNING: Log if using hardcoded credentials (only once per request)
+if ($usingHardcodedCredentials && !isset($GLOBALS['db_security_warning_logged'])) {
+    $GLOBALS['db_security_warning_logged'] = true;
+    error_log('SECURITY WARNING: Database credentials are hardcoded. Missing environment variables: ' . implode(', ', $missingEnvVars) . '. Please configure .env file for production use.');
+}
+
 return [
     'host' => (defined('DB_HOST') && !empty(DB_HOST)) ? DB_HOST : 'localhost',
     'database' => (defined('DB_NAME') && !empty(DB_NAME)) ? DB_NAME : 'u284911514_pcsmy',

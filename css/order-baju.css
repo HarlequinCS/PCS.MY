@@ -1,6 +1,21 @@
 /**
  * Modern Order Form Page - Matching Homepage Design
+ * 
  * Dark theme with clean, minimal aesthetic
+ * 
+ * Features:
+ * - Fully responsive design (mobile, tablet, desktop)
+ * - Smooth animations and transitions
+ * - Accessible form controls
+ * - Modal dialogs for size chart and image zoom
+ * - Shopping cart popup
+ * - Professional UI/UX
+ * 
+ * Responsive Breakpoints:
+ * - Desktop: > 1024px (two-column layout)
+ * - Tablet: 768px - 1024px (single column, adjusted spacing)
+ * - Mobile: 480px - 768px (optimized for touch, smaller fonts)
+ * - Small Mobile: < 480px (stacked variant cards, minimal padding)
  */
 
 /* ============================================

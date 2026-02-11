@@ -1,13 +1,48 @@
 <?php
 /**
  * E-Commerce Product Page with Shopping Cart
- * User can select product variant, size, quantity and add to cart
- * Session-based cart with popup display
+ * 
+ * This page handles:
+ * - Product variant and size selection
+ * - Shopping cart management (add/remove items)
+ * - Session-based cart storage
+ * - Order form submission
+ * - Image lazy loading with preloading
  */
 
-// ============================================
-// STEP 1: Start Session
-// ============================================
+// HTTPS enforcement and security headers
+$isLocalhost = in_array($_SERVER['HTTP_HOST'] ?? '', ['localhost', '127.0.0.1', '::1']) || 
+               (isset($_SERVER['SERVER_ADDR']) && in_array($_SERVER['SERVER_ADDR'], ['127.0.0.1', '::1']));
+
+if (!$isLocalhost && (!isset($_SERVER['HTTPS']) || $_SERVER['HTTPS'] !== 'on')) {
+    header("Location: https://{$_SERVER['HTTP_HOST']}{$_SERVER['REQUEST_URI']}", true, 301);
+    exit;
+}
+
+if (!headers_sent()) {
+    if (!$isLocalhost) {
+        header('Strict-Transport-Security: max-age=31536000; includeSubDomains');
+    }
+    header('X-Content-Type-Options: nosniff');
+    header('X-Frame-Options: SAMEORIGIN');
+    header('X-XSS-Protection: 1; mode=block');
+    header('Referrer-Policy: strict-origin-when-cross-origin');
+}
+
+
+// Session security configuration
+$isLocalhost = in_array($_SERVER['HTTP_HOST'] ?? '', ['localhost', '127.0.0.1', '::1']) || 
+               (isset($_SERVER['SERVER_ADDR']) && in_array($_SERVER['SERVER_ADDR'], ['127.0.0.1', '::1']));
+
+ini_set('session.cookie_httponly', 1);
+ini_set('session.use_only_cookies', 1);
+ini_set('session.cookie_secure', $isLocalhost ? 0 : 1);
+ini_set('session.cookie_samesite', 'Strict');
+ini_set('session.use_strict_mode', 1);
+ini_set('session.gc_maxlifetime', 3600);
+ini_set('session.gc_probability', 1);
+ini_set('session.gc_divisor', 100);
+
 session_start();
 
 // Initialize cart if not exists
@@ -26,12 +61,16 @@ if (!defined('DB_CONFIG_LOADED')) {
 // Include database connection
 require_once __DIR__ . '/includes/db.php';
 
+// Include CSRF protection
+require_once __DIR__ . '/includes/csrf.php';
+
+// Include rate limiting
+require_once __DIR__ . '/includes/rate_limit.php';
+
 // Include version configuration for asset versioning
 require_once __DIR__ . '/config/version.php';
 
-// ============================================
-// CHECK IF ORDERS ARE CLOSED
-// ============================================
+// Check if orders are closed
 try {
     $pdo = getDBConnection();
     $ordersClosedStmt = $pdo->prepare("SELECT setting_value FROM settings WHERE setting_key = 'orders_closed' LIMIT 1");
@@ -317,9 +356,7 @@ try {
         exit;
     }
 } catch (Exception $e) {
-    // If there's an error checking the setting, log it but continue normally
     error_log('Error checking orders_closed setting: ' . $e->getMessage());
-    // Continue to show order page if check fails (fail open)
 }
 
 // Auto-create orders table if not exists
@@ -384,7 +421,6 @@ try {
         define('ORIGINAL_PRICE', 120.00); // Marketing original price for strikethrough display
         $productStockStatus = $product['stock_status'];
         
-        // Get variants from database
         $variantsStmt = $pdo->prepare("
             SELECT variant_key, variant_name, variant_image 
             FROM product_variants 
@@ -410,7 +446,6 @@ try {
             ];
         }
         
-        // Get inventory data if in_stock
         $inventoryData = [];
         if ($productStockStatus === 'in_stock') {
             $inventoryStmt = $pdo->prepare("
@@ -512,26 +547,30 @@ function getSizeChartData() {
     ];
 }
 
-// ============================================
-// STEP 3: Handle Add to Cart
-// ============================================
+// Handle Add to Cart
 $message = '';
 $messageType = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'add_to_cart') {
-    // Validate input
-    $variant = $_POST['variant'] ?? '';
-    $size = $_POST['size'] ?? '';
-    $quantity = intval($_POST['quantity'] ?? 0);
-    
-    // Validation
-    if (empty($variant) || !isset($variants[$variant])) {
-        $message = 'Please select a color';
+    if (!checkRateLimit('cart_add', 20, 60)) {
+        $message = 'Too many requests. Please wait a moment before adding more items.';
         $messageType = 'error';
-    } elseif (empty($size) || !in_array($size, $sizes)) {
-        $message = 'Please select a size';
+    } elseif (!validateCSRFToken($_POST['csrf_token'] ?? '')) {
+        http_response_code(403);
+        $message = 'Invalid security token. Please refresh the page and try again.';
         $messageType = 'error';
-    } elseif ($quantity < 1) {
+    } else {
+        $variant = $_POST['variant'] ?? '';
+        $size = $_POST['size'] ?? '';
+        $quantity = intval($_POST['quantity'] ?? 0);
+        
+        if (empty($variant) || !isset($variants[$variant])) {
+            $message = 'Please select a color';
+            $messageType = 'error';
+        } elseif (empty($size) || !in_array($size, $sizes)) {
+            $message = 'Please select a size';
+            $messageType = 'error';
+        } elseif ($quantity < 1) {
         $message = 'Quantity must be at least 1';
         $messageType = 'error';
     } else {
@@ -540,7 +579,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             $message = 'This product is currently out of stock. Please check back later.';
             $messageType = 'error';
         } elseif (isset($productStockStatus) && $productStockStatus === 'in_stock') {
-            // Check inventory quantity for in_stock products
             try {
                 $pdo = getDBConnection();
                 $inventoryStmt = $pdo->prepare("
@@ -565,8 +603,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                     }
                     $messageType = 'error';
                 } else {
-                    // Inventory check passed, proceed with adding to cart
-                    // Calculate price with size addon
                     $sizeAddon = getSizeAddonPrice($size);
                     $itemPrice = PRICE_PER_SHIRT + $sizeAddon;
                     $itemTotal = $itemPrice * $quantity;
@@ -589,8 +625,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                 }
             } catch (PDOException $e) {
                 error_log('Inventory check error: ' . $e->getMessage());
-                // Fail open - allow order if inventory check fails
-                // Calculate price with size addon
                 $sizeAddon = getSizeAddonPrice($size);
                 $itemPrice = PRICE_PER_SHIRT + $sizeAddon;
                 $itemTotal = $itemPrice * $quantity;
@@ -612,8 +646,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                 $messageType = 'success';
             }
         } else {
-            // pre_order status - allow ordering without inventory check
-            // Calculate price with size addon
             $sizeAddon = getSizeAddonPrice($size);
             $itemPrice = PRICE_PER_SHIRT + $sizeAddon;
             $itemTotal = $itemPrice * $quantity;
@@ -635,38 +667,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             $messageType = 'success';
         }
     }
-    
-    // Old code removed - now handled above
-    if (false) {
-        // Calculate item total
-        $itemTotal = PRICE_PER_SHIRT * $quantity;
-        
-        // Create cart item
-        $cartItem = [
-            'id' => uniqid('item_'),
-            'variant' => $variant,
-            'variant_name' => $variants[$variant]['name'],
-            'variant_image' => $variants[$variant]['image'],
-            'size' => $size,
-            'quantity' => $quantity,
-            'price' => PRICE_PER_SHIRT,
-            'subtotal' => $itemTotal
-        ];
-        
-        // Add to cart
-        $_SESSION['cart'][] = $cartItem;
-        
-        $message = 'Item successfully added to cart!';
-        $messageType = 'success';
-    }
 }
 
-// ============================================
-// STEP 4: Handle Remove from Cart (AJAX)
-// ============================================
+// Handle Remove from Cart (AJAX)
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'remove_from_cart') {
+    if (!checkRateLimit('cart_remove', 20, 60)) {
+        header('Content-Type: application/json');
+        http_response_code(429);
+        echo json_encode([
+            'success' => false,
+            'error' => 'Too many requests. Please wait a moment.'
+        ]);
+        exit;
+    }
+    // SECURITY: CSRF protection - validate token
+    if (!validateCSRFToken($_POST['csrf_token'] ?? '')) {
+        header('Content-Type: application/json');
+        http_response_code(403);
+        echo json_encode([
+            'success' => false,
+            'error' => 'Invalid security token. Please refresh the page.'
+        ]);
+        exit;
+    }
+    
+    // SECURITY: Safe input retrieval with null coalescing
+    // Item IDs are generated server-side (uniqid()), so they're safe
+    // but we still validate they exist in the session
     $itemId = $_POST['item_id'] ?? '';
     
+    // SECURITY: Multi-condition validation
+    // - Ensures item_id is not empty (prevents empty string attacks)
+    // - Verifies cart exists in session (prevents null reference errors)
     if (!empty($itemId) && isset($_SESSION['cart'])) {
         // Find the item to get its subtotal before removing
         $removedItemSubtotal = 0;
@@ -680,20 +712,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         $_SESSION['cart'] = array_filter($_SESSION['cart'], function($item) use ($itemId) {
             return $item['id'] !== $itemId;
         });
-        $_SESSION['cart'] = array_values($_SESSION['cart']); // Re-index array
+        $_SESSION['cart'] = array_values($_SESSION['cart']);
         
-        // If cart is now empty, ensure it's an empty array (not null or false)
         if (empty($_SESSION['cart'])) {
             $_SESSION['cart'] = [];
         }
         
-        // Calculate new cart total
         $newCartTotal = 0;
         foreach ($_SESSION['cart'] as $item) {
             $newCartTotal += $item['subtotal'];
         }
         
-        // Return JSON response for AJAX
+        regenerateCSRFToken();
+        
         header('Content-Type: application/json');
         echo json_encode([
             'success' => true, 
@@ -705,9 +736,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     }
 }
 
-// ============================================
-// STEP 5: Calculate Cart Totals
-// ============================================
+// Calculate Cart Totals
 $cartCount = count($_SESSION['cart']);
 $cartTotal = 0;
 foreach ($_SESSION['cart'] as $item) {
@@ -749,6 +778,7 @@ foreach ($_SESSION['cart'] as $item) {
     
     <!-- Stylesheet -->
     <link rel="stylesheet" href="<?php echo getVersionedAsset('css/order-baju.css'); ?>">
+    <link rel="stylesheet" href="<?php echo getVersionedAsset('css/image-loader.css'); ?>">
     
     <!-- Preconnect for Performance -->
     <link rel="preconnect" href="https://projectcutisem.com">
@@ -777,7 +807,8 @@ foreach ($_SESSION['cart'] as $item) {
                 <div class="product-visual-column">
                     <div class="product-preview">
                         <div class="product-image-wrapper" id="productImageWrapper">
-                            <img src="" alt="Product Preview" id="mainProductImage" class="main-product-image">
+                            <img data-src="" alt="Product Preview" id="mainProductImage" class="lazy-image main-product-image">
+                            <div class="placeholder"></div>
                             <div class="image-placeholder" id="imagePlaceholder">
                                 <span>Select a color to see preview</span>
                             </div>
@@ -817,7 +848,7 @@ foreach ($_SESSION['cart'] as $item) {
 
                         <!-- Message Display -->
                         <?php if ($message): ?>
-                            <div class="order-message order-message--<?php echo $messageType; ?>" id="orderMessage">
+                            <div class="order-message order-message--<?php echo htmlspecialchars($messageType); ?>" id="orderMessage">
                                 <?php echo htmlspecialchars($message); ?>
                             </div>
                         <?php endif; ?>
@@ -825,6 +856,7 @@ foreach ($_SESSION['cart'] as $item) {
                         <!-- Order Form -->
                         <form method="POST" action="" id="orderForm" class="order-form">
                             <input type="hidden" name="action" value="add_to_cart">
+                            <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars(generateCSRFToken(), ENT_QUOTES, 'UTF-8'); ?>">
                             
                             <!-- Variant Selection -->
                             <div class="form-section">
@@ -834,19 +866,20 @@ foreach ($_SESSION['cart'] as $item) {
                                 </label>
                                 <div class="variant-selector" id="variantSelector" role="radiogroup" aria-labelledby="variant-label">
                                     <?php foreach ($variants as $key => $variant): ?>
-                                        <label class="variant-card" data-variant="<?php echo htmlspecialchars($key); ?>" aria-label="Select <?php echo htmlspecialchars($variant['name']); ?> color">
-                                            <input type="radio" name="variant" value="<?php echo htmlspecialchars($key); ?>" 
-                                                   data-image="<?php echo htmlspecialchars($variant['image']); ?>"
-                                                   id="variant-<?php echo htmlspecialchars($key); ?>"
-                                                   aria-describedby="variant-<?php echo htmlspecialchars($key); ?>-name"
+                                        <label class="variant-card" data-variant="<?php echo htmlspecialchars($key, ENT_QUOTES, 'UTF-8'); ?>" aria-label="Select <?php echo htmlspecialchars($variant['name'], ENT_QUOTES, 'UTF-8'); ?> color">
+                                            <input type="radio" name="variant" value="<?php echo htmlspecialchars($key, ENT_QUOTES, 'UTF-8'); ?>" 
+                                                   data-image="<?php echo htmlspecialchars($variant['image'], ENT_QUOTES, 'UTF-8'); ?>"
+                                                   id="variant-<?php echo htmlspecialchars($key, ENT_QUOTES, 'UTF-8'); ?>"
+                                                   aria-describedby="variant-<?php echo htmlspecialchars($key, ENT_QUOTES, 'UTF-8'); ?>-name"
                                                    required>
                                             <div class="variant-card-content">
                                                 <div class="variant-thumbnail">
-                                                    <img src="<?php echo htmlspecialchars($variant['image']); ?>" 
+                                                    <!-- Variant thumbnail with lazy loading -->
+                                                    <img class="lazy-image" data-src="<?php echo htmlspecialchars($variant['image']); ?>" 
                                                          alt="<?php echo htmlspecialchars($variant['name']); ?> workshirt"
-                                                         loading="lazy"
                                                          width="120"
                                                          height="120">
+                                                    <div class="placeholder"></div>
                                                 </div>
                                                 <div class="variant-label" id="variant-<?php echo htmlspecialchars($key); ?>-name">
                                                     <?php echo htmlspecialchars($variant['name']); ?>
@@ -873,11 +906,11 @@ foreach ($_SESSION['cart'] as $item) {
                                 </div>
                                 <div class="size-selector" id="sizeSelector" role="radiogroup" aria-labelledby="size-label">
                                     <?php foreach ($sizes as $size): ?>
-                                        <label class="size-option" aria-label="Select size <?php echo htmlspecialchars($size); ?>">
-                                            <input type="radio" name="size" value="<?php echo htmlspecialchars($size); ?>" 
-                                                   id="size-<?php echo htmlspecialchars($size); ?>"
+                                        <label class="size-option" aria-label="Select size <?php echo htmlspecialchars($size, ENT_QUOTES, 'UTF-8'); ?>">
+                                            <input type="radio" name="size" value="<?php echo htmlspecialchars($size, ENT_QUOTES, 'UTF-8'); ?>" 
+                                                   id="size-<?php echo htmlspecialchars($size, ENT_QUOTES, 'UTF-8'); ?>"
                                                    required>
-                                            <span class="size-label"><?php echo htmlspecialchars($size); ?></span>
+                                            <span class="size-label"><?php echo htmlspecialchars($size, ENT_QUOTES, 'UTF-8'); ?></span>
                                         </label>
                                     <?php endforeach; ?>
                                 </div>
@@ -1022,7 +1055,9 @@ foreach ($_SESSION['cart'] as $item) {
                 <button class="size-chart-close" id="sizeChartClose">&times;</button>
             </div>
             <div class="size-chart-illustration">
-                <img src="images/MockUp size.svg" alt="Size chart illustration showing pit (width) and length measurements" class="size-chart-image">
+                <!-- Size chart image with lazy loading -->
+                <img class="lazy-image size-chart-image" data-src="images/MockUp size.svg" alt="Size chart illustration showing pit (width) and length measurements">
+                <div class="placeholder"></div>
             </div>
             <div class="size-chart-table-wrapper">
                 <table class="size-chart-table">
@@ -1100,18 +1135,18 @@ foreach ($_SESSION['cart'] as $item) {
             <?php else: ?>
                 <div class="cart-items-list" id="cartItemsList">
                     <?php foreach ($_SESSION['cart'] as $item): ?>
-                        <div class="cart-item-card" data-item-id="<?php echo htmlspecialchars($item['id']); ?>">
+                        <div class="cart-item-card" data-item-id="<?php echo htmlspecialchars($item['id'], ENT_QUOTES, 'UTF-8'); ?>">
                             <div class="cart-item-image-wrapper">
-                                <img src="<?php echo htmlspecialchars($item['variant_image']); ?>" 
-                                     alt="<?php echo htmlspecialchars($item['variant_name']); ?>"
-                                     class="cart-item-image">
+                                <img class="lazy-image cart-item-image" data-src="<?php echo htmlspecialchars($item['variant_image'], ENT_QUOTES, 'UTF-8'); ?>" 
+                                     alt="<?php echo htmlspecialchars($item['variant_name'], ENT_QUOTES, 'UTF-8'); ?>">
+                                <div class="placeholder"></div>
                             </div>
                             <div class="cart-item-info">
-                                <h4 class="cart-item-title"><?php echo htmlspecialchars($item['variant_name']); ?></h4>
-                                <p class="cart-item-meta">Size: <?php echo htmlspecialchars($item['size']); ?> • Qty: <?php echo $item['quantity']; ?></p>
-                                <div class="cart-item-price">RM <?php echo number_format($item['subtotal'], 2); ?></div>
+                                <h4 class="cart-item-title"><?php echo htmlspecialchars($item['variant_name'], ENT_QUOTES, 'UTF-8'); ?></h4>
+                                <p class="cart-item-meta">Size: <?php echo htmlspecialchars($item['size'], ENT_QUOTES, 'UTF-8'); ?> • Qty: <?php echo intval($item['quantity']); ?></p>
+                                <div class="cart-item-price">RM <?php echo number_format(floatval($item['subtotal']), 2); ?></div>
                             </div>
-                            <button class="cart-item-remove" onclick="removeFromCart('<?php echo htmlspecialchars($item['id']); ?>')" aria-label="Remove item">
+                            <button class="cart-item-remove" onclick="removeFromCart('<?php echo htmlspecialchars($item['id'], ENT_QUOTES, 'UTF-8'); ?>')" aria-label="Remove item">
                                 <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
                                     <path d="M15 5L5 15M5 5l10 10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
                                 </svg>
@@ -1136,324 +1171,31 @@ foreach ($_SESSION['cart'] as $item) {
         </div>
     </div>
 
-    <script>
-        // Constants
-        const PRICE_PER_SHIRT = <?php echo PRICE_PER_SHIRT; ?>;
-        const ORIGINAL_PRICE = <?php echo ORIGINAL_PRICE; ?>;
-        const SHOW_ORIGINAL_PRICE = PRICE_PER_SHIRT < ORIGINAL_PRICE;
-        
-        // Size Addon Prices
-        const SIZE_ADDON_PRICES = {
-            'S': 0.00,
-            'M': 0.00,
-            'L': 0.00,
-            'XL': 0.00,
-            '2XL': 0.00,
-            '3XL': 3.00,
-            '4XL': 5.00,
-            '5XL': 5.00,
-            '6XL': 5.00
-        };
-        
-        // DOM Elements
-        const orderForm = document.getElementById('orderForm');
-        const quantityInput = document.getElementById('quantityInput');
-        const quantityDecrease = document.getElementById('quantityDecrease');
-        const quantityIncrease = document.getElementById('quantityIncrease');
-        const totalPriceDisplay = document.getElementById('totalPriceDisplay');
-        const originalTotalPriceDisplay = document.getElementById('originalTotalPriceDisplay');
-        const variantRadios = document.querySelectorAll('input[name="variant"]');
-        const sizeRadios = document.querySelectorAll('input[name="size"]');
-        const mainProductImage = document.getElementById('mainProductImage');
-        const imagePlaceholder = document.getElementById('imagePlaceholder');
-        const productImageWrapper = document.getElementById('productImageWrapper');
-        const addToCartBtn = document.getElementById('addToCartBtn');
-        const btnText = addToCartBtn.querySelector('.btn-text');
-        const btnLoader = addToCartBtn.querySelector('.btn-loader');
-        
-        // Cart Elements
-        const cartFab = document.getElementById('cartFab');
-        const cartPopup = document.getElementById('cartPopup');
-        const cartPopupClose = document.getElementById('cartPopupClose');
-        const cartFabBadge = document.getElementById('cartFabBadge');
-        
-        // Size Chart Modal
-        const sizeChartBtn = document.getElementById('sizeChartBtn');
-        const sizeChartModal = document.getElementById('sizeChartModal');
-        const sizeChartClose = document.getElementById('sizeChartClose');
-        
-        // Image Zoom Modal
-        const imageZoomModal = document.getElementById('imageZoomModal');
-        const imageZoomClose = document.getElementById('imageZoomClose');
-        const zoomedImage = document.getElementById('zoomedImage');
-        const zoomHint = document.getElementById('zoomHint');
+    <!-- Image Lazy Loader - Enhanced with WebP support and preloading -->
+    <script src="<?php echo getVersionedAsset('js/image-lazy-loader.js'); ?>"></script>
 
-        // Update Total Price
-        function updateTotalPrice() {
-            const quantity = parseInt(quantityInput.value) || 1;
-            const selectedSize = document.querySelector('input[name="size"]:checked');
-            const sizeAddon = selectedSize ? (SIZE_ADDON_PRICES[selectedSize.value] || 0) : 0;
-            const itemPrice = PRICE_PER_SHIRT + sizeAddon;
-            const total = itemPrice * quantity;
-            totalPriceDisplay.textContent = total.toFixed(2);
-            
-            // Update original price total if strikethrough is shown
-            if (SHOW_ORIGINAL_PRICE && originalTotalPriceDisplay) {
-                const originalTotal = ORIGINAL_PRICE * quantity;
-                originalTotalPriceDisplay.textContent = originalTotal.toFixed(2);
-            }
+    <!-- Order Page Configuration -->
+    <script id="orderPageConfig" type="application/json">
+    {
+        "pricePerShirt": <?php echo PRICE_PER_SHIRT; ?>,
+        "originalPrice": <?php echo ORIGINAL_PRICE; ?>,
+        "showOriginalPrice": <?php echo (PRICE_PER_SHIRT < ORIGINAL_PRICE) ? 'true' : 'false'; ?>,
+        "csrfToken": "<?php echo htmlspecialchars(generateCSRFToken(), ENT_QUOTES, 'UTF-8'); ?>",
+        "sizeAddonPrices": {
+            "S": 0.00,
+            "M": 0.00,
+            "L": 0.00,
+            "XL": 0.00,
+            "2XL": 0.00,
+            "3XL": 3.00,
+            "4XL": 5.00,
+            "5XL": 5.00,
+            "6XL": 5.00
         }
-        
-        // Update price when size changes
-        sizeRadios.forEach(radio => {
-            radio.addEventListener('change', updateTotalPrice);
-        });
-
-        // Quantity Controls
-        quantityDecrease.addEventListener('click', () => {
-            const current = parseInt(quantityInput.value) || 1;
-            if (current > 1) {
-                quantityInput.value = current - 1;
-                updateTotalPrice();
-            }
-        });
-
-        quantityIncrease.addEventListener('click', () => {
-            const current = parseInt(quantityInput.value) || 1;
-            if (current < 10) {
-                quantityInput.value = current + 1;
-                updateTotalPrice();
-            }
-        });
-
-        // Variant Selection
-        variantRadios.forEach(radio => {
-            radio.addEventListener('change', function() {
-                if (this.checked) {
-                    const imageSrc = this.getAttribute('data-image');
-                    
-                    // Update main image
-                    mainProductImage.src = imageSrc;
-                    imagePlaceholder.style.display = 'none';
-                    mainProductImage.style.display = 'block';
-                    zoomHint.style.display = 'block';
-                    
-                    // Update variant card active state
-                    document.querySelectorAll('.variant-card').forEach(card => {
-                        card.classList.remove('variant-card--active');
-                    });
-                    this.closest('.variant-card').classList.add('variant-card--active');
-                }
-            });
-        });
-
-        // Image Zoom
-        productImageWrapper.addEventListener('click', function() {
-            if (mainProductImage.src) {
-                zoomedImage.src = mainProductImage.src;
-                imageZoomModal.classList.add('image-zoom-modal--active');
-                document.body.style.overflow = 'hidden';
-            }
-        });
-
-        imageZoomClose.addEventListener('click', () => {
-            imageZoomModal.classList.remove('image-zoom-modal--active');
-            document.body.style.overflow = '';
-        });
-
-        imageZoomModal.querySelector('.image-zoom-overlay').addEventListener('click', () => {
-            imageZoomModal.classList.remove('image-zoom-modal--active');
-            document.body.style.overflow = '';
-        });
-
-        // Size Chart Modal
-        sizeChartBtn.addEventListener('click', () => {
-            sizeChartModal.classList.add('size-chart-modal--active');
-            document.body.style.overflow = 'hidden';
-        });
-
-        sizeChartClose.addEventListener('click', () => {
-            sizeChartModal.classList.remove('size-chart-modal--active');
-            document.body.style.overflow = '';
-        });
-
-        sizeChartModal.querySelector('.size-chart-overlay').addEventListener('click', () => {
-            sizeChartModal.classList.remove('size-chart-modal--active');
-            document.body.style.overflow = '';
-        });
-
-        // Cart Popup
-        cartFab.addEventListener('click', () => {
-            cartPopup.classList.add('cart-popup--active');
-            document.body.style.overflow = 'hidden';
-        });
-
-        cartPopupClose.addEventListener('click', () => {
-            cartPopup.classList.remove('cart-popup--active');
-            document.body.style.overflow = '';
-        });
-
-        cartPopup.querySelector('.cart-popup-overlay').addEventListener('click', () => {
-            cartPopup.classList.remove('cart-popup--active');
-            document.body.style.overflow = '';
-        });
-
-        // Form Submission with Loading State
-        orderForm.addEventListener('submit', function(e) {
-            // Basic validation
-            const variantSelected = document.querySelector('input[name="variant"]:checked');
-            const sizeSelected = document.querySelector('input[name="size"]:checked');
-            
-            if (!variantSelected || !sizeSelected) {
-                e.preventDefault();
-                return;
-            }
-
-            // Prevent double submission
-            if (addToCartBtn.disabled) {
-                e.preventDefault();
-                return;
-            }
-
-            // Show loading state
-            addToCartBtn.disabled = true;
-            btnText.style.display = 'none';
-            btnLoader.style.display = 'inline-block';
-        });
-
-        // Remove from Cart (AJAX)
-        function removeFromCart(itemId) {
-            if (!confirm('Adakah anda pasti mahu membuang item ini?')) {
-                return;
-            }
-            
-            // Disable form submission temporarily to prevent adding items back
-            if (orderForm) {
-                orderForm.style.pointerEvents = 'none';
-                orderForm.style.opacity = '0.6';
-            }
-            
-            const formData = new FormData();
-            formData.append('action', 'remove_from_cart');
-            formData.append('item_id', itemId);
-            
-            fetch('order-baju.php', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // Remove item from DOM
-                    const itemElement = document.querySelector(`[data-item-id="${itemId}"]`);
-                    if (itemElement) {
-                        itemElement.style.animation = 'fadeOut 0.3s ease-out';
-                        setTimeout(() => {
-                            itemElement.remove();
-                            
-                            // Update cart summary
-                            const totalItemsElement = document.querySelector('.cart-summary-row:first-child span:last-child');
-                            const totalAmountElement = document.querySelector('.cart-total-amount');
-                            
-                            if (data.cart_count > 0) {
-                                // Update total items count
-                                if (totalItemsElement) {
-                                    totalItemsElement.textContent = data.cart_count + ' item(s)';
-                                }
-                                
-                                // Update total amount
-                                if (totalAmountElement) {
-                                    totalAmountElement.textContent = 'RM ' + parseFloat(data.cart_total).toFixed(2);
-                                }
-                                
-                                // Update badge
-                                if (cartFabBadge) {
-                                    cartFabBadge.textContent = data.cart_count;
-                                } else {
-                                    const badge = document.createElement('span');
-                                    badge.className = 'cart-fab-badge';
-                                    badge.id = 'cartFabBadge';
-                                    badge.textContent = data.cart_count;
-                                    cartFab.appendChild(badge);
-                                }
-                                
-                                // Re-enable form
-                                if (orderForm) {
-                                    orderForm.style.pointerEvents = '';
-                                    orderForm.style.opacity = '';
-                                }
-                            } else {
-                                // Cart is empty - show empty cart message without reloading
-                                if (cartFabBadge) cartFabBadge.remove();
-                                
-                                // Get cart popup elements
-                                const cartItemsList = document.getElementById('cartItemsList');
-                                const cartSummary = cartItemsList ? cartItemsList.nextElementSibling : null;
-                                const checkoutBtn = cartSummary ? cartSummary.nextElementSibling : null;
-                                
-                                // Remove cart items list, summary, and checkout button
-                                if (cartItemsList) cartItemsList.remove();
-                                if (cartSummary) cartSummary.remove();
-                                if (checkoutBtn) checkoutBtn.remove();
-                                
-                                // Create and insert empty cart message
-                                const cartPopupContent = document.querySelector('.cart-popup-content');
-                                if (cartPopupContent) {
-                                    const emptyCartDiv = document.createElement('div');
-                                    emptyCartDiv.className = 'cart-empty';
-                                    emptyCartDiv.innerHTML = `
-                                        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.3">
-                                            <path d="M9 2L7 6M17 2l2 4M3 10h18l-2 8H5l-2-8zM10 18a1 1 0 11-2 0 1 1 0 012 0zM20 18a1 1 0 11-2 0 1 1 0 012 0z"/>
-                                        </svg>
-                                        <p>Your cart is empty</p>
-                                    `;
-                                    
-                                    // Insert after header
-                                    const cartHeader = cartPopupContent.querySelector('.cart-popup-header');
-                                    if (cartHeader && cartHeader.nextSibling) {
-                                        cartPopupContent.insertBefore(emptyCartDiv, cartHeader.nextSibling);
-                                    } else {
-                                        cartPopupContent.appendChild(emptyCartDiv);
-                                    }
-                                }
-                                
-                                // Re-enable form after a short delay
-                                setTimeout(() => {
-                                    if (orderForm) {
-                                        orderForm.style.pointerEvents = '';
-                                        orderForm.style.opacity = '';
-                                    }
-                                }, 500);
-                            }
-                        }, 300);
-                    } else {
-                        // Item element not found, re-enable form anyway
-                        if (orderForm) {
-                            orderForm.style.pointerEvents = '';
-                            orderForm.style.opacity = '';
-                        }
-                    }
-                } else {
-                    // Re-enable form on error
-                    if (orderForm) {
-                        orderForm.style.pointerEvents = '';
-                        orderForm.style.opacity = '';
-                    }
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Error removing item. Please try again.');
-                // Re-enable form on error
-                if (orderForm) {
-                    orderForm.style.pointerEvents = '';
-                    orderForm.style.opacity = '';
-                }
-            });
-        }
-
-        // Initialize
-        updateTotalPrice();
+    }
     </script>
+
+    <!-- Order Page JavaScript Module -->
+    <script src="<?php echo getVersionedAsset('js/order-baju.js'); ?>"></script>
 </body>
 </html>

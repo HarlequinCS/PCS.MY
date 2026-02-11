@@ -67,6 +67,7 @@
     <!-- Preload Critical CSS -->
     <link rel="preload" href="css/behind-the-product.css?v=29" as="style" onload="this.onload=null;this.rel='stylesheet'">
     <noscript><link rel="stylesheet" href="css/behind-the-product.css?v=29"></noscript>
+    <link rel="stylesheet" href="css/image-loader.css?v=1">
     
     <!-- Schema.org Structured Data -->
     <script type="application/ld+json">
@@ -154,7 +155,8 @@
                             </div>
                             <div class="card-media-section">
                                 <div class="media-container">
-                                    <img src="images/1.svg" alt="Phase 1: Initial button workshirt mockup design sketch" loading="lazy" width="400" height="300" decoding="async" />
+                                    <img class="lazy-image" data-src="images/1.svg" alt="Phase 1: Initial button workshirt mockup design sketch" width="400" height="300" decoding="async" />
+                                    <div class="placeholder"></div>
                                 </div>
                             </div>
                         </div>
@@ -189,7 +191,8 @@
                             </div>
                             <div class="card-media-section">
                                 <div class="media-container">
-                                    <img src="images/2.svg" alt="Phase 2: Color palette selection showing Red, Green, and Black options" loading="lazy" width="400" height="300" decoding="async" />
+                                    <img class="lazy-image" data-src="images/2.svg" alt="Phase 2: Color palette selection showing Red, Green, and Black options" width="400" height="300" decoding="async" />
+                                    <div class="placeholder"></div>
                                 </div>
                             </div>
                         </div>
@@ -220,7 +223,8 @@
                             </div>
                             <div class="card-media-section">
                                 <div class="media-container">
-                                    <img src="images/4.svg" alt="Phase 3: Japanese drill fabric material sample and texture" loading="lazy" width="400" height="300" decoding="async" />
+                                    <img class="lazy-image" data-src="images/4.svg" alt="Phase 3: Japanese drill fabric material sample and texture" width="400" height="300" decoding="async" />
+                                    <div class="placeholder"></div>
                                 </div>
                             </div>
                         </div>
@@ -251,7 +255,8 @@
                             </div>
                             <div class="card-media-section">
                                 <div class="media-container">
-                                    <img src="images/3.svg" alt="Phase 4: Design evolution from button to half-zipper style" loading="lazy" width="400" height="300" decoding="async" />
+                                    <img class="lazy-image" data-src="images/3.svg" alt="Phase 4: Design evolution from button to half-zipper style" width="400" height="300" decoding="async" />
+                                    <div class="placeholder"></div>
                                 </div>
                             </div>
                         </div>
@@ -315,7 +320,8 @@
                             </div>
                             <div class="card-media-section">
                                 <div class="media-container">
-                                    <img src="images/5.svg" alt="Phase 6: Final product sample with temporary packaging" loading="lazy" width="400" height="300" decoding="async" />
+                                    <img class="lazy-image" data-src="images/5.svg" alt="Phase 6: Final product sample with temporary packaging" width="400" height="300" decoding="async" />
+                                    <div class="placeholder"></div>
                                 </div>
                             </div>
                         </div>
@@ -346,7 +352,8 @@
                             </div>
                             <div class="card-media-section">
                                 <div class="media-container">
-                                    <img src="images/6.svg" alt="Phase 7: Casual product photoshoot for social media" loading="lazy" width="400" height="300" decoding="async" />
+                                    <img class="lazy-image" data-src="images/6.svg" alt="Phase 7: Casual product photoshoot for social media" width="400" height="300" decoding="async" />
+                                    <div class="placeholder"></div>
                                 </div>
                             </div>
                         </div>
@@ -499,5 +506,8 @@
         
         }); // End DOMContentLoaded
     </script>
+    
+    <!-- Image Lazy Loader -->
+    <script src="js/image-lazy-loader.js?v=1" defer></script>
 </body>
 </html>
