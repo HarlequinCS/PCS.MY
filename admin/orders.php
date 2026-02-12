@@ -71,6 +71,53 @@ foreach ($stats as $stat) {
         'total' => $stat['total']
     ];
 }
+
+// Get quantity by color/variant (excluding cancelled)
+$variantStatsStmt = $pdo->query("
+    SELECT 
+        variant,
+        SUM(quantity) as total_quantity
+    FROM orders
+    WHERE status != 'cancelled'
+    GROUP BY variant
+    ORDER BY total_quantity DESC
+");
+$variantStats = $variantStatsStmt->fetchAll(PDO::FETCH_ASSOC);
+$variantCounts = [];
+$variantNames = [
+    'hitamdepan' => 'Classic Black',
+    'hijaufront' => 'Forest Green',
+    'merahdepan' => 'Royal Red'
+];
+foreach ($variantStats as $stat) {
+    $variantName = $variantNames[$stat['variant']] ?? ucfirst($stat['variant']);
+    $variantCounts[$variantName] = $stat['total_quantity'];
+}
+
+// Get quantity by size (excluding cancelled)
+$sizeStatsStmt = $pdo->query("
+    SELECT 
+        size,
+        SUM(quantity) as total_quantity
+    FROM orders
+    WHERE status != 'cancelled'
+    GROUP BY size
+    ORDER BY 
+        CASE size
+            WHEN 'XS' THEN 1
+            WHEN 'S' THEN 2
+            WHEN 'M' THEN 3
+            WHEN 'L' THEN 4
+            WHEN 'XL' THEN 5
+            WHEN 'XXL' THEN 6
+            ELSE 7
+        END
+");
+$sizeStats = $sizeStatsStmt->fetchAll(PDO::FETCH_ASSOC);
+$sizeCounts = [];
+foreach ($sizeStats as $stat) {
+    $sizeCounts[$stat['size']] = $stat['total_quantity'];
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -97,6 +144,15 @@ foreach ($stats as $stat) {
         .stat-card .stat-value { font-size: 1.5rem; font-weight: 700; color: var(--text-primary); }
         .price-adjust-link { color: var(--primary-color); text-decoration: none; }
         .price-adjust-link:hover { text-decoration: underline; }
+        .category-stats { background: var(--card-bg); padding: 1.5rem; border-radius: 8px; margin-bottom: 1.5rem; }
+        .category-stats h2 { margin: 0 0 1.5rem 0; font-size: 1.25rem; color: var(--text-primary); }
+        .category-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; }
+        .category-section { background: #f9fafb; padding: 1rem; border-radius: 8px; }
+        .category-section h3 { margin: 0 0 1rem 0; font-size: 1rem; color: var(--text-primary); font-weight: 600; }
+        .category-item { display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0; border-bottom: 1px solid #e5e7eb; }
+        .category-item:last-child { border-bottom: none; }
+        .category-item-label { color: var(--text-secondary); font-size: 0.875rem; }
+        .category-item-value { font-weight: 700; color: var(--text-primary); font-size: 1.125rem; }
     </style>
 </head>
 <body class="admin-dashboard">
@@ -150,6 +206,68 @@ foreach ($stats as $stat) {
                 <h3>Cancelled</h3>
                 <div class="stat-value" style="color: #ef4444;"><?php echo number_format($statusCounts['cancelled']['count'] ?? 0); ?></div>
                 <small style="color: #6b7280; font-size: 0.75rem;">Excluded from totals</small>
+            </div>
+        </div>
+        
+        <!-- Category Statistics -->
+        <div class="category-stats">
+            <h2>Quantity Breakdown</h2>
+            <div class="category-grid">
+                <!-- Quantity by Color -->
+                <div class="category-section">
+                    <h3>Quantity by Color</h3>
+                    <?php if (empty($variantCounts)): ?>
+                        <p style="color: #6b7280; font-size: 0.875rem; margin: 0;">No orders found</p>
+                    <?php else: ?>
+                        <?php 
+                        $totalVariantQty = array_sum($variantCounts);
+                        foreach ($variantCounts as $variantName => $quantity): 
+                            $percentage = $totalVariantQty > 0 ? round(($quantity / $totalVariantQty) * 100, 1) : 0;
+                        ?>
+                            <div class="category-item">
+                                <span class="category-item-label"><?php echo htmlspecialchars($variantName); ?></span>
+                                <span class="category-item-value">
+                                    <?php echo number_format($quantity); ?>
+                                    <small style="color: #6b7280; font-size: 0.75rem; font-weight: normal; margin-left: 0.5rem;">
+                                        (<?php echo $percentage; ?>%)
+                                    </small>
+                                </span>
+                            </div>
+                        <?php endforeach; ?>
+                        <div class="category-item" style="margin-top: 0.5rem; padding-top: 0.75rem; border-top: 2px solid #e5e7eb; font-weight: 700;">
+                            <span class="category-item-label">Total</span>
+                            <span class="category-item-value"><?php echo number_format($totalVariantQty); ?></span>
+                        </div>
+                    <?php endif; ?>
+                </div>
+                
+                <!-- Quantity by Size -->
+                <div class="category-section">
+                    <h3>Quantity by Size</h3>
+                    <?php if (empty($sizeCounts)): ?>
+                        <p style="color: #6b7280; font-size: 0.875rem; margin: 0;">No orders found</p>
+                    <?php else: ?>
+                        <?php 
+                        $totalSizeQty = array_sum($sizeCounts);
+                        foreach ($sizeCounts as $size => $quantity): 
+                            $percentage = $totalSizeQty > 0 ? round(($quantity / $totalSizeQty) * 100, 1) : 0;
+                        ?>
+                            <div class="category-item">
+                                <span class="category-item-label">Size <?php echo htmlspecialchars($size); ?></span>
+                                <span class="category-item-value">
+                                    <?php echo number_format($quantity); ?>
+                                    <small style="color: #6b7280; font-size: 0.75rem; font-weight: normal; margin-left: 0.5rem;">
+                                        (<?php echo $percentage; ?>%)
+                                    </small>
+                                </span>
+                            </div>
+                        <?php endforeach; ?>
+                        <div class="category-item" style="margin-top: 0.5rem; padding-top: 0.75rem; border-top: 2px solid #e5e7eb; font-weight: 700;">
+                            <span class="category-item-label">Total</span>
+                            <span class="category-item-value"><?php echo number_format($totalSizeQty); ?></span>
+                        </div>
+                    <?php endif; ?>
+                </div>
             </div>
         </div>
         
