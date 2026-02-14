@@ -1,7 +1,7 @@
 <?php
 /**
  * Generate PDF Receipt for Order
- * Only available for paid orders
+ * Streetwear Theme: Red / Black / White
  */
 
 // Enable error reporting for debugging (remove in production)
@@ -94,9 +94,10 @@ try {
     
     // Configure DomPDF
     $options = new Options();
-    $options->set('isRemoteEnabled', false);
+    // IMPORTANT: Enable remote to load the logo URL
+    $options->set('isRemoteEnabled', true); 
     $options->set('isHtml5ParserEnabled', true);
-    $options->set('defaultFont', 'DejaVu Sans');
+    $options->set('defaultFont', 'Courier'); // Monospace fits streetwear better
     $options->set('isFontSubsettingEnabled', true);
     $options->set('isPhpEnabled', false);
     $options->set('chroot', __DIR__ . '/../../');
@@ -104,8 +105,11 @@ try {
     $dompdf = new Dompdf($options);
     
     // Format date
-    $orderDate = formatDateTime(dbToAppTime($firstItem['created_at']), 'F d, Y \a\t g:i A');
+    $orderDate = formatDateTime(dbToAppTime($firstItem['created_at']), 'd M Y / H:i');
     
+    // Logo URL
+    $logoUrl = 'https://projectcutisem.com/images/android-chrome-512x512.png';
+
     // Generate HTML for receipt
     $html = '
     <!DOCTYPE html>
@@ -113,229 +117,224 @@ try {
     <head>
         <meta charset="UTF-8">
         <style>
-            * {
+            @page { margin: 0px; }
+            body {
+                font-family: "Courier New", Courier, monospace;
+                font-size: 12px;
+                color: #000;
+                line-height: 1.4;
                 margin: 0;
+                padding: 40px;
+                background: #fff;
+            }
+            .container {
+                border: 4px solid #000;
                 padding: 0;
+                position: relative;
+                max-width: 100%;
+            }
+            /* HEADER STYLE */
+            .header-top {
+                background: #000;
+                color: #fff;
+                padding: 20px;
+                overflow: hidden;
+                border-bottom: 4px solid #000;
+            }
+            .logo-wrap {
+                float: left;
+                width: 60px;
+                height: 60px;
+                background: #fff;
+                border: 2px solid #fff;
+            }
+            .logo-wrap img {
+                width: 100%;
+                height: auto;
+                display: block;
+            }
+            .brand-title {
+                float: left;
+                margin-left: 20px;
+                font-weight: 900;
+                font-size: 24px;
+                text-transform: uppercase;
+                letter-spacing: 2px;
+                line-height: 60px; /* Vertically center with logo */
+            }
+            .receipt-tag {
+                float: right;
+                background: #ff0000;
+                color: #fff;
+                padding: 5px 15px;
+                font-weight: bold;
+                text-transform: uppercase;
+                font-size: 14px;
+                margin-top: 15px;
+                transform: rotate(-2deg);
+            }
+
+            /* INFO GRID */
+            .info-grid {
+                width: 100%;
+                border-bottom: 4px solid #000;
+                overflow: hidden;
+            }
+            .col-left {
+                float: left;
+                width: 50%;
+                padding: 20px;
+                border-right: 4px solid #000;
                 box-sizing: border-box;
             }
-            body {
-                font-family: DejaVu Sans, Arial, Helvetica, sans-serif;
-                font-size: 12px;
-                color: #333;
-                line-height: 1.6;
+            .col-right {
+                float: left;
+                width: 50%;
                 padding: 20px;
-                background: #f5f5f5;
+                box-sizing: border-box;
             }
-            .receipt-container {
-                max-width: 800px;
-                margin: 0 auto;
-                background: #ffffff;
-                padding: 40px;
-                box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            }
-            .header {
-                text-align: center;
-                border-bottom: 3px solid #2563eb;
-                padding-bottom: 20px;
-                margin-bottom: 30px;
-            }
-            .header h1 {
-                color: #2563eb;
-                font-size: 28px;
-                font-weight: 700;
-                margin-bottom: 10px;
+            .label {
+                font-weight: bold;
+                text-transform: uppercase;
+                font-size: 10px;
+                color: #ff0000;
+                margin-bottom: 2px;
                 letter-spacing: 1px;
             }
-            .header p {
-                color: #6b7280;
+            .value {
                 font-size: 14px;
+                font-weight: bold;
+                margin-bottom: 15px;
+                word-wrap: break-word;
             }
-            .receipt-info {
-                width: 100%;
-                margin-bottom: 30px;
-            }
-            .info-row {
-                margin-bottom: 10px;
-                overflow: hidden;
-            }
-            .info-label {
-                float: left;
-                font-weight: 600;
-                color: #4b5563;
-                padding: 8px 15px 8px 0;
-                width: 140px;
-            }
-            .info-value {
-                color: #111827;
-                padding: 8px 0;
-                overflow: hidden;
-            }
-            .section-title {
+            .value.ref {
+                font-family: Helvetica, Arial, sans-serif;
                 font-size: 16px;
-                font-weight: 700;
-                color: #111827;
-                margin: 25px 0 15px 0;
-                padding-bottom: 8px;
-                border-bottom: 2px solid #e5e7eb;
+                letter-spacing: 1px;
             }
-            .customer-info {
-                background: #f9fafb;
-                padding: 20px;
-                border-radius: 8px;
-                margin-bottom: 25px;
-            }
-            .items-table {
+
+            /* TABLE STYLE */
+            table {
                 width: 100%;
                 border-collapse: collapse;
-                margin: 20px 0;
             }
-            .items-table thead {
-                background: #2563eb;
-                color: #ffffff;
-            }
-            .items-table th {
+            th {
+                background: #000;
+                color: #fff;
+                text-transform: uppercase;
                 padding: 12px;
                 text-align: left;
-                font-weight: 600;
-                font-size: 13px;
+                font-size: 11px;
+                border-bottom: 4px solid #000;
             }
-            .items-table td {
-                padding: 12px;
-                border-bottom: 1px solid #e5e7eb;
+            td {
+                padding: 15px 12px;
+                border-bottom: 2px solid #000;
+                font-weight: bold;
             }
-            .items-table tbody tr:hover {
-                background: #f9fafb;
-            }
-            .text-right {
-                text-align: right;
-            }
-            .text-center {
-                text-align: center;
-            }
-            .totals-section {
-                margin-top: 25px;
-                padding-top: 20px;
-                border-top: 2px solid #e5e7eb;
+            .text-right { text-align: right; }
+            .text-center { text-align: center; }
+
+            /* TOTALS */
+            .totals-area {
+                float: right;
+                width: 50%;
+                padding: 20px 0;
             }
             .total-row {
-                width: 100%;
-                margin: 8px 0;
                 overflow: hidden;
+                margin-bottom: 5px;
+                padding: 0 20px;
             }
             .total-label {
                 float: left;
-                text-align: right;
-                padding-right: 20px;
-                color: #4b5563;
-                font-weight: 500;
-                width: calc(100% - 140px);
+                text-transform: uppercase;
+                font-weight: bold;
             }
-            .total-value {
+            .total-val {
                 float: right;
-                text-align: right;
-                color: #111827;
-                font-weight: 600;
-                width: 120px;
+                font-weight: bold;
             }
             .grand-total {
-                margin-top: 15px;
-                padding-top: 15px;
-                border-top: 2px solid #2563eb;
-            }
-            .grand-total .total-label {
-                font-size: 16px;
-                font-weight: 700;
-                color: #111827;
-            }
-            .grand-total .total-value {
+                background: #ff0000;
+                color: #fff;
+                padding: 15px 20px;
+                margin-top: 10px;
+                border-top: 4px solid #000;
+                border-bottom: 4px solid #000; /* Create a stripe effect */
                 font-size: 18px;
-                font-weight: 700;
-                color: #2563eb;
             }
+
+            /* FOOTER / SUPPORT */
             .footer {
-                margin-top: 40px;
-                padding-top: 20px;
-                border-top: 1px solid #e5e7eb;
+                clear: both;
+                padding: 30px 20px;
                 text-align: center;
-                color: #6b7280;
-                font-size: 11px;
+                background: #000;
+                color: #fff;
+                margin-top: 40px; 
             }
-            .status-badge {
-                display: inline-block;
-                padding: 6px 12px;
-                background: #10b981;
-                color: #ffffff;
-                border-radius: 20px;
-                font-weight: 600;
-                font-size: 11px;
+            .support-line {
+                font-size: 14px;
+                font-weight: bold;
                 text-transform: uppercase;
-                letter-spacing: 0.5px;
+                margin-bottom: 5px;
             }
-            .discount {
-                color: #10b981;
+            .support-contact {
+                color: #ff0000;
+                font-family: "Courier New", monospace;
+            }
+            .barcode-fake {
+                margin-top: 15px;
+                letter-spacing: 8px;
+                font-size: 24px;
+                opacity: 0.5;
             }
         </style>
     </head>
     <body>
-        <div class="receipt-container">
-            <div class="header">
-                <h1>PROJEK CUTI SEM</h1>
-                <p>Official Receipt</p>
+        <div class="container">
+            <div class="header-top">
+                <div class="logo-wrap">
+                    <img src="' . $logoUrl . '" alt="Logo">
+                </div>
+                <div class="brand-title">PROJECT CUTI SEM</div>
+                <div class="receipt-tag">OFFICIAL RECEIPT</div>
             </div>
-            
-            <div class="receipt-info">
-                <div class="info-row">
-                    <div class="info-label">Receipt Number:</div>
-                    <div class="info-value"><strong>' . htmlspecialchars($refNo) . '</strong></div>
+
+            <div class="info-grid">
+                <div class="col-left">
+                    <div class="label">Billed To</div>
+                    <div class="value">' . htmlspecialchars($firstItem['fullname'] ?: $firstItem['name']) . '</div>
+                    
+                    <div class="label">Contact</div>
+                    <div class="value">' . htmlspecialchars($firstItem['phone']) . '<br>' . htmlspecialchars($firstItem['email']) . '</div>
+
+                    <div class="label">Shipment Address</div>
+                    <div class="value">
+                        ' . htmlspecialchars($firstItem['address1']) . '<br>
+                        ' . ($firstItem['district'] ? htmlspecialchars($firstItem['district']) . ', ' : '') . htmlspecialchars($firstItem['state'] ?? '') . '
+                    </div>
                 </div>
-                <div class="info-row">
-                    <div class="info-label">Order Date:</div>
-                    <div class="info-value">' . htmlspecialchars($orderDate) . '</div>
-                </div>
-                <div class="info-row">
-                    <div class="info-label">Payment Status:</div>
-                    <div class="info-value"><span class="status-badge">PAID</span></div>
+                <div class="col-right">
+                    <div class="label">Receipt No.</div>
+                    <div class="value ref">#' . htmlspecialchars($refNo) . '</div>
+
+                    <div class="label">Date / Time</div>
+                    <div class="value">' . htmlspecialchars($orderDate) . '</div>
+
+                    <div class="label">Status</div>
+                    <div class="value" style="color:#ff0000;">PAID / CONFIRMED</div>
                 </div>
             </div>
-            
-            <div class="section-title">Customer Information</div>
-            <div class="customer-info">
-                <div class="info-row">
-                    <div class="info-label">Name:</div>
-                    <div class="info-value"><strong>' . htmlspecialchars($firstItem['fullname'] ?: $firstItem['name']) . '</strong></div>
-                </div>
-                <div class="info-row">
-                    <div class="info-label">Email:</div>
-                    <div class="info-value">' . htmlspecialchars($firstItem['email']) . '</div>
-                </div>
-                <div class="info-row">
-                    <div class="info-label">Phone:</div>
-                    <div class="info-value">' . htmlspecialchars($firstItem['phone']) . '</div>
-                </div>';
-    
-    if (!empty($firstItem['address1'])) {
-        $html .= '
-                <div class="info-row">
-                    <div class="info-label">Address:</div>
-                    <div class="info-value">' . htmlspecialchars($firstItem['address1']);
-        if (!empty($firstItem['district']) || !empty($firstItem['state'])) {
-            $html .= '<br>' . htmlspecialchars($firstItem['district'] ?? '') . ', ' . htmlspecialchars($firstItem['state'] ?? '');
-        }
-        $html .= '</div>
-                </div>';
-    }
-    
-    $html .= '
-            </div>
-            
-            <div class="section-title">Order Items</div>
-            <table class="items-table">
+
+            <table>
                 <thead>
                     <tr>
-                        <th>Item</th>
-                        <th>Size</th>
-                        <th class="text-center">Quantity</th>
-                        <th class="text-right">Unit Price</th>
+                        <th style="width: 40%;">Item / Variant</th>
+                        <th class="text-center">Size</th>
+                        <th class="text-center">Qty</th>
+                        <th class="text-right">Price</th>
                         <th class="text-right">Total</th>
                     </tr>
                 </thead>
@@ -349,51 +348,61 @@ try {
         
         $html .= '
                     <tr>
-                        <td><strong>' . htmlspecialchars($variantName) . '</strong></td>
-                        <td>' . htmlspecialchars($item['size'] ?? 'N/A') . '</td>
-                        <td class="text-center">' . $quantity . '</td>
-                        <td class="text-right">RM ' . number_format($unitPrice, 2) . '</td>
-                        <td class="text-right"><strong>RM ' . number_format($itemAmount, 2) . '</strong></td>
+                        <td>
+                            <span style="display:block; text-transform:uppercase;">' . htmlspecialchars($variantName) . '</span>
+                        </td>
+                        <td class="text-center">' . htmlspecialchars($item['size'] ?? '-') . '</td>
+                        <td class="text-center">x' . $quantity . '</td>
+                        <td class="text-right">' . number_format($unitPrice, 2) . '</td>
+                        <td class="text-right">' . number_format($itemAmount, 2) . '</td>
                     </tr>';
     }
     
     $html .= '
                 </tbody>
             </table>
-            
-            <div class="totals-section">
-                <div class="total-row">
-                    <div class="total-label">Subtotal:</div>
-                    <div class="total-value">RM ' . number_format($subtotal, 2) . '</div>
-                </div>';
+
+            <div style="overflow: hidden;">
+                <div class="totals-area">
+                    <div class="total-row">
+                        <div class="total-label">Subtotal</div>
+                        <div class="total-val">RM ' . number_format($subtotal, 2) . '</div>
+                    </div>';
     
     if ($deliveryFee > 0) {
         $html .= '
-                <div class="total-row">
-                    <div class="total-label">Delivery Fee:</div>
-                    <div class="total-value">RM ' . number_format($deliveryFee, 2) . '</div>
-                </div>';
+                    <div class="total-row">
+                        <div class="total-label">Shipping</div>
+                        <div class="total-val">RM ' . number_format($deliveryFee, 2) . '</div>
+                    </div>';
     }
     
     if ($discountAmount > 0) {
         $html .= '
-                <div class="total-row">
-                    <div class="total-label discount">Discount:</div>
-                    <div class="total-value discount">-RM ' . number_format($discountAmount, 2) . '</div>
-                </div>';
+                    <div class="total-row">
+                        <div class="total-label" style="color:#ff0000">Discount</div>
+                        <div class="total-val" style="color:#ff0000">-RM ' . number_format($discountAmount, 2) . '</div>
+                    </div>';
     }
     
     $html .= '
-                <div class="total-row grand-total">
-                    <div class="total-label">Total Amount:</div>
-                    <div class="total-value">RM ' . number_format($totalAmount, 2) . '</div>
+                    <div class="grand-total">
+                        <div style="float:left;">TOTAL PAID</div>
+                        <div style="float:right;">RM ' . number_format($totalAmount, 2) . '</div>
+                        <div style="clear:both;"></div>
+                    </div>
                 </div>
             </div>
-            
+
             <div class="footer">
-                <p>Thank you for your purchase!</p>
-                <p>This is an official receipt for your records.</p>
-                <p style="margin-top: 15px;">Generated on ' . date('F d, Y \a\t g:i A') . '</p>
+                <div class="support-line">Need Help?</div>
+                <div class="support-contact">
+                    ' . htmlspecialchars('info@projectcutisem.com') . ' <span style="color:#666">|</span> DM our IG
+                </div>
+                <div class="barcode-fake">||| || ||| || |||||| |||</div>
+                <div style="margin-top:10px; font-size:9px; color:#666;">
+                    COMPUTER GENERATED RECEIPT. NO SIGNATURE REQUIRED.
+                </div>
             </div>
         </div>
     </body>
@@ -414,7 +423,7 @@ try {
     }
     
     // Output PDF with proper headers
-    $filename = 'Receipt_' . preg_replace('/[^a-zA-Z0-9_-]/', '_', $refNo) . '_' . date('Ymd') . '.pdf';
+    $filename = 'Receipt_' . preg_replace('/[^a-zA-Z0-9_-]/', '_', $refNo) . '.pdf';
     
     // Clear any previous output
     if (ob_get_level()) {
@@ -432,23 +441,10 @@ try {
     
 } catch (Exception $e) {
     error_log("Receipt generation error: " . $e->getMessage());
-    error_log("Stack trace: " . $e->getTraceAsString());
     http_response_code(500);
-    
-    // For debugging - show error details (remove in production)
-    $errorMsg = 'Error generating receipt: ' . $e->getMessage();
-    if (isset($_GET['debug']) && $_GET['debug'] === '1') {
-        $errorMsg .= "\n\nStack trace:\n" . $e->getTraceAsString();
-    }
-    die($errorMsg);
+    die('Error generating receipt. Please try again later.');
 } catch (Error $e) {
     error_log("Receipt generation fatal error: " . $e->getMessage());
-    error_log("Stack trace: " . $e->getTraceAsString());
     http_response_code(500);
-    
-    $errorMsg = 'Fatal error generating receipt: ' . $e->getMessage();
-    if (isset($_GET['debug']) && $_GET['debug'] === '1') {
-        $errorMsg .= "\n\nStack trace:\n" . $e->getTraceAsString();
-    }
-    die($errorMsg);
+    die('System error generating receipt.');
 }
