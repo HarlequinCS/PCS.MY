@@ -153,6 +153,31 @@ foreach ($sizeStats as $stat) {
         .category-item:last-child { border-bottom: none; }
         .category-item-label { color: var(--text-secondary); font-size: 0.875rem; }
         .category-item-value { font-weight: 700; color: var(--text-primary); font-size: 1.125rem; }
+        .download-receipt-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: #ffffff;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 0.875rem;
+            transition: all 0.2s ease;
+            margin-bottom: 0.5rem;
+            box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3);
+        }
+        .download-receipt-btn:hover {
+            background: linear-gradient(135deg, #059669 0%, #047857 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(16, 185, 129, 0.4);
+            color: #ffffff;
+        }
+        .download-receipt-btn::before {
+            content: "📄";
+            font-size: 1rem;
+        }
     </style>
 </head>
 <body class="admin-dashboard">
@@ -410,6 +435,20 @@ foreach ($sizeStats as $stat) {
                                     echo formatDateTime(dbToAppTime($firstItem['created_at']), 'Y-m-d H:i'); 
                                 ?></td>
                                 <td>
+                                    <?php 
+                                    // Check if order is paid - show receipt button only for paid orders
+                                    // Check if primary status is paid or if all items are paid
+                                    $isPaid = ($primaryStatus === 'paid') || (count($allStatuses) === 1 && in_array('paid', $allStatuses));
+                                    if ($isPaid): 
+                                    ?>
+                                        <a href="/admin/api/generate_receipt.php?ref=<?php echo urlencode($refNo); ?>" 
+                                           class="download-receipt-btn" 
+                                           target="_blank"
+                                           title="Download Receipt (PDF)">
+                                            Download Receipt
+                                        </a>
+                                        <br>
+                                    <?php endif; ?>
                                     <a href="#" onclick="openPriceAdjust(<?php echo $firstItem['id']; ?>, <?php echo $totalAmount; ?>); return false;" 
                                        class="price-adjust-link">Adjust Price</a>
                                     <br>
