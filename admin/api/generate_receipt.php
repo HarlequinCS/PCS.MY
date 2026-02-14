@@ -4,13 +4,29 @@
  * Only available for paid orders
  */
 
+// Enable error reporting for debugging (remove in production)
+error_reporting(E_ALL);
+ini_set('display_errors', 0);
+ini_set('log_errors', 1);
+
+// Increase memory limit for PDF generation
+ini_set('memory_limit', '256M');
+ini_set('max_execution_time', 60);
+
 define('DB_CONFIG_LOADED', true);
 require_once __DIR__ . '/../../config/database.php';
 require_once __DIR__ . '/../../includes/db.php';
 require_once __DIR__ . '/../config.php';
 
 // Load DomPDF
-require_once __DIR__ . '/../../vendor/autoload.php';
+$autoloadPath = __DIR__ . '/../../vendor/autoload.php';
+if (!file_exists($autoloadPath)) {
+    error_log("Autoload file not found at: " . $autoloadPath);
+    http_response_code(500);
+    die('PDF library not found. Please run: composer install');
+}
+
+require_once $autoloadPath;
 
 use Dompdf\Dompdf;
 use Dompdf\Options;
@@ -35,7 +51,11 @@ if (empty($refNo)) {
 }
 
 try {
+    // Test database connection
     $pdo = getDBConnection();
+    if (!$pdo) {
+        throw new Exception('Database connection failed');
+    }
     
     // Get all order items for this reference number
     $stmt = $pdo->prepare("SELECT * FROM orders WHERE billExternalReferenceNo = ? ORDER BY id ASC");
@@ -57,11 +77,12 @@ try {
     // Calculate totals
     $subtotal = 0;
     foreach ($orderItems as $item) {
-        $subtotal += $item['final_amount'];
+        $amount = floatval($item['final_amount'] ?? $item['amount'] ?? 0);
+        $subtotal += $amount;
     }
     
-    $deliveryFee = $firstItem['delivery_fee'] ?? 0;
-    $discountAmount = $firstItem['discount_amount'] ?? 0;
+    $deliveryFee = floatval($firstItem['delivery_fee'] ?? 0);
+    $discountAmount = floatval($firstItem['discount_amount'] ?? 0);
     $totalAmount = $subtotal + $deliveryFee - $discountAmount;
     
     // Variant names mapping
@@ -73,9 +94,12 @@ try {
     
     // Configure DomPDF
     $options = new Options();
-    $options->set('isRemoteEnabled', true);
+    $options->set('isRemoteEnabled', false);
     $options->set('isHtml5ParserEnabled', true);
     $options->set('defaultFont', 'DejaVu Sans');
+    $options->set('isFontSubsettingEnabled', true);
+    $options->set('isPhpEnabled', false);
+    $options->set('chroot', __DIR__ . '/../../');
     
     $dompdf = new Dompdf($options);
     
@@ -95,7 +119,7 @@ try {
                 box-sizing: border-box;
             }
             body {
-                font-family: "DejaVu Sans", Arial, sans-serif;
+                font-family: DejaVu Sans, Arial, Helvetica, sans-serif;
                 font-size: 12px;
                 color: #333;
                 line-height: 1.6;
@@ -127,24 +151,24 @@ try {
                 font-size: 14px;
             }
             .receipt-info {
-                display: table;
                 width: 100%;
                 margin-bottom: 30px;
             }
             .info-row {
-                display: table-row;
+                margin-bottom: 10px;
+                overflow: hidden;
             }
             .info-label {
-                display: table-cell;
+                float: left;
                 font-weight: 600;
                 color: #4b5563;
                 padding: 8px 15px 8px 0;
                 width: 140px;
             }
             .info-value {
-                display: table-cell;
                 color: #111827;
                 padding: 8px 0;
+                overflow: hidden;
             }
             .section-title {
                 font-size: 16px;
@@ -194,23 +218,24 @@ try {
                 border-top: 2px solid #e5e7eb;
             }
             .total-row {
-                display: table;
                 width: 100%;
                 margin: 8px 0;
+                overflow: hidden;
             }
             .total-label {
-                display: table-cell;
+                float: left;
                 text-align: right;
                 padding-right: 20px;
                 color: #4b5563;
                 font-weight: 500;
+                width: calc(100% - 140px);
             }
             .total-value {
-                display: table-cell;
+                float: right;
                 text-align: right;
                 color: #111827;
                 font-weight: 600;
-                min-width: 120px;
+                width: 120px;
             }
             .grand-total {
                 margin-top: 15px;
@@ -318,15 +343,17 @@ try {
     
     foreach ($orderItems as $item) {
         $variantName = $variantNames[$item['variant']] ?? $item['variant'];
-        $unitPrice = $item['quantity'] > 0 ? $item['final_amount'] / $item['quantity'] : 0;
+        $itemAmount = floatval($item['final_amount'] ?? $item['amount'] ?? 0);
+        $quantity = intval($item['quantity'] ?? 1);
+        $unitPrice = $quantity > 0 ? $itemAmount / $quantity : 0;
         
         $html .= '
                     <tr>
                         <td><strong>' . htmlspecialchars($variantName) . '</strong></td>
-                        <td>' . htmlspecialchars($item['size']) . '</td>
-                        <td class="text-center">' . $item['quantity'] . '</td>
+                        <td>' . htmlspecialchars($item['size'] ?? 'N/A') . '</td>
+                        <td class="text-center">' . $quantity . '</td>
                         <td class="text-right">RM ' . number_format($unitPrice, 2) . '</td>
-                        <td class="text-right"><strong>RM ' . number_format($item['final_amount'], 2) . '</strong></td>
+                        <td class="text-right"><strong>RM ' . number_format($itemAmount, 2) . '</strong></td>
                     </tr>';
     }
     
@@ -379,14 +406,49 @@ try {
     $dompdf->setPaper('A4', 'portrait');
     
     // Render PDF
-    $dompdf->render();
+    try {
+        $dompdf->render();
+    } catch (Exception $renderError) {
+        error_log("PDF render error: " . $renderError->getMessage());
+        throw new Exception("Failed to render PDF: " . $renderError->getMessage());
+    }
+    
+    // Output PDF with proper headers
+    $filename = 'Receipt_' . preg_replace('/[^a-zA-Z0-9_-]/', '_', $refNo) . '_' . date('Ymd') . '.pdf';
+    
+    // Clear any previous output
+    if (ob_get_level()) {
+        ob_end_clean();
+    }
+    
+    // Set headers
+    header('Content-Type: application/pdf');
+    header('Content-Disposition: attachment; filename="' . $filename . '"');
+    header('Cache-Control: private, max-age=0, must-revalidate');
+    header('Pragma: public');
     
     // Output PDF
-    $filename = 'Receipt_' . $refNo . '_' . date('Ymd') . '.pdf';
     $dompdf->stream($filename, ['Attachment' => 1]);
     
 } catch (Exception $e) {
     error_log("Receipt generation error: " . $e->getMessage());
+    error_log("Stack trace: " . $e->getTraceAsString());
     http_response_code(500);
-    die('Error generating receipt: ' . $e->getMessage());
+    
+    // For debugging - show error details (remove in production)
+    $errorMsg = 'Error generating receipt: ' . $e->getMessage();
+    if (isset($_GET['debug']) && $_GET['debug'] === '1') {
+        $errorMsg .= "\n\nStack trace:\n" . $e->getTraceAsString();
+    }
+    die($errorMsg);
+} catch (Error $e) {
+    error_log("Receipt generation fatal error: " . $e->getMessage());
+    error_log("Stack trace: " . $e->getTraceAsString());
+    http_response_code(500);
+    
+    $errorMsg = 'Fatal error generating receipt: ' . $e->getMessage();
+    if (isset($_GET['debug']) && $_GET['debug'] === '1') {
+        $errorMsg .= "\n\nStack trace:\n" . $e->getTraceAsString();
+    }
+    die($errorMsg);
 }
