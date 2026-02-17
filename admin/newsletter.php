@@ -33,6 +33,12 @@ $stats = [
 $allEmails = [];
 
 try {
+    // Check if source column exists, if not add it
+    $columns = $pdo->query("SHOW COLUMNS FROM email_notifications LIKE 'source'")->fetchAll();
+    if (empty($columns)) {
+        $pdo->exec("ALTER TABLE email_notifications ADD COLUMN source VARCHAR(20) DEFAULT 'subscriber' AFTER status");
+    }
+    
     $totalStmt = $pdo->query("SELECT COUNT(*) as total FROM email_notifications");
     $stats['total'] = (int)$totalStmt->fetch(PDO::FETCH_ASSOC)['total'];
     
@@ -41,8 +47,15 @@ try {
     
     $stats['inactive'] = $stats['total'] - $stats['active'];
     
-    // Get all emails for selection
-    $emailsStmt = $pdo->query("SELECT notification_id, email, status FROM email_notifications ORDER BY email ASC");
+    // Get counts by source
+    $subscriberStmt = $pdo->query("SELECT COUNT(*) as total FROM email_notifications WHERE status = 'active' AND (source = 'subscriber' OR source IS NULL)");
+    $stats['subscribers'] = (int)$subscriberStmt->fetch(PDO::FETCH_ASSOC)['total'];
+    
+    $customerStmt = $pdo->query("SELECT COUNT(*) as total FROM email_notifications WHERE status = 'active' AND source = 'customer'");
+    $stats['customers'] = (int)$customerStmt->fetch(PDO::FETCH_ASSOC)['total'];
+    
+    // Get all emails for selection (include source)
+    $emailsStmt = $pdo->query("SELECT notification_id, email, status, COALESCE(source, 'subscriber') as source FROM email_notifications ORDER BY email ASC");
     $allEmails = $emailsStmt->fetchAll(PDO::FETCH_ASSOC);
 } catch (PDOException $e) {
     error_log("Stats error: " . $e->getMessage());
@@ -513,16 +526,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         <!-- Statistics -->
         <div class="stats-grid">
             <div class="stat-card">
-                <h3>Total Subscribers</h3>
+                <h3>Total Emails</h3>
                 <div class="stat-value"><?php echo $stats['total']; ?></div>
             </div>
             <div class="stat-card">
                 <h3>Active Subscribers</h3>
-                <div class="stat-value"><?php echo $stats['active']; ?></div>
+                <div class="stat-value"><?php echo $stats['subscribers'] ?? 0; ?></div>
             </div>
             <div class="stat-card">
-                <h3>Inactive Subscribers</h3>
-                <div class="stat-value"><?php echo $stats['inactive']; ?></div>
+                <h3>Customer Emails</h3>
+                <div class="stat-value"><?php echo $stats['customers'] ?? 0; ?></div>
+            </div>
+            <div class="stat-card">
+                <h3>Active Total</h3>
+                <div class="stat-value"><?php echo $stats['active']; ?></div>
             </div>
         </div>
         
@@ -574,6 +591,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                                     <option value="all">All Emails</option>
                                     <option value="active">Active Only</option>
                                     <option value="inactive">Inactive Only</option>
+                                    <option value="subscriber">Subscribers Only</option>
+                                    <option value="customer">Customers Only</option>
                                 </select>
                                 <button type="button" id="selectAllBtn" class="btn btn-sm btn-secondary">Select All</button>
                                 <button type="button" id="deselectAllBtn" class="btn btn-sm btn-secondary">Deselect All</button>
@@ -581,9 +600,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                         </div>
                         <div id="emailListContainer" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 0.5rem;">
                             <?php foreach ($allEmails as $email): ?>
-                                <label class="email-checkbox-label" style="display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem; background: white; border: 1px solid var(--border-color); border-radius: 4px; cursor: pointer; transition: all 0.2s;" data-status="<?php echo htmlspecialchars($email['status']); ?>">
-                                    <input type="checkbox" name="selected_emails[]" value="<?php echo htmlspecialchars($email['notification_id']); ?>" class="email-checkbox" data-email="<?php echo htmlspecialchars($email['email']); ?>" data-status="<?php echo htmlspecialchars($email['status']); ?>" form="newsletterForm">
+                                <?php 
+                                $source = $email['source'] ?? 'subscriber';
+                                $sourceLabel = $source === 'customer' ? 'Customer' : 'Subscriber';
+                                $sourceColor = $source === 'customer' ? '#3b82f6' : '#10b981';
+                                ?>
+                                <label class="email-checkbox-label" style="display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem; background: white; border: 1px solid var(--border-color); border-radius: 4px; cursor: pointer; transition: all 0.2s;" data-status="<?php echo htmlspecialchars($email['status']); ?>" data-source="<?php echo htmlspecialchars($source); ?>">
+                                    <input type="checkbox" name="selected_emails[]" value="<?php echo htmlspecialchars($email['notification_id']); ?>" class="email-checkbox" data-email="<?php echo htmlspecialchars($email['email']); ?>" data-status="<?php echo htmlspecialchars($email['status']); ?>" data-source="<?php echo htmlspecialchars($source); ?>" form="newsletterForm">
                                     <span style="flex: 1; font-size: 0.875rem;"><?php echo htmlspecialchars($email['email']); ?></span>
+                                    <span style="font-size: 0.7rem; color: <?php echo $sourceColor; ?>; font-weight: 500; margin-right: 0.25rem;" title="<?php echo $sourceLabel; ?>">
+                                        <?php echo $source === 'customer' ? '🛒' : '📧'; ?>
+                                    </span>
                                     <span style="font-size: 0.75rem; color: <?php echo $email['status'] === 'active' ? '#10b981' : '#6b7280'; ?>; font-weight: 500;">
                                         <?php echo $email['status'] === 'active' ? '✓' : '○'; ?>
                                     </span>
@@ -821,11 +848,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                 
                 emailLabels.forEach(label => {
                     const status = label.getAttribute('data-status');
+                    const source = label.getAttribute('data-source');
+                    
                     if (filterValue === 'all') {
                         label.style.display = 'flex';
                     } else if (filterValue === 'active' && status === 'active') {
                         label.style.display = 'flex';
                     } else if (filterValue === 'inactive' && status === 'inactive') {
+                        label.style.display = 'flex';
+                    } else if (filterValue === 'subscriber' && source === 'subscriber' && status === 'active') {
+                        label.style.display = 'flex';
+                    } else if (filterValue === 'customer' && source === 'customer' && status === 'active') {
                         label.style.display = 'flex';
                     } else {
                         label.style.display = 'none';

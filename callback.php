@@ -12,6 +12,69 @@
 // ============================================
 require_once __DIR__ . '/config/timezone.php';
 
+/**
+ * Add customer email to newsletter list
+ * Automatically adds customer emails from purchases to newsletter with 'customer' source
+ * 
+ * @param PDO $pdo Database connection
+ * @param string $email Customer email address
+ * @return bool True on success, false on failure
+ */
+function addCustomerEmailToNewsletter($pdo, $email) {
+    if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        return false;
+    }
+    
+    try {
+        // Check if source column exists, if not add it
+        $columns = $pdo->query("SHOW COLUMNS FROM email_notifications LIKE 'source'")->fetchAll();
+        if (empty($columns)) {
+            $pdo->exec("ALTER TABLE email_notifications ADD COLUMN source VARCHAR(20) DEFAULT 'subscriber' AFTER status");
+            error_log("Added 'source' column to email_notifications table");
+        }
+        
+        // Check if email already exists
+        $checkStmt = $pdo->prepare("SELECT notification_id, source FROM email_notifications WHERE email = ?");
+        $checkStmt->execute([$email]);
+        $existing = $checkStmt->fetch();
+        
+        if ($existing) {
+            // Email exists - update source to 'customer' if it's currently 'subscriber' or null
+            // This way, if someone subscribed first then made a purchase, they become a customer
+            // But if they're already a customer, don't update
+            if (empty($existing['source']) || $existing['source'] === 'subscriber') {
+                $updateStmt = $pdo->prepare("UPDATE email_notifications SET source = 'customer', updated_at = ? WHERE email = ?");
+                $updateStmt->execute([getCurrentDateTimeUTC(), $email]);
+                error_log("Updated email source to 'customer' for: {$email}");
+            }
+            return true;
+        }
+        
+        // Insert new email with 'customer' source
+        $stmt = $pdo->prepare("INSERT INTO email_notifications (email, ip_address, user_agent, status, source, created_at, updated_at) VALUES (?, NULL, NULL, 'active', 'customer', ?, ?)");
+        $nowUTC = getCurrentDateTimeUTC();
+        $stmt->execute([$email, $nowUTC, $nowUTC]);
+        
+        error_log("Added customer email to newsletter: {$email}");
+        return true;
+        
+    } catch (PDOException $e) {
+        // If duplicate entry, that's okay - email already exists
+        if ($e->getCode() == 23000) {
+            // Try to update source if it's a duplicate
+            try {
+                $updateStmt = $pdo->prepare("UPDATE email_notifications SET source = 'customer', updated_at = ? WHERE email = ?");
+                $updateStmt->execute([getCurrentDateTimeUTC(), $email]);
+                return true;
+            } catch (Exception $updateError) {
+                error_log("Failed to update duplicate email source: " . $updateError->getMessage());
+            }
+        }
+        error_log("Failed to add customer email to newsletter: " . $e->getMessage());
+        return false;
+    }
+}
+
 // ============================================
 // STEP 2: Capture POST Data from ToyyibPay
 // ============================================
@@ -153,6 +216,14 @@ if ($statusId == 1) {
                 
                 // Send email if we have valid order data and email address
                 if ($orderData && !empty($orderData['email']) && !empty($orderItems)) {
+                    // Add customer email to newsletter list (if not already exists)
+                    try {
+                        addCustomerEmailToNewsletter($pdo, $orderData['email']);
+                    } catch (Exception $e) {
+                        error_log("Failed to add customer email to newsletter: " . $e->getMessage());
+                        // Don't fail the callback if newsletter addition fails
+                    }
+                    
                     $emailSent = sendOrderConfirmationEmail($orderData, $orderItems);
                     
                     if ($emailSent) {

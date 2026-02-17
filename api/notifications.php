@@ -103,8 +103,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $user_agent = $_SERVER['HTTP_USER_AGENT'] ?? null;
     
     try {
+        // Check if source column exists, if not add it
+        $columns = $pdo->query("SHOW COLUMNS FROM email_notifications LIKE 'source'")->fetchAll();
+        if (empty($columns)) {
+            $pdo->exec("ALTER TABLE email_notifications ADD COLUMN source VARCHAR(20) DEFAULT 'subscriber' AFTER status");
+        }
+        
         // Check if email already exists
-        $checkStmt = $pdo->prepare("SELECT notification_id, status FROM email_notifications WHERE email = ?");
+        $checkStmt = $pdo->prepare("SELECT notification_id, status, source FROM email_notifications WHERE email = ?");
         $checkStmt->execute([$email]);
         $existing = $checkStmt->fetch();
         
@@ -120,7 +126,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 exit;
             } else {
                 // Reactivate if previously unsubscribed
-                $updateStmt = $pdo->prepare("UPDATE email_notifications SET status = 'active', updated_at = ?, ip_address = ?, user_agent = ? WHERE email = ?");
+                // Update source to 'subscriber' if they're subscribing via form (even if they were a customer)
+                $updateStmt = $pdo->prepare("UPDATE email_notifications SET status = 'active', source = 'subscriber', updated_at = ?, ip_address = ?, user_agent = ? WHERE email = ?");
                 $updateStmt->execute([getCurrentDateTimeUTC(), $ip_address, $user_agent, $email]);
                 
                 http_response_code(200);
@@ -133,9 +140,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
         
-        // Insert new email
+        // Insert new email with 'subscriber' source
         // created_at and updated_at: Use UTC timezone helper to store in UTC
-        $stmt = $pdo->prepare("INSERT INTO email_notifications (email, ip_address, user_agent, status, created_at, updated_at) VALUES (?, ?, ?, 'active', ?, ?)");
+        $stmt = $pdo->prepare("INSERT INTO email_notifications (email, ip_address, user_agent, status, source, created_at, updated_at) VALUES (?, ?, ?, 'active', 'subscriber', ?, ?)");
         $nowUTC = getCurrentDateTimeUTC();
         $stmt->execute([$email, $ip_address, $user_agent, $nowUTC, $nowUTC]);
         
