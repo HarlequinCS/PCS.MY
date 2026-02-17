@@ -185,8 +185,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         
         $promotion = $validation['promotion'];
         
-        // Calculate discount using centralized function
-        $discount = calculatePromotionDiscount($promotion, $cartSubtotal);
+        // Calculate discount per-item (per piece) instead of proportional
+        $totalDiscountAmount = 0.00;
+        foreach ($cart as $item) {
+            $itemSubtotal = floatval($item['subtotal'] ?? 0);
+            $itemQuantity = intval($item['quantity'] ?? 1);
+            if ($itemQuantity > 0 && $itemSubtotal > 0) {
+                $itemUnitPrice = $itemSubtotal / $itemQuantity;
+                
+                // Calculate discount per unit
+                $discountPerUnit = 0.00;
+                if ($promotion['type'] === 'percentage') {
+                    $percentage = floatval($promotion['value']);
+                    $discountPerUnit = ($itemUnitPrice * $percentage) / 100;
+                    if ($promotion['max_discount'] !== null) {
+                        $maxDiscountPerUnit = round(floatval($promotion['max_discount']), 2);
+                        if ($discountPerUnit > $maxDiscountPerUnit) {
+                            $discountPerUnit = $maxDiscountPerUnit;
+                        }
+                    }
+                } else { // fixed
+                    $discountPerUnit = round(floatval($promotion['value']), 2);
+                }
+                
+                // Discount per unit must not exceed unit price
+                if ($discountPerUnit > $itemUnitPrice) {
+                    $discountPerUnit = $itemUnitPrice;
+                }
+                
+                // Total discount for this item = discount per unit × quantity
+                $totalDiscountAmount += round($discountPerUnit * $itemQuantity, 2);
+            }
+        }
+        $discount = $totalDiscountAmount;
         
         // Store validated promotion in session
         storePromotionInSession($promotion['code'], $discount);
