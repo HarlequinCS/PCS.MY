@@ -117,6 +117,7 @@ $cartCount = count($cart);
 $cartSubtotal = 0;
 $totalBasePrice = 0;
 $totalSizeAddons = 0;
+$totalQuantity = 0; // Total quantity of all items
 
 foreach ($cart as $item) {
     // Safety check: ensure item has required fields
@@ -129,6 +130,7 @@ foreach ($cart as $item) {
     // Calculate base price and size addons for detailed breakdown
     $itemSize = $item['size'] ?? '';
     $itemQuantity = isset($item['quantity']) ? intval($item['quantity']) : 1;
+    $totalQuantity += $itemQuantity; // Sum up total quantity
     $itemSizeAddon = isset($item['size_addon']) ? floatval($item['size_addon']) : getSizeAddonPrice($itemSize);
     $itemBasePrice = PRICE_PER_SHIRT * $itemQuantity;
     $itemSizeAddonTotal = $itemSizeAddon * $itemQuantity;
@@ -1025,7 +1027,7 @@ if ($finalAmount < 0) {
                             <h3 style="font-size: 1rem; font-weight: 600; margin-bottom: 0.75rem; color: #333;">Order Breakdown</h3>
                             
                             <div class="order-total-row" style="font-size: 0.9rem; color: #666;">
-                                <span>Base Price (<?php echo $cartCount; ?> item(s)):</span>
+                                <span>Base Price (<?php echo $totalQuantity; ?> piece<?php echo $totalQuantity != 1 ? 's' : ''; ?>):</span>
                                 <span>RM <?php echo number_format($totalBasePrice, 2); ?></span>
                             </div>
                             

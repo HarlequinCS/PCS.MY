@@ -51,6 +51,13 @@ try {
 // Handle form submission
 $message = '';
 $messageType = '';
+$uploadedAttachments = [];
+
+// Create uploads directory if it doesn't exist
+$uploadsDir = __DIR__ . '/../uploads/newsletter_attachments/';
+if (!file_exists($uploadsDir)) {
+    mkdir($uploadsDir, 0755, true);
+}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'send_campaign') {
     $subject = trim($_POST['subject'] ?? '');
@@ -59,6 +66,67 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     $testEmail = trim($_POST['test_email'] ?? '');
     $testOnly = isset($_POST['test_only']);
     $selectedEmails = $_POST['selected_emails'] ?? [];
+    
+    // Handle file uploads
+    $attachments = [];
+    if (!empty($_FILES['attachments']['name'][0])) {
+        $allowedTypes = [
+            'application/pdf',
+            'application/msword',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'application/vnd.ms-excel',
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'application/vnd.ms-powerpoint',
+            'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+            'image/jpeg',
+            'image/png',
+            'image/gif',
+            'text/plain',
+            'application/zip',
+            'application/x-zip-compressed'
+        ];
+        
+        $maxFileSize = 10 * 1024 * 1024; // 10MB per file
+        
+        foreach ($_FILES['attachments']['name'] as $key => $fileName) {
+            if ($_FILES['attachments']['error'][$key] === UPLOAD_ERR_OK) {
+                $tmpName = $_FILES['attachments']['tmp_name'][$key];
+                $fileSize = $_FILES['attachments']['size'][$key];
+                $fileType = $_FILES['attachments']['type'][$key];
+                
+                // Validate file size
+                if ($fileSize > $maxFileSize) {
+                    $message = "File '{$fileName}' exceeds maximum size of 10MB";
+                    $messageType = 'error';
+                    continue;
+                }
+                
+                // Validate file type
+                if (!in_array($fileType, $allowedTypes)) {
+                    $message = "File '{$fileName}' has an invalid file type. Allowed: PDF, Word, Excel, PowerPoint, Images, Text, ZIP";
+                    $messageType = 'error';
+                    continue;
+                }
+                
+                // Sanitize filename
+                $safeFileName = preg_replace('/[^a-zA-Z0-9._-]/', '_', $fileName);
+                $uniqueFileName = time() . '_' . uniqid() . '_' . $safeFileName;
+                $targetPath = $uploadsDir . $uniqueFileName;
+                
+                // Move uploaded file
+                if (move_uploaded_file($tmpName, $targetPath)) {
+                    $attachments[] = [
+                        'path' => $targetPath,
+                        'name' => $fileName,
+                        'size' => $fileSize
+                    ];
+                    $uploadedAttachments[] = $targetPath; // Track for cleanup
+                } else {
+                    error_log("Failed to move uploaded file: {$fileName}");
+                }
+            }
+        }
+    }
     
     // Debug logging (remove in production)
     error_log("Newsletter Campaign - Recipient Type: " . $recipientType);
@@ -84,10 +152,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                 $message = 'Invalid test email address';
                 $messageType = 'error';
             } else {
-                // Send test email
+                // Send test email with attachments
                 $testBody = "<div style='background: #fff3cd; padding: 20px; border: 2px solid #ffc107; border-radius: 8px; margin-bottom: 20px;'><strong>🧪 TEST EMAIL</strong><br>This is a test email. The actual campaign will be sent to all recipients.</div>" . $body;
                 
-                $result = sendSMTPEmail($testEmail, "[TEST] " . $subject, $testBody);
+                $result = sendSMTPEmail($testEmail, "[TEST] " . $subject, $testBody, '', $attachments);
                 
                 if ($result) {
                     $message = "Test email sent successfully to {$testEmail}";
@@ -145,7 +213,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                     $failCount = 0;
                     
                     foreach ($recipients as $email) {
-                        $result = sendSMTPEmail($email, $subject, $body);
+                        $result = sendSMTPEmail($email, $subject, $body, '', $attachments);
                         if ($result) {
                             $successCount++;
                         } else {
@@ -156,7 +224,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                         usleep(100000); // 0.1 second delay
                     }
                     
-                    $message = "Campaign sent! Success: {$successCount}, Failed: {$failCount}";
+                    // Clean up uploaded files after sending
+                    foreach ($uploadedAttachments as $filePath) {
+                        if (file_exists($filePath)) {
+                            @unlink($filePath);
+                        }
+                    }
+                    
+                    $attachmentInfo = !empty($attachments) ? ' with ' . count($attachments) . ' attachment(s)' : '';
+                    $message = "Campaign sent{$attachmentInfo}! Success: {$successCount}, Failed: {$failCount}";
                     $messageType = 'success';
                 } elseif (empty($recipients) && $messageType !== 'error') {
                     // Fallback error message if no recipients found and no specific error set
@@ -167,6 +243,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                 error_log("Campaign send error: " . $e->getMessage());
                 $message = "Error sending campaign: " . $e->getMessage();
                 $messageType = 'error';
+                
+                // Clean up uploaded files on error
+                foreach ($uploadedAttachments as $filePath) {
+                    if (file_exists($filePath)) {
+                        @unlink($filePath);
+                    }
+                }
+            }
+        }
+    }
+    
+    // Clean up uploaded files if validation failed
+    if ($messageType === 'error' && !empty($uploadedAttachments)) {
+        foreach ($uploadedAttachments as $filePath) {
+            if (file_exists($filePath)) {
+                @unlink($filePath);
             }
         }
     }
@@ -357,6 +449,48 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             font-weight: 700;
             color: var(--primary-color);
         }
+        
+        .attachment-section {
+            background: #f8f9fa;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 0.5rem;
+        }
+        
+        .attachment-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            margin-bottom: 0.5rem;
+        }
+        
+        .attachment-item:last-child {
+            margin-bottom: 0;
+        }
+        
+        .attachment-icon {
+            font-size: 1.5rem;
+        }
+        
+        .attachment-info {
+            flex: 1;
+        }
+        
+        .attachment-name {
+            font-weight: 500;
+            color: var(--text-primary);
+            margin-bottom: 0.25rem;
+        }
+        
+        .attachment-size {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
     </style>
 </head>
 <body class="admin-dashboard">
@@ -401,7 +535,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         
         <!-- Newsletter Form -->
         <div class="newsletter-form">
-            <form method="POST" action="" id="newsletterForm">
+            <form method="POST" action="" id="newsletterForm" enctype="multipart/form-data">
                 <input type="hidden" name="action" value="send_campaign">
                 
                 <!-- Recipient Selection -->
@@ -492,6 +626,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                     <div class="email-preview" id="emailPreview" style="display: none;">
                         <h4>Preview</h4>
                         <div class="email-preview-content" id="previewContent"></div>
+                    </div>
+                </div>
+                
+                <!-- Attachments Section -->
+                <div class="form-section">
+                    <h3>📎 Attachments (Optional)</h3>
+                    <div class="form-group">
+                        <input type="file" name="attachments[]" id="attachments" multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.jpg,.jpeg,.png,.gif,.txt,.zip" class="form-group input" style="width: 100%; padding: 0.75rem;">
+                        <small style="color: var(--text-secondary); margin-top: 0.5rem; display: block;">
+                            You can attach multiple files. Maximum file size: 10MB per file.<br>
+                            Allowed types: PDF, Word (.doc, .docx), Excel (.xls, .xlsx), PowerPoint (.ppt, .pptx), Images (.jpg, .png, .gif), Text (.txt), ZIP (.zip)
+                        </small>
+                        <div id="attachmentList" style="margin-top: 1rem;"></div>
                     </div>
                 </div>
                 
@@ -689,6 +836,70 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         
         // Initialize
         toggleEmailList();
+        
+        // Attachment file list display
+        const attachmentsInput = document.getElementById('attachments');
+        const attachmentList = document.getElementById('attachmentList');
+        
+        if (attachmentsInput && attachmentList) {
+            attachmentsInput.addEventListener('change', function() {
+                const files = Array.from(this.files);
+                attachmentList.innerHTML = '';
+                
+                if (files.length > 0) {
+                    const listContainer = document.createElement('div');
+                    listContainer.style.cssText = 'background: #f8f9fa; border: 1px solid var(--border-color); border-radius: 8px; padding: 1rem; margin-top: 0.5rem;';
+                    
+                    const header = document.createElement('div');
+                    header.style.cssText = 'font-weight: 600; margin-bottom: 0.75rem; color: var(--text-primary);';
+                    header.textContent = `Selected Files (${files.length}):`;
+                    listContainer.appendChild(header);
+                    
+                    files.forEach((file, index) => {
+                        const fileItem = document.createElement('div');
+                        fileItem.style.cssText = 'display: flex; justify-content: space-between; align-items: center; padding: 0.5rem; background: white; border: 1px solid var(--border-color); border-radius: 4px; margin-bottom: 0.5rem;';
+                        
+                        const fileInfo = document.createElement('div');
+                        fileInfo.style.cssText = 'flex: 1;';
+                        
+                        const fileName = document.createElement('div');
+                        fileName.style.cssText = 'font-weight: 500; color: var(--text-primary);';
+                        fileName.textContent = file.name;
+                        
+                        const fileSize = document.createElement('div');
+                        fileSize.style.cssText = 'font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.25rem;';
+                        const sizeInMB = (file.size / (1024 * 1024)).toFixed(2);
+                        fileSize.textContent = `${sizeInMB} MB`;
+                        
+                        fileInfo.appendChild(fileName);
+                        fileInfo.appendChild(fileSize);
+                        fileItem.appendChild(fileInfo);
+                        
+                        // File type icon
+                        const fileIcon = document.createElement('span');
+                        fileIcon.style.cssText = 'font-size: 1.5rem; margin-right: 0.5rem;';
+                        const extension = file.name.split('.').pop().toLowerCase();
+                        const iconMap = {
+                            'pdf': '📄',
+                            'doc': '📝', 'docx': '📝',
+                            'xls': '📊', 'xlsx': '📊',
+                            'ppt': '📊', 'pptx': '📊',
+                            'jpg': '🖼️', 'jpeg': '🖼️', 'png': '🖼️', 'gif': '🖼️',
+                            'txt': '📄',
+                            'zip': '📦'
+                        };
+                        fileIcon.textContent = iconMap[extension] || '📎';
+                        fileItem.insertBefore(fileIcon, fileInfo);
+                        
+                        listContainer.appendChild(fileItem);
+                    });
+                    
+                    attachmentList.appendChild(listContainer);
+                } else {
+                    attachmentList.innerHTML = '';
+                }
+            });
+        }
     </script>
 </body>
 </html>

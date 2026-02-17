@@ -47,3 +47,8 @@ tmp/
 
 # Private folder - test/debug files and temporary documentation
 _private/
+
+# Uploaded files - newsletter attachments and receipts
+uploads/
+uploads/receipts/
+uploads/newsletter_attachments/
