@@ -52,15 +52,24 @@ try {
     if ($firstItem['status'] !== 'paid') die('Receipt available for paid orders only');
     
     // 4. CALCULATIONS
+    // Calculate subtotal from amount (after discount, before delivery fee)
     $subtotal = 0;
+    $totalDeliveryFee = 0;
+    $totalDiscountAmount = 0;
+    
     foreach ($orderItems as $item) {
-        $amount = floatval($item['final_amount'] ?? $item['amount'] ?? 0);
-        $subtotal += $amount;
+        // amount = item price after discount (before delivery fee)
+        $itemAmount = floatval($item['amount'] ?? 0);
+        $subtotal += $itemAmount;
+        
+        // Sum up delivery fees and discounts from all items
+        $totalDeliveryFee += floatval($item['delivery_fee'] ?? 0);
+        $totalDiscountAmount += floatval($item['discount_amount'] ?? 0);
     }
     
-    $deliveryFee = floatval($firstItem['delivery_fee'] ?? 0);
-    $discountAmount = floatval($firstItem['discount_amount'] ?? 0);
-    $totalAmount = $subtotal + $deliveryFee - $discountAmount;
+    // Total = Subtotal (after discount) + Delivery Fee
+    // Note: Discount is already applied in 'amount' field, so we don't subtract it again
+    $totalAmount = $subtotal + $totalDeliveryFee;
     
     // Mappings
     $variantNames = [
@@ -263,9 +272,13 @@ try {
         // Generate a fake SKU for detail: e.g. HIT-XL-001
         $sku = strtoupper(substr($variantRaw, 0, 3) . '-' . $size . '-01');
         
-        $amount = floatval($item['final_amount'] ?? $item['amount'] ?? 0);
+        // Use 'amount' field (after discount, before delivery) for item calculations
+        $itemAmount = floatval($item['amount'] ?? 0);
         $qty = intval($item['quantity'] ?? 1);
-        $unit = $qty > 0 ? $amount / $qty : 0;
+        $unitPrice = $qty > 0 ? $itemAmount / $qty : 0;
+        
+        // Total for this line item (after discount, before delivery)
+        $lineTotal = $itemAmount;
         
         $html .= '
                 <tr class="item-row">
@@ -275,8 +288,8 @@ try {
                     </td>
                     <td class="text-center">' . htmlspecialchars($size) . '</td>
                     <td class="text-center">' . $qty . '</td>
-                    <td class="text-right">' . number_format($unit, 2) . '</td>
-                    <td class="text-right">' . number_format($amount, 2) . '</td>
+                    <td class="text-right">RM ' . number_format($unitPrice, 2) . '</td>
+                    <td class="text-right">RM ' . number_format($lineTotal, 2) . '</td>
                 </tr>';
     }
 
@@ -295,15 +308,18 @@ try {
                     <td width="40%" style="padding:0;">
                         <table style="width:100%;">
                             <tr class="totals-row">
-                                <td style="padding-top:15px;">Subtotal</td>
-                                <td style="padding-top:15px;">RM ' . number_format($subtotal, 2) . '</td>
+                                <td style="padding-top:15px;">Subtotal (Before Discount)</td>
+                                <td style="padding-top:15px;">RM ' . number_format($subtotal + $totalDiscountAmount, 2) . '</td>
                             </tr>';
     
-    if ($deliveryFee > 0) {
-        $html .= '<tr class="totals-row"><td>Shipping</td><td>RM ' . number_format($deliveryFee, 2) . '</td></tr>';
+    if ($totalDiscountAmount > 0) {
+        $html .= '<tr class="totals-row"><td class="text-red">Discount Applied</td><td class="text-red">-RM ' . number_format($totalDiscountAmount, 2) . '</td></tr>';
     }
-    if ($discountAmount > 0) {
-        $html .= '<tr class="totals-row"><td class="text-red">Discount</td><td class="text-red">-RM ' . number_format($discountAmount, 2) . '</td></tr>';
+    
+    $html .= '<tr class="totals-row"><td>Subtotal (After Discount)</td><td>RM ' . number_format($subtotal, 2) . '</td></tr>';
+    
+    if ($totalDeliveryFee > 0) {
+        $html .= '<tr class="totals-row"><td>Shipping</td><td>RM ' . number_format($totalDeliveryFee, 2) . '</td></tr>';
     }
     
     $html .= '

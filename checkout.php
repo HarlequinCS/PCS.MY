@@ -335,6 +335,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     // For pickup, address fields are optional
     
     // Validate promotion code if provided
+    $promotion = null; // Store promotion object for per-item discount calculation
     if (!empty($promoCodeInput)) {
         try {
             $pdo = getDBConnection();
@@ -346,8 +347,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                 $errors[] = $validation['error'];
                 $discountAmount = 0.00;
                 $promoCode = '';
+                $promotion = null;
             } else {
                 $promotion = $validation['promotion'];
+                // Calculate total discount for display/validation (will be recalculated per-item later)
                 $discountAmount = calculatePromotionDiscount($promotion, $cartSubtotal);
                 $promoCode = strtoupper(trim($promoCodeInput));
             }
@@ -356,11 +359,49 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             $errors[] = 'Error validating promotion code';
             $discountAmount = 0.00;
             $promoCode = '';
+            $promotion = null;
         }
     }
     
     // Store order_type in session
     $_SESSION['order_type'] = $orderType;
+    
+    // Calculate per-item discount if promotion exists
+    // This will be used for both final amount calculation and item processing
+    if ($promotion) {
+        $totalDiscountAmount = 0.00;
+        foreach ($cart as $item) {
+            $itemSubtotal = floatval($item['subtotal'] ?? 0);
+            $itemQuantity = intval($item['quantity'] ?? 1);
+            if ($itemQuantity > 0 && $itemSubtotal > 0) {
+                $itemUnitPrice = $itemSubtotal / $itemQuantity;
+                
+                // Calculate discount per unit
+                $discountPerUnit = 0.00;
+                if ($promotion['type'] === 'percentage') {
+                    $percentage = floatval($promotion['value']);
+                    $discountPerUnit = ($itemUnitPrice * $percentage) / 100;
+                    if ($promotion['max_discount'] !== null) {
+                        $maxDiscountPerUnit = round(floatval($promotion['max_discount']), 2);
+                        if ($discountPerUnit > $maxDiscountPerUnit) {
+                            $discountPerUnit = $maxDiscountPerUnit;
+                        }
+                    }
+                } else { // fixed
+                    $discountPerUnit = round(floatval($promotion['value']), 2);
+                }
+                
+                // Discount per unit must not exceed unit price
+                if ($discountPerUnit > $itemUnitPrice) {
+                    $discountPerUnit = $itemUnitPrice;
+                }
+                
+                // Total discount for this item = discount per unit × quantity
+                $totalDiscountAmount += round($discountPerUnit * $itemQuantity, 2);
+            }
+        }
+        $discountAmount = $totalDiscountAmount;
+    }
     
     // Calculate final amount: subtotal + delivery_fee - discount (all rounded to 2 decimal places)
     $finalAmount = round($cartSubtotal + $deliveryFee - $discountAmount, 2);
@@ -410,6 +451,50 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                 )
             ");
             
+            /**
+             * Calculate discount per item based on promotion
+             * Applies discount per piece/unit, then multiplies by quantity
+             * 
+             * @param array $promotion Promotion data
+             * @param float $itemUnitPrice Price per unit of the item
+             * @param int $quantity Quantity of items
+             * @return float Total discount for this item (discount per unit × quantity)
+             */
+            $calculateItemDiscount = function($promotion, $itemUnitPrice, $quantity) {
+                if (!$promotion || $quantity <= 0 || $itemUnitPrice <= 0) {
+                    return 0.00;
+                }
+                
+                $discountPerUnit = 0.00;
+                
+                if ($promotion['type'] === 'percentage') {
+                    // Calculate percentage discount per unit
+                    $percentage = floatval($promotion['value']);
+                    $discountPerUnit = ($itemUnitPrice * $percentage) / 100;
+                    
+                    // Apply max_discount cap per unit if set
+                    if ($promotion['max_discount'] !== null) {
+                        $maxDiscountPerUnit = round(floatval($promotion['max_discount']), 2);
+                        if ($discountPerUnit > $maxDiscountPerUnit) {
+                            $discountPerUnit = $maxDiscountPerUnit;
+                        }
+                    }
+                } else { // fixed
+                    // Fixed discount per unit
+                    $discountPerUnit = round(floatval($promotion['value']), 2);
+                }
+                
+                // Discount per unit must not exceed unit price
+                if ($discountPerUnit > $itemUnitPrice) {
+                    $discountPerUnit = $itemUnitPrice;
+                }
+                
+                // Total discount = discount per unit × quantity
+                $totalDiscount = round($discountPerUnit * $quantity, 2);
+                
+                return $totalDiscount;
+            };
+            
             // Insert each cart item as a separate order record
             foreach ($cart as $item) {
                 // Safety check: ensure item has required fields
@@ -423,13 +508,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                     throw new Exception('Invalid cart subtotal. Cannot process order.');
                 }
                 
-                // Calculate item amount (proportional discount if applicable)
+                // Calculate item amount (per-item discount if applicable)
                 $itemSubtotal = floatval($item['subtotal']);
+                $itemQuantity = intval($item['quantity'] ?? 1);
+                $itemUnitPrice = $itemQuantity > 0 ? $itemSubtotal / $itemQuantity : 0;
+                
                 $itemAmount = $itemSubtotal;
                 $itemDiscount = 0;
-                if ($discountAmount > 0) {
-                    // Apply proportional discount to each item (based on original subtotal)
-                    $itemDiscount = ($itemSubtotal / $cartSubtotal) * $discountAmount;
+                
+                if ($promotion && $itemQuantity > 0 && $itemUnitPrice > 0) {
+                    // Apply discount per item (per piece) based on promotion
+                    $itemDiscount = $calculateItemDiscount($promotion, $itemUnitPrice, $itemQuantity);
                     $itemAmount = $itemSubtotal - $itemDiscount;
                 }
                 
