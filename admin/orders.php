@@ -116,6 +116,10 @@ $variantSizeMatrixStmt = $pdo->query("
 ");
 $variantSizeData = $variantSizeMatrixStmt->fetchAll(PDO::FETCH_ASSOC);
 
+// Debug: Verify query results
+// Uncomment to see raw data:
+// error_log("Variant-Size Data: " . json_encode($variantSizeData));
+
 // Build matrix structure
 $variantNames = [
     'hitamdepan' => 'Classic Black',
@@ -130,14 +134,27 @@ $sizeOrder = ['XS' => 1, 'S' => 2, 'M' => 3, 'L' => 4, 'XL' => 5, 'XXL' => 6, '3
 // Build matrix: variant => size => quantity
 $variantSizeMatrix = [];
 foreach ($variantSizeData as $row) {
-    $variant = $row['variant'];
-    $size = $row['size'];
-    $quantity = (int)$row['total_quantity'];
+    $variant = trim($row['variant'] ?? '');
+    $size = trim($row['size'] ?? '');
+    $quantity = (int)($row['total_quantity'] ?? 0);
+    
+    // Skip invalid data (but keep quantity > 0 since SQL already filters this)
+    if (empty($variant) || empty($size)) {
+        continue;
+    }
+    // Don't skip quantity <= 0 here - let SQL handle it, but we should still store it
+    // Actually, SQL WHERE clause already filters quantity > 0, so we can trust the data
     
     if (!isset($variantSizeMatrix[$variant])) {
         $variantSizeMatrix[$variant] = [];
     }
-    $variantSizeMatrix[$variant][$size] = $quantity;
+    // Store the quantity - SQL GROUP BY already sums them, so we just store the result
+    // If the same variant+size combination appears (shouldn't happen with GROUP BY), sum them
+    if (isset($variantSizeMatrix[$variant][$size])) {
+        $variantSizeMatrix[$variant][$size] += $quantity;
+    } else {
+        $variantSizeMatrix[$variant][$size] = $quantity;
+    }
 }
 
 // Get all variants that exist in orders
@@ -325,7 +342,11 @@ foreach ($allVariants as $variant) {
                                     <?php 
                                     // Display all standard sizes in order
                                     foreach ($allSizes as $size):
-                                        $quantity = $variantData[$size] ?? 0;
+                                        // Get quantity from matrix - ensure we read the exact value
+                                        $quantity = 0;
+                                        if (isset($variantData[$size])) {
+                                            $quantity = (int)$variantData[$size];
+                                        }
                                     ?>
                                         <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.9375rem;">
                                             <span style="min-width: 40px; font-weight: 600; color: var(--text-primary);">
