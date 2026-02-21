@@ -109,9 +109,13 @@ $variantSizeMatrixStmt = $pdo->query("
             WHEN 'M' THEN 3
             WHEN 'L' THEN 4
             WHEN 'XL' THEN 5
-            WHEN 'XXL' THEN 6
-            WHEN '3XL' THEN 7
-            ELSE 8
+            WHEN '2XL' THEN 6
+            WHEN 'XXL' THEN 7
+            WHEN '3XL' THEN 8
+            WHEN '4XL' THEN 9
+            WHEN '5XL' THEN 10
+            WHEN '6XL' THEN 11
+            ELSE 99
         END
 ");
 $variantSizeData = $variantSizeMatrixStmt->fetchAll(PDO::FETCH_ASSOC);
@@ -127,9 +131,28 @@ $variantNames = [
     'merahdepan' => 'Royal Red'
 ];
 
-// Get all unique sizes
-$allSizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL', '3XL'];
-$sizeOrder = ['XS' => 1, 'S' => 2, 'M' => 3, 'L' => 4, 'XL' => 5, 'XXL' => 6, '3XL' => 7];
+// Define size order for proper sorting
+$sizeOrder = [
+    'XS' => 1, 'S' => 2, 'M' => 3, 'L' => 4, 
+    'XL' => 5, '2XL' => 6, 'XXL' => 6.5, '3XL' => 7, 
+    '4XL' => 8, '5XL' => 9, '6XL' => 10
+];
+
+// Get all unique sizes from the database results (dynamic)
+// This ensures we display all sizes that actually exist in orders
+$allSizesFromDB = array_unique(array_column($variantSizeData, 'size'));
+// Filter out empty values and trim
+$allSizesFromDB = array_filter(array_map('trim', $allSizesFromDB), function($size) {
+    return !empty($size);
+});
+// Sort sizes by predefined order
+usort($allSizesFromDB, function($a, $b) use ($sizeOrder) {
+    $orderA = $sizeOrder[$a] ?? 999;
+    $orderB = $sizeOrder[$b] ?? 999;
+    return $orderA <=> $orderB;
+});
+// Use dynamic sizes if available, otherwise fallback to standard list
+$allSizes = !empty($allSizesFromDB) ? array_values($allSizesFromDB) : ['S', 'M', 'L', 'XL', '2XL', '3XL', '4XL', '5XL', '6XL'];
 
 // Build matrix: variant => size => quantity
 $variantSizeMatrix = [];

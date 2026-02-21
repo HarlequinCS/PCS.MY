@@ -135,6 +135,7 @@
                         this.updateProductImage(imageSrc);
                         this.updateVariantCardActiveState(radio);
                     }
+
                 });
             });
         }
