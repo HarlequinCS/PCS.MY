@@ -81,37 +81,22 @@ $paidOrderCountStmt = $pdo->query("
 $paidOrderCountResult = $paidOrderCountStmt->fetch(PDO::FETCH_ASSOC);
 $paidOrderCount = (int)($paidOrderCountResult['order_count'] ?? 0);
 
-// Get quantity by color/variant (excluding cancelled)
-$variantStatsStmt = $pdo->query("
+// Get quantity by variant and size combination (matrix format)
+$variantSizeMatrixStmt = $pdo->query("
     SELECT 
         variant,
-        SUM(quantity) as total_quantity
-    FROM orders
-    WHERE status != 'cancelled'
-    GROUP BY variant
-    ORDER BY total_quantity DESC
-");
-$variantStats = $variantStatsStmt->fetchAll(PDO::FETCH_ASSOC);
-$variantCounts = [];
-$variantNames = [
-    'hitamdepan' => 'Classic Black',
-    'hijaufront' => 'Forest Green',
-    'merahdepan' => 'Royal Red'
-];
-foreach ($variantStats as $stat) {
-    $variantName = $variantNames[$stat['variant']] ?? ucfirst($stat['variant']);
-    $variantCounts[$variantName] = $stat['total_quantity'];
-}
-
-// Get quantity by size (excluding cancelled)
-$sizeStatsStmt = $pdo->query("
-    SELECT 
         size,
         SUM(quantity) as total_quantity
     FROM orders
     WHERE status != 'cancelled'
-    GROUP BY size
+    GROUP BY variant, size
     ORDER BY 
+        CASE variant
+            WHEN 'hitamdepan' THEN 1
+            WHEN 'hijaufront' THEN 2
+            WHEN 'merahdepan' THEN 3
+            ELSE 4
+        END,
         CASE size
             WHEN 'XS' THEN 1
             WHEN 'S' THEN 2
@@ -122,11 +107,39 @@ $sizeStatsStmt = $pdo->query("
             ELSE 7
         END
 ");
-$sizeStats = $sizeStatsStmt->fetchAll(PDO::FETCH_ASSOC);
-$sizeCounts = [];
-foreach ($sizeStats as $stat) {
-    $sizeCounts[$stat['size']] = $stat['total_quantity'];
+$variantSizeData = $variantSizeMatrixStmt->fetchAll(PDO::FETCH_ASSOC);
+
+// Build matrix structure
+$variantNames = [
+    'hitamdepan' => 'Classic Black',
+    'hijaufront' => 'Forest Green',
+    'merahdepan' => 'Royal Red'
+];
+
+// Get all unique sizes
+$allSizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL', '3XL'];
+$sizeOrder = ['XS' => 1, 'S' => 2, 'M' => 3, 'L' => 4, 'XL' => 5, 'XXL' => 6, '3XL' => 7];
+
+// Build matrix: variant => size => quantity
+$variantSizeMatrix = [];
+foreach ($variantSizeData as $row) {
+    $variant = $row['variant'];
+    $size = $row['size'];
+    $quantity = (int)$row['total_quantity'];
+    
+    if (!isset($variantSizeMatrix[$variant])) {
+        $variantSizeMatrix[$variant] = [];
+    }
+    $variantSizeMatrix[$variant][$size] = $quantity;
 }
+
+// Get all variants that exist in orders
+$allVariants = array_unique(array_column($variantSizeData, 'variant'));
+// Sort variants by predefined order
+usort($allVariants, function($a, $b) use ($variantNames) {
+    $order = ['hitamdepan' => 1, 'hijaufront' => 2, 'merahdepan' => 3];
+    return ($order[$a] ?? 999) <=> ($order[$b] ?? 999);
+});
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -251,63 +264,41 @@ foreach ($sizeStats as $stat) {
             </div>
         </div>
         
-        <!-- Category Statistics -->
+        <!-- Category Statistics - Matrix Format -->
         <div class="category-stats">
-            <h2>Quantity Breakdown</h2>
-            <div class="category-grid">
-                <!-- Quantity by Color -->
-                <div class="category-section">
-                    <h3>Quantity by Color</h3>
-                    <?php if (empty($variantCounts)): ?>
+            <h2>Quantity Breakdown by Variant & Size</h2>
+            <div class="category-grid" style="grid-template-columns: 1fr;">
+                <div class="category-section" style="width: 100%;">
+                    <?php if (empty($allVariants)): ?>
                         <p style="color: #6b7280; font-size: 0.875rem; margin: 0;">No orders found</p>
                     <?php else: ?>
-                        <?php 
-                        $totalVariantQty = array_sum($variantCounts);
-                        foreach ($variantCounts as $variantName => $quantity): 
-                            $percentage = $totalVariantQty > 0 ? round(($quantity / $totalVariantQty) * 100, 1) : 0;
+                        <?php foreach ($allVariants as $variant): 
+                            $variantName = $variantNames[$variant] ?? ucfirst($variant);
+                            $variantData = $variantSizeMatrix[$variant] ?? [];
                         ?>
-                            <div class="category-item">
-                                <span class="category-item-label"><?php echo htmlspecialchars($variantName); ?></span>
-                                <span class="category-item-value">
-                                    <?php echo number_format($quantity); ?>
-                                    <small style="color: #6b7280; font-size: 0.75rem; font-weight: normal; margin-left: 0.5rem;">
-                                        (<?php echo $percentage; ?>%)
-                                    </small>
-                                </span>
+                            <div style="margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid #e5e7eb;">
+                                <h3 style="margin: 0 0 0.75rem 0; font-size: 1rem; color: var(--text-primary); font-weight: 600;">
+                                    <?php echo htmlspecialchars($variantName); ?>
+                                </h3>
+                                <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                                    <?php 
+                                    // Display all standard sizes in order
+                                    foreach ($allSizes as $size):
+                                        $quantity = $variantData[$size] ?? 0;
+                                    ?>
+                                        <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.9375rem;">
+                                            <span style="min-width: 40px; font-weight: 600; color: var(--text-primary);">
+                                                <?php echo htmlspecialchars($size); ?>
+                                            </span>
+                                            <span style="color: #6b7280;">-</span>
+                                            <span style="font-weight: 700; color: var(--text-primary); min-width: 30px;">
+                                                <?php echo $quantity > 0 ? $quantity : ''; ?>
+                                            </span>
+                                        </div>
+                                    <?php endforeach; ?>
+                                </div>
                             </div>
                         <?php endforeach; ?>
-                        <div class="category-item" style="margin-top: 0.5rem; padding-top: 0.75rem; border-top: 2px solid #e5e7eb; font-weight: 700;">
-                            <span class="category-item-label">Total</span>
-                            <span class="category-item-value"><?php echo number_format($totalVariantQty); ?></span>
-                        </div>
-                    <?php endif; ?>
-                </div>
-                
-                <!-- Quantity by Size -->
-                <div class="category-section">
-                    <h3>Quantity by Size</h3>
-                    <?php if (empty($sizeCounts)): ?>
-                        <p style="color: #6b7280; font-size: 0.875rem; margin: 0;">No orders found</p>
-                    <?php else: ?>
-                        <?php 
-                        $totalSizeQty = array_sum($sizeCounts);
-                        foreach ($sizeCounts as $size => $quantity): 
-                            $percentage = $totalSizeQty > 0 ? round(($quantity / $totalSizeQty) * 100, 1) : 0;
-                        ?>
-                            <div class="category-item">
-                                <span class="category-item-label">Size <?php echo htmlspecialchars($size); ?></span>
-                                <span class="category-item-value">
-                                    <?php echo number_format($quantity); ?>
-                                    <small style="color: #6b7280; font-size: 0.75rem; font-weight: normal; margin-left: 0.5rem;">
-                                        (<?php echo $percentage; ?>%)
-                                    </small>
-                                </span>
-                            </div>
-                        <?php endforeach; ?>
-                        <div class="category-item" style="margin-top: 0.5rem; padding-top: 0.75rem; border-top: 2px solid #e5e7eb; font-weight: 700;">
-                            <span class="category-item-label">Total</span>
-                            <span class="category-item-value"><?php echo number_format($totalSizeQty); ?></span>
-                        </div>
                     <?php endif; ?>
                 </div>
             </div>
