@@ -82,13 +82,19 @@ $paidOrderCountResult = $paidOrderCountStmt->fetch(PDO::FETCH_ASSOC);
 $paidOrderCount = (int)($paidOrderCountResult['order_count'] ?? 0);
 
 // Get quantity by variant and size combination (matrix format)
+// Only count PAID orders (confirmed purchases)
+// Note: This counts each order item separately, so if one order has 2 items of same variant+size, it counts as 2
 $variantSizeMatrixStmt = $pdo->query("
     SELECT 
         variant,
         size,
-        SUM(quantity) as total_quantity
+        SUM(quantity) as total_quantity,
+        COUNT(*) as item_count
     FROM orders
-    WHERE status != 'cancelled'
+    WHERE status = 'paid'
+        AND variant IS NOT NULL 
+        AND size IS NOT NULL
+        AND quantity > 0
     GROUP BY variant, size
     ORDER BY 
         CASE variant
@@ -104,7 +110,8 @@ $variantSizeMatrixStmt = $pdo->query("
             WHEN 'L' THEN 4
             WHEN 'XL' THEN 5
             WHEN 'XXL' THEN 6
-            ELSE 7
+            WHEN '3XL' THEN 7
+            ELSE 8
         END
 ");
 $variantSizeData = $variantSizeMatrixStmt->fetchAll(PDO::FETCH_ASSOC);
@@ -140,6 +147,26 @@ usort($allVariants, function($a, $b) use ($variantNames) {
     $order = ['hitamdepan' => 1, 'hijaufront' => 2, 'merahdepan' => 3];
     return ($order[$a] ?? 999) <=> ($order[$b] ?? 999);
 });
+
+// Calculate total quantity for verification
+$totalQuantityFromMatrix = 0;
+foreach ($variantSizeMatrix as $variant => $sizes) {
+    foreach ($sizes as $size => $qty) {
+        $totalQuantityFromMatrix += $qty;
+    }
+}
+
+// Get total quantity from orders table for comparison (only paid orders)
+$totalQuantityStmt = $pdo->query("
+    SELECT SUM(quantity) as total 
+    FROM orders 
+    WHERE status = 'paid'
+    AND variant IS NOT NULL 
+    AND size IS NOT NULL
+    AND quantity > 0
+");
+$totalQuantityResult = $totalQuantityStmt->fetch(PDO::FETCH_ASSOC);
+$totalQuantityFromDB = (int)($totalQuantityResult['total'] ?? 0);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -267,6 +294,14 @@ usort($allVariants, function($a, $b) use ($variantNames) {
         <!-- Category Statistics - Matrix Format -->
         <div class="category-stats">
             <h2>Quantity Breakdown by Variant & Size</h2>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; padding: 0.75rem; background: #f8f9fa; border-radius: 6px;">
+                <p style="color: #6b7280; font-size: 0.875rem; margin: 0;">
+                    Showing quantities from <strong>paid orders only</strong>. Each order item's quantity is summed by variant and size.
+                </p>
+                <div style="font-weight: 600; color: var(--text-primary);">
+                    Total: <?php echo number_format($totalQuantityFromMatrix); ?> pieces
+                </div>
+            </div>
             <div class="category-grid" style="grid-template-columns: 1fr;">
                 <div class="category-section" style="width: 100%;">
                     <?php if (empty($allVariants)): ?>

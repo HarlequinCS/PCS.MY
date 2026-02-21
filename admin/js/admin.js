@@ -6,8 +6,11 @@ let currentFilter = 'pending';
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
-    loadComments('pending');
-    setupEventListeners();
+    // Only load comments if we're on the comments page
+    if (document.getElementById('commentsContainer')) {
+        loadComments('pending');
+        setupEventListeners();
+    }
     setupMobileMenu();
 });
 
@@ -96,13 +99,16 @@ function setupMobileMenu() {
 }
 
 function setupEventListeners() {
-    // Tab buttons
-    document.querySelectorAll('.tab-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const filter = btn.dataset.filter;
-            switchFilter(filter);
+    // Tab buttons (only if they exist)
+    const tabButtons = document.querySelectorAll('.tab-btn');
+    if (tabButtons.length > 0) {
+        tabButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const filter = btn.dataset.filter;
+                switchFilter(filter);
+            });
         });
-    });
+    }
 }
 
 function switchFilter(filter) {
@@ -121,6 +127,10 @@ function switchFilter(filter) {
 
 async function loadComments(filter = 'pending') {
     const container = document.getElementById('commentsContainer');
+    if (!container) {
+        console.warn('Comments container not found. This function should only be called on the comments page.');
+        return;
+    }
     container.innerHTML = '<div class="loading-spinner"><div class="spinner"></div><p>Loading comments...</p></div>';
     
     try {
@@ -140,9 +150,13 @@ async function loadComments(filter = 'pending') {
 }
 
 function updateStats(counts) {
-    document.getElementById('pendingCount').textContent = counts.pending;
-    document.getElementById('approvedCount').textContent = counts.approved;
-    document.getElementById('totalCount').textContent = counts.total;
+    const pendingCount = document.getElementById('pendingCount');
+    const approvedCount = document.getElementById('approvedCount');
+    const totalCount = document.getElementById('totalCount');
+    
+    if (pendingCount) pendingCount.textContent = counts.pending;
+    if (approvedCount) approvedCount.textContent = counts.approved;
+    if (totalCount) totalCount.textContent = counts.total;
 }
 
 function displayComments(comments, filter) {
@@ -344,10 +358,12 @@ function showNotification(message, type) {
     }, 3000);
 }
 
-// Auto-refresh every 30 seconds
-setInterval(() => {
-    if (currentFilter === 'pending') {
-        loadComments('pending');
-    }
-}, 30000);
+// Auto-refresh every 30 seconds (only if comments container exists)
+if (document.getElementById('commentsContainer')) {
+    setInterval(() => {
+        if (currentFilter === 'pending') {
+            loadComments('pending');
+        }
+    }, 30000);
+}
 
