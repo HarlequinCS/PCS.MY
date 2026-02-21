@@ -148,25 +148,18 @@ usort($allVariants, function($a, $b) use ($variantNames) {
     return ($order[$a] ?? 999) <=> ($order[$b] ?? 999);
 });
 
-// Calculate total quantity for verification
+// Calculate total quantity from the matrix (this is what we display)
+// Only count variants that will be displayed (in $allVariants)
+// Count all sizes for each variant
 $totalQuantityFromMatrix = 0;
-foreach ($variantSizeMatrix as $variant => $sizes) {
-    foreach ($sizes as $size => $qty) {
-        $totalQuantityFromMatrix += $qty;
+foreach ($allVariants as $variant) {
+    if (isset($variantSizeMatrix[$variant])) {
+        foreach ($allSizes as $size) {
+            $qty = $variantSizeMatrix[$variant][$size] ?? 0;
+            $totalQuantityFromMatrix += $qty;
+        }
     }
 }
-
-// Get total quantity from orders table for comparison (only paid orders)
-$totalQuantityStmt = $pdo->query("
-    SELECT SUM(quantity) as total 
-    FROM orders 
-    WHERE status = 'paid'
-    AND variant IS NOT NULL 
-    AND size IS NOT NULL
-    AND quantity > 0
-");
-$totalQuantityResult = $totalQuantityStmt->fetch(PDO::FETCH_ASSOC);
-$totalQuantityFromDB = (int)($totalQuantityResult['total'] ?? 0);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -299,21 +292,34 @@ $totalQuantityFromDB = (int)($totalQuantityResult['total'] ?? 0);
                     Showing quantities from <strong>paid orders only</strong>. Each order item's quantity is summed by variant and size.
                 </p>
                 <div style="font-weight: 600; color: var(--text-primary);">
-                    Total: <?php echo number_format($totalQuantityFromMatrix); ?> pieces
+                    Total: <span id="totalQuantityDisplay"><?php echo number_format($totalQuantityFromMatrix); ?></span> pieces
                 </div>
             </div>
             <div class="category-grid" style="grid-template-columns: 1fr;">
                 <div class="category-section" style="width: 100%;">
                     <?php if (empty($allVariants)): ?>
                         <p style="color: #6b7280; font-size: 0.875rem; margin: 0;">No orders found</p>
-                    <?php else: ?>
-                        <?php foreach ($allVariants as $variant): 
+                    <?php else: 
+                        // Recalculate total as we display (for accurate total)
+                        $displayedTotal = 0;
+                        foreach ($allVariants as $variant): 
                             $variantName = $variantNames[$variant] ?? ucfirst($variant);
                             $variantData = $variantSizeMatrix[$variant] ?? [];
+                            
+                            // Calculate variant total
+                            $variantTotal = 0;
+                            foreach ($allSizes as $size) {
+                                $qty = $variantData[$size] ?? 0;
+                                $variantTotal += $qty;
+                            }
+                            $displayedTotal += $variantTotal;
                         ?>
                             <div style="margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid #e5e7eb;">
                                 <h3 style="margin: 0 0 0.75rem 0; font-size: 1rem; color: var(--text-primary); font-weight: 600;">
                                     <?php echo htmlspecialchars($variantName); ?>
+                                    <?php if ($variantTotal > 0): ?>
+                                        <small style="color: #6b7280; font-weight: normal; margin-left: 0.5rem;">(Total: <?php echo $variantTotal; ?>)</small>
+                                    <?php endif; ?>
                                 </h3>
                                 <div style="display: flex; flex-direction: column; gap: 0.5rem;">
                                     <?php 
