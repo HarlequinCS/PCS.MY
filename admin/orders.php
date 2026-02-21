@@ -82,7 +82,7 @@ $paidOrderCountResult = $paidOrderCountStmt->fetch(PDO::FETCH_ASSOC);
 $paidOrderCount = (int)($paidOrderCountResult['order_count'] ?? 0);
 
 // Get quantity by variant and size combination (matrix format)
-// Only count PAID orders (confirmed purchases)
+// Count all orders excluding cancelled (to match Total Orders count)
 // Note: This counts each order item separately, so if one order has 2 items of same variant+size, it counts as 2
 $variantSizeMatrixStmt = $pdo->query("
     SELECT 
@@ -91,7 +91,7 @@ $variantSizeMatrixStmt = $pdo->query("
         SUM(quantity) as total_quantity,
         COUNT(*) as item_count
     FROM orders
-    WHERE status = 'paid'
+    WHERE status != 'cancelled'
         AND variant IS NOT NULL 
         AND size IS NOT NULL
         AND quantity > 0
@@ -306,7 +306,7 @@ foreach ($allVariants as $variant) {
             <h2>Quantity Breakdown by Variant & Size</h2>
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; padding: 0.75rem; background: #f8f9fa; border-radius: 6px;">
                 <p style="color: #6b7280; font-size: 0.875rem; margin: 0;">
-                    Showing quantities from <strong>paid orders only</strong>. Each order item's quantity is summed by variant and size.
+                    Showing quantities from <strong>all orders (excluding cancelled)</strong>. Each order item's quantity is summed by variant and size.
                 </p>
                 <div style="font-weight: 600; color: var(--text-primary);">
                     Total: <span id="totalQuantityDisplay"><?php echo number_format($totalQuantityFromMatrix); ?></span> pieces
