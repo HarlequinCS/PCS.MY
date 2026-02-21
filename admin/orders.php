@@ -72,6 +72,15 @@ foreach ($stats as $stat) {
     ];
 }
 
+// Get distinct paid order count for gateway fee calculation
+$paidOrderCountStmt = $pdo->query("
+    SELECT COUNT(DISTINCT billExternalReferenceNo) as order_count
+    FROM orders
+    WHERE status = 'paid'
+");
+$paidOrderCountResult = $paidOrderCountStmt->fetch(PDO::FETCH_ASSOC);
+$paidOrderCount = (int)($paidOrderCountResult['order_count'] ?? 0);
+
 // Get quantity by color/variant (excluding cancelled)
 $variantStatsStmt = $pdo->query("
     SELECT 
@@ -208,6 +217,9 @@ foreach ($sizeStats as $stat) {
                     $totalRevenue += $data['total'];
                 }
             }
+            // Calculate net revenue after gateway fees (RM1 per paid order)
+            $totalGatewayFees = $paidOrderCount * 1.00;
+            $netRevenue = max(0, $totalRevenue - $totalGatewayFees);
             ?>
             <div class="stat-card">
                 <h3>Total Orders</h3>
@@ -218,6 +230,11 @@ foreach ($sizeStats as $stat) {
                 <h3>Total Revenue</h3>
                 <div class="stat-value">RM <?php echo number_format($totalRevenue, 2); ?></div>
                 <small style="color: #6b7280; font-size: 0.75rem;">(Excluding cancelled)</small>
+            </div>
+            <div class="stat-card" style="border-left-color: #059669;">
+                <h3>Net Revenue (After Gateway Fee)</h3>
+                <div class="stat-value" style="color: #059669;">RM <?php echo number_format($netRevenue, 2); ?></div>
+                <small style="color: #6b7280; font-size: 0.75rem;">Gateway Fee: -RM <?php echo number_format($totalGatewayFees, 2); ?> (<?php echo $paidOrderCount; ?> paid orders × RM1)</small>
             </div>
             <div class="stat-card">
                 <h3>Pending</h3>
@@ -351,6 +368,9 @@ foreach ($sizeStats as $stat) {
                         <?php foreach ($orderGroups as $refNo => $items): 
                             $firstItem = $items[0];
                             $totalAmount = array_sum(array_column($items, 'final_amount'));
+                            // Calculate gateway fee (RM1 per order, not per item)
+                            $gatewayFee = 1.00;
+                            $netAmount = max(0, $totalAmount - $gatewayFee);
                             $allStatuses = array_unique(array_column($items, 'status'));
                             $primaryStatus = $firstItem['status'];
                         ?>
@@ -390,6 +410,10 @@ foreach ($sizeStats as $stat) {
                                     <?php endif; ?>
                                     <?php if ($firstItem['discount_amount'] > 0): ?>
                                         <br><small style="color: #10b981;">Discount: -RM <?php echo number_format($firstItem['discount_amount'], 2); ?></small>
+                                    <?php endif; ?>
+                                    <?php if ($primaryStatus === 'paid'): ?>
+                                        <br><small style="color: #ef4444;">Gateway Fee: -RM <?php echo number_format($gatewayFee, 2); ?></small>
+                                        <br><strong style="color: #059669;">Net Received: RM <?php echo number_format($netAmount, 2); ?></strong>
                                     <?php endif; ?>
                                 </td>
                                 <td>
