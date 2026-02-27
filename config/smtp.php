@@ -22,7 +22,7 @@ return [
     
     // SMTP Authentication (FROM email must match username for Hostinger)
     'username' => getenv('SMTP_USERNAME') ?: 'info@projectcutisem.com',
-    'password' => getenv('SMTP_PASSWORD') ?: 'PCS@admin2025', // Set via environment variable
+    'password' => getenv('SMTP_PASSWORD') ?: 'Infopcs@2025', // Set via environment variable
     
     // Email Settings
     'from_email' => getenv('SMTP_FROM_EMAIL') ?: getenv('SMTP_USERNAME') ?: 'info@projectcutisem.com',
