@@ -12,8 +12,8 @@
     RewriteBase /
     
     # Force HTTPS (uncomment in production with SSL)
-    # RewriteCond %{HTTPS} off
-    # RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+    RewriteCond %{HTTPS} off
+    RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
     
     # Remove www (uncomment if needed)
     # RewriteCond %{HTTP_HOST} ^www\.(.+)$ [NC]

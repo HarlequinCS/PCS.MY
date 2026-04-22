@@ -14,6 +14,9 @@ header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST');
 header('Access-Control-Allow-Headers: Content-Type');
 
+// Load Honeybadger error monitoring
+require_once __DIR__ . '/../config/honeybadger.php';
+
 // Rate limiting - prevent spam and abuse
 require_once __DIR__ . '/../includes/rate_limit.php';
 checkRateLimit('comments', 10, 60); // 10 requests per minute per IP

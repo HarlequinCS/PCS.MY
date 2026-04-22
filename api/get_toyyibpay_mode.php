@@ -10,6 +10,9 @@ header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET');
 header('Access-Control-Allow-Headers: Content-Type');
 
+// Load Honeybadger error monitoring
+require_once __DIR__ . '/../config/honeybadger.php';
+
 // Define database config constant
 if (!defined('DB_CONFIG_LOADED')) {
     define('DB_CONFIG_LOADED', true);

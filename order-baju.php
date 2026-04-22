@@ -10,6 +10,11 @@
  * - Image lazy loading with preloading
  */
 
+// Production error handling
+error_reporting(0);
+ini_set('display_errors', 0);
+ini_set('log_errors', 1);
+
 // HTTPS enforcement and security headers
 $isLocalhost = in_array($_SERVER['HTTP_HOST'] ?? '', ['localhost', '127.0.0.1', '::1']) || 
                (isset($_SERVER['SERVER_ADDR']) && in_array($_SERVER['SERVER_ADDR'], ['127.0.0.1', '::1']));
@@ -54,6 +59,9 @@ if (!isset($_SESSION['cart'])) {
 if (!defined('DB_CONFIG_LOADED')) {
     define('DB_CONFIG_LOADED', true);
 }
+
+// Load Honeybadger error monitoring
+require_once __DIR__ . '/config/honeybadger.php';
 
 // Include database connection
 require_once __DIR__ . '/includes/db.php';

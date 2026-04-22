@@ -3,6 +3,9 @@
  * Admin Configuration
  */
 
+// Load Honeybadger error monitoring
+require_once __DIR__ . '/../config/honeybadger.php';
+
 // Admin credentials (change these!)
 define('ADMIN_USERNAME', 'admin');
 define('ADMIN_PASSWORD', 'PCSadmin2024!'); // Change this password!

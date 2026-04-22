@@ -7,10 +7,18 @@
  * Jangan guna return.php untuk validate payment status
  */
 
+// Production error handling
+error_reporting(0);
+ini_set('display_errors', 0);
+ini_set('log_errors', 1);
+
 // ============================================
 // STEP 1: Load Timezone Configuration
 // ============================================
 require_once __DIR__ . '/config/timezone.php';
+
+// Load Honeybadger error monitoring
+require_once __DIR__ . '/config/honeybadger.php';
 
 /**
  * Add customer email to newsletter list

@@ -4,8 +4,16 @@
  * Displays cart items, collects complete user information, applies discounts, and processes payment
  */
 
+// Production error handling
+error_reporting(0);
+ini_set('display_errors', 0);
+ini_set('log_errors', 1);
+
 // Load timezone configuration (sets default timezone and provides helper functions)
 require_once __DIR__ . '/config/timezone.php';
+
+// Load Honeybadger error monitoring
+require_once __DIR__ . '/config/honeybadger.php';
 
 // CSP Header Override - form-action removed to prevent blocking
 // Alternative security measures implemented below (Origin check, Referer validation)
