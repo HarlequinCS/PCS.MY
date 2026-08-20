@@ -48,8 +48,15 @@ if (!defined('DB_HOST')) {
 }
 
 if (!defined('CLOUDINARY_CLOUD_NAME')) {
-    define('CLOUDINARY_CLOUD_NAME', !empty($env['CLOUDINARY_CLOUD_NAME']) ? $env['CLOUDINARY_CLOUD_NAME'] : '');
-    define('CLOUDINARY_API_KEY', !empty($env['CLOUDINARY_API_KEY']) ? $env['CLOUDINARY_API_KEY'] : '');
-    define('CLOUDINARY_API_SECRET', !empty($env['CLOUDINARY_API_SECRET']) ? $env['CLOUDINARY_API_SECRET'] : '');
+    // Cloud name is public (it appears in every delivery URL). Default it so
+    // production still uses Cloudinary if Hostinger .env was not updated.
+    $cloudinaryCloudName = trim((string) ($env['CLOUDINARY_CLOUD_NAME'] ?? getenv('CLOUDINARY_CLOUD_NAME') ?: ''));
+    if ($cloudinaryCloudName === '') {
+        $cloudinaryCloudName = 'ditifn5y3';
+    }
+
+    define('CLOUDINARY_CLOUD_NAME', $cloudinaryCloudName);
+    define('CLOUDINARY_API_KEY', (string) ($env['CLOUDINARY_API_KEY'] ?? getenv('CLOUDINARY_API_KEY') ?: ''));
+    define('CLOUDINARY_API_SECRET', (string) ($env['CLOUDINARY_API_SECRET'] ?? getenv('CLOUDINARY_API_SECRET') ?: ''));
 }
 
