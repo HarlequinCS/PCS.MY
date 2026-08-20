@@ -7,8 +7,7 @@
  * based on settings configured in the admin panel.
  */
 
-// No database connection needed here - JavaScript will fetch button link via API
-// This PHP file allows for future server-side enhancements if needed
+require_once __DIR__ . '/includes/cloudinary.php';
 ?>
 <!DOCTYPE html>
 <html lang="en" dir="ltr" prefix="og: https://ogp.me/ns#">
@@ -71,18 +70,20 @@
   <!-- Resource Hints - Optimize third-party loading -->
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
   <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
+  <link rel="preconnect" href="https://res.cloudinary.com" crossorigin>
+  <link rel="dns-prefetch" href="https://res.cloudinary.com">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="dns-prefetch" href="https://s3-us-west-2.amazonaws.com">
   
   <!-- Preload critical hero images - Only preload first slide for fastest LCP -->
-  <link rel="preload" as="image" href="images/hijaufront.svg" fetchpriority="high" type="image/svg+xml">
-  <link rel="preload" as="image" href="images/hijauback.svg" fetchpriority="high" type="image/svg+xml">
+  <link rel="preload" as="image" href="<?php echo e_media_url('images/hijaufront.svg'); ?>" fetchpriority="high">
+  <link rel="preload" as="image" href="<?php echo e_media_url('images/hijauback.svg'); ?>" fetchpriority="high">
   
   <!-- Preload WebGL morph backgrounds (PNG optimized) -->
-  <link rel="preload" as="image" href="images/morph1.png" fetchpriority="high">
-  <link rel="preload" as="image" href="images/morph2.png" fetchpriority="high">
-  <link rel="preload" as="image" href="images/morph3.png" fetchpriority="high">
+  <link rel="preload" as="image" href="<?php echo e_media_url('images/morph1.png'); ?>" fetchpriority="high">
+  <link rel="preload" as="image" href="<?php echo e_media_url('images/morph2.png'); ?>" fetchpriority="high">
+  <link rel="preload" as="image" href="<?php echo e_media_url('images/morph3.png'); ?>" fetchpriority="high">
   
   <!-- Preload critical CSS - Non-blocking load with instant swap -->
   <link rel="preload" href="css/workshirt.css?v=29" as="style" onload="this.onload=null;this.rel='stylesheet'">
@@ -155,10 +156,10 @@
     "name": "WORKSHIRT COLLECTION",
     "description": "Premium heavyweight Japanese drill workshirt with YKK half-zipper. Relaxed workwear fit designed for movement. Available in Royal Red, Forest Green, and Classic Black.",
     "image": [
-      "https://projectcutisem.com/images/hijaufront.svg",
-      "https://projectcutisem.com/images/hijauback.svg",
-      "https://projectcutisem.com/images/hitamdepan.svg",
-      "https://projectcutisem.com/images/merahdepan.svg"
+      <?php echo json_encode(media_url('images/hijaufront.svg')); ?>,
+      <?php echo json_encode(media_url('images/hijauback.svg')); ?>,
+      <?php echo json_encode(media_url('images/hitamdepan.svg')); ?>,
+      <?php echo json_encode(media_url('images/merahdepan.svg')); ?>
     ],
     "url": "https://projectcutisem.com",
     "brand": {
@@ -236,10 +237,10 @@
     <article class="slide js-slide" role="listitem" aria-label="Forest Green Workshirt">
       <div class="slide__content">
         <figure class="slide__img js-slide__img">
-          <img src="images/hijaufront.svg" alt="Forest Green Workshirt - Front view showing premium Japanese drill fabric" loading="eager" fetchpriority="high" decoding="async">
+          <img src="<?php echo e_media_url('images/hijaufront.svg'); ?>" alt="Forest Green Workshirt - Front view showing premium Japanese drill fabric" loading="eager" fetchpriority="high" decoding="async">
         </figure>
         <figure class="slide__img js-slide__img">
-          <img src="images/hijauback.svg" alt="Forest Green Workshirt - Back view with embroidered details" loading="eager" fetchpriority="high" decoding="async">
+          <img src="<?php echo e_media_url('images/hijauback.svg'); ?>" alt="Forest Green Workshirt - Back view with embroidered details" loading="eager" fetchpriority="high" decoding="async">
         </figure>
       </div>
       
@@ -255,11 +256,11 @@
     <article class="slide js-slide" role="listitem" aria-label="Classic Black Workshirt">
       <div class="slide__content">
         <figure class="slide__img js-slide__img">
-          <img class="lazy-image" data-src="images/hitamdepan.svg" alt="Classic Black Workshirt - Front view featuring half-zip YKK zipper" decoding="async">
+          <img class="lazy-image" data-src="<?php echo e_media_url('images/hitamdepan.svg'); ?>" alt="Classic Black Workshirt - Front view featuring half-zip YKK zipper" decoding="async">
           <div class="placeholder"></div>
         </figure>
         <figure class="slide__img js-slide__img">
-          <img class="lazy-image" data-src="images/hitamback.svg" alt="Classic Black Workshirt - Back view with Les Étudiants embroidery" decoding="async">
+          <img class="lazy-image" data-src="<?php echo e_media_url('images/hitamback.svg'); ?>" alt="Classic Black Workshirt - Back view with Les Étudiants embroidery" decoding="async">
           <div class="placeholder"></div>
         </figure>
       </div>
@@ -276,11 +277,11 @@
     <article class="slide js-slide" role="listitem" aria-label="Royal Red Workshirt">
       <div class="slide__content">
         <figure class="slide__img js-slide__img">
-          <img class="lazy-image" data-src="images/merahdepan.svg" alt="Royal Red Workshirt - Front view with PCS logo embroidery" decoding="async">
+          <img class="lazy-image" data-src="<?php echo e_media_url('images/merahdepan.svg'); ?>" alt="Royal Red Workshirt - Front view with PCS logo embroidery" decoding="async">
           <div class="placeholder"></div>
         </figure>
         <figure class="slide__img js-slide__img">
-          <img class="lazy-image" data-src="images/merahback.svg" alt="Royal Red Workshirt - Back view with We Lead The Future emblem" decoding="async">
+          <img class="lazy-image" data-src="<?php echo e_media_url('images/merahback.svg'); ?>" alt="Royal Red Workshirt - Back view with We Lead The Future emblem" decoding="async">
           <div class="placeholder"></div>
         </figure>
       </div>
@@ -419,11 +420,11 @@
         <article class="showcase-item showcase-item--left">
           <div class="showcase-images">
             <div class="showcase-image-main">
-              <img class="lazy-image" data-src="images/halfzip.png" alt="Half Zipper Detail - Main View showing YKK metal zipper quality" width="400" height="300" decoding="async">
+              <img class="lazy-image" data-src="<?php echo e_media_url('images/halfzip.png'); ?>" alt="Half Zipper Detail - Main View showing YKK metal zipper quality" width="400" height="300" decoding="async">
               <div class="placeholder"></div>
             </div>
             <div class="showcase-image-support">
-              <img class="lazy-image" data-src="images/halfzip2.png" alt="Half Zipper Detail - Supporting View of zipper mechanism" width="200" height="150" decoding="async">
+              <img class="lazy-image" data-src="<?php echo e_media_url('images/halfzip2.png'); ?>" alt="Half Zipper Detail - Supporting View of zipper mechanism" width="200" height="150" decoding="async">
               <div class="placeholder"></div>
             </div>
           </div>
@@ -445,11 +446,11 @@
           </div>
           <div class="showcase-images">
             <div class="showcase-image-main">
-              <img class="lazy-image" data-src="images/pcs.png" alt="Left Pocket PCS Logo Embroidery - Main View showing detailed stitching" width="400" height="300" decoding="async">
+              <img class="lazy-image" data-src="<?php echo e_media_url('images/pcs.png'); ?>" alt="Left Pocket PCS Logo Embroidery - Main View showing detailed stitching" width="400" height="300" decoding="async">
               <div class="placeholder"></div>
             </div>
             <div class="showcase-image-support">
-              <img class="lazy-image" data-src="images/pcs2.png" alt="Left Pocket PCS Logo Embroidery - Supporting View close-up" width="200" height="150" decoding="async">
+              <img class="lazy-image" data-src="<?php echo e_media_url('images/pcs2.png'); ?>" alt="Left Pocket PCS Logo Embroidery - Supporting View close-up" width="200" height="150" decoding="async">
               <div class="placeholder"></div>
             </div>
           </div>
@@ -459,11 +460,11 @@
         <article class="showcase-item showcase-item--left">
           <div class="showcase-images">
             <div class="showcase-image-main">
-              <img class="lazy-image" data-src="images/lead.png" alt="Right Pocket 'We Lead The Future' Emblem - Main View showing embroidered text" width="400" height="300" decoding="async">
+              <img class="lazy-image" data-src="<?php echo e_media_url('images/lead.png'); ?>" alt="Right Pocket 'We Lead The Future' Emblem - Main View showing embroidered text" width="400" height="300" decoding="async">
               <div class="placeholder"></div>
             </div>
             <div class="showcase-image-support">
-              <img class="lazy-image" data-src="images/lead2.png" alt="Right Pocket 'We Lead The Future' Emblem - Supporting View detail" width="200" height="150" decoding="async">
+              <img class="lazy-image" data-src="<?php echo e_media_url('images/lead2.png'); ?>" alt="Right Pocket 'We Lead The Future' Emblem - Supporting View detail" width="200" height="150" decoding="async">
               <div class="placeholder"></div>
             </div>
           </div>
@@ -485,11 +486,11 @@
           </div>
           <div class="showcase-images">
             <div class="showcase-image-main">
-              <img class="lazy-image" data-src="images/etudiants.png" alt="Back Embroidery 'Les Étudiants Mènent le Monde' - Main View showing French text" width="400" height="300" decoding="async">
+              <img class="lazy-image" data-src="<?php echo e_media_url('images/etudiants.png'); ?>" alt="Back Embroidery 'Les Étudiants Mènent le Monde' - Main View showing French text" width="400" height="300" decoding="async">
               <div class="placeholder"></div>
             </div>
             <div class="showcase-image-support">
-              <img class="lazy-image" data-src="images/etudiants2.png" alt="Back Embroidery 'Les Étudiants Mènent le Monde' - Supporting View close-up" width="200" height="150" decoding="async">
+              <img class="lazy-image" data-src="<?php echo e_media_url('images/etudiants2.png'); ?>" alt="Back Embroidery 'Les Étudiants Mènent le Monde' - Supporting View close-up" width="200" height="150" decoding="async">
               <div class="placeholder"></div>
             </div>
           </div>
@@ -552,7 +553,7 @@
             <a href="/behind-the-product" class="story-link">Learn More</a>
           </div>
           <div class="story-image">
-            <img class="lazy-image" data-src="images/story.svg" alt="Craftsmanship Detail" width="600" height="400" decoding="async">
+            <img class="lazy-image" data-src="<?php echo e_media_url('images/story.svg'); ?>" alt="Craftsmanship Detail" width="600" height="400" decoding="async">
             <div class="placeholder"></div>
           </div>
         </div>
@@ -695,8 +696,17 @@
     </div>
   </div>
 
+  <script>
+    window.PCS_MEDIA = {
+      morph: [
+        <?php echo json_encode(media_url('images/morph1.png')); ?>,
+        <?php echo json_encode(media_url('images/morph2.png')); ?>,
+        <?php echo json_encode(media_url('images/morph3.png')); ?>
+      ]
+    };
+  </script>
   <!-- Workshirt JavaScript - Loads after libraries with defer for non-blocking -->
-  <script src="js/workshirt.js?v=29" defer></script>
+  <script src="js/workshirt.js?v=30" defer></script>
   
   <!-- Page Prefetcher - Preloads next pages in background for instant navigation -->
   <script src="js/page-prefetcher.js?v=1" defer></script>

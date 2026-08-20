@@ -47,3 +47,9 @@ if (!defined('DB_HOST')) {
     define('APP_DEBUG', filter_var($env['APP_DEBUG'] ?? 'false', FILTER_VALIDATE_BOOLEAN));
 }
 
+if (!defined('CLOUDINARY_CLOUD_NAME')) {
+    define('CLOUDINARY_CLOUD_NAME', !empty($env['CLOUDINARY_CLOUD_NAME']) ? $env['CLOUDINARY_CLOUD_NAME'] : '');
+    define('CLOUDINARY_API_KEY', !empty($env['CLOUDINARY_API_KEY']) ? $env['CLOUDINARY_API_KEY'] : '');
+    define('CLOUDINARY_API_SECRET', !empty($env['CLOUDINARY_API_SECRET']) ? $env['CLOUDINARY_API_SECRET'] : '');
+}
+

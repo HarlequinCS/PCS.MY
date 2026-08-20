@@ -9,6 +9,7 @@ requireAdminLogin();
 define('DB_CONFIG_LOADED', true);
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../includes/db.php';
+require_once __DIR__ . '/../includes/cloudinary.php';
 require_once __DIR__ . '/sidebar_helper.php';
 
 $pdo = getDBConnection();
@@ -353,7 +354,7 @@ $sizes = ['S', 'M', 'L', 'XL', 'XXL'];
                                 <div class="variant-group">
                                     <div class="variant-card">
                                         <div class="variant-image-container">
-                                            <img src="/<?php echo htmlspecialchars($variant['variant_image']); ?>" 
+                                            <img src="<?php echo e_media_url($variant['variant_image']); ?>" 
                                                  alt="<?php echo htmlspecialchars($variant['variant_name']); ?>"
                                                  class="variant-image-large"
                                                  onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">

@@ -65,6 +65,7 @@ require_once __DIR__ . '/config/honeybadger.php';
 
 // Include database connection
 require_once __DIR__ . '/includes/db.php';
+require_once __DIR__ . '/includes/cloudinary.php';
 
 // Include CSRF protection
 require_once __DIR__ . '/includes/csrf.php';
@@ -792,6 +793,8 @@ foreach ($_SESSION['cart'] as $item) {
     <!-- Preconnect for Performance -->
     <link rel="preconnect" href="https://projectcutisem.com">
     <link rel="dns-prefetch" href="https://projectcutisem.com">
+    <link rel="preconnect" href="https://res.cloudinary.com" crossorigin>
+    <link rel="dns-prefetch" href="https://res.cloudinary.com">
 </head>
 <body>
     <!-- Navigation Bar -->
@@ -877,14 +880,14 @@ foreach ($_SESSION['cart'] as $item) {
                                     <?php foreach ($variants as $key => $variant): ?>
                                         <label class="variant-card" data-variant="<?php echo htmlspecialchars($key, ENT_QUOTES, 'UTF-8'); ?>" aria-label="Select <?php echo htmlspecialchars($variant['name'], ENT_QUOTES, 'UTF-8'); ?> color">
                                             <input type="radio" name="variant" value="<?php echo htmlspecialchars($key, ENT_QUOTES, 'UTF-8'); ?>" 
-                                                   data-image="<?php echo htmlspecialchars($variant['image'], ENT_QUOTES, 'UTF-8'); ?>"
+                                                   data-image="<?php echo e_media_url($variant['image']); ?>"
                                                    id="variant-<?php echo htmlspecialchars($key, ENT_QUOTES, 'UTF-8'); ?>"
                                                    aria-describedby="variant-<?php echo htmlspecialchars($key, ENT_QUOTES, 'UTF-8'); ?>-name"
                                                    required>
                                             <div class="variant-card-content">
                                                 <div class="variant-thumbnail">
                                                     <!-- Variant thumbnail with lazy loading -->
-                                                    <img class="lazy-image" data-src="<?php echo htmlspecialchars($variant['image']); ?>" 
+                                                    <img class="lazy-image" data-src="<?php echo e_media_url($variant['image']); ?>" 
                                                          alt="<?php echo htmlspecialchars($variant['name']); ?> workshirt"
                                                          width="120"
                                                          height="120">
@@ -1065,7 +1068,7 @@ foreach ($_SESSION['cart'] as $item) {
             </div>
             <div class="size-chart-illustration">
                 <!-- Size chart image with lazy loading -->
-                <img class="lazy-image size-chart-image" data-src="images/MockUp size.svg" alt="Size chart illustration showing pit (width) and length measurements">
+                <img class="lazy-image size-chart-image" data-src="<?php echo e_media_url('images/MockUp size.svg'); ?>" alt="Size chart illustration showing pit (width) and length measurements">
                 <div class="placeholder"></div>
             </div>
             <div class="size-chart-table-wrapper">
@@ -1146,7 +1149,7 @@ foreach ($_SESSION['cart'] as $item) {
                     <?php foreach ($_SESSION['cart'] as $item): ?>
                         <div class="cart-item-card" data-item-id="<?php echo htmlspecialchars($item['id'], ENT_QUOTES, 'UTF-8'); ?>">
                             <div class="cart-item-image-wrapper">
-                                <img class="lazy-image cart-item-image" data-src="<?php echo htmlspecialchars($item['variant_image'], ENT_QUOTES, 'UTF-8'); ?>" 
+                                <img class="lazy-image cart-item-image" data-src="<?php echo e_media_url($item['variant_image']); ?>" 
                                      alt="<?php echo htmlspecialchars($item['variant_name'], ENT_QUOTES, 'UTF-8'); ?>">
                                 <div class="placeholder"></div>
                             </div>

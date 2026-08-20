@@ -18,7 +18,7 @@ require_once __DIR__ . '/config/honeybadger.php';
 // CSP Header Override - form-action removed to prevent blocking
 // Alternative security measures implemented below (Origin check, Referer validation)
 if (!headers_sent()) {
-    header("Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://fonts.googleapis.com https://static.cloudflareinsights.com https://cdn.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://projectcutisem.com https://static.cloudflareinsights.com; frame-ancestors 'self'; base-uri 'self';", true);
+    header("Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://fonts.googleapis.com https://static.cloudflareinsights.com https://cdn.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; media-src 'self' https://res.cloudinary.com; connect-src 'self' https://projectcutisem.com https://static.cloudflareinsights.com https://res.cloudinary.com; frame-ancestors 'self'; base-uri 'self';", true);
 }
 
 // ============================================
@@ -42,6 +42,7 @@ if (!defined('DB_CONFIG_LOADED')) {
 
 // Include database connection
 require_once __DIR__ . '/includes/db.php';
+require_once __DIR__ . '/includes/cloudinary.php';
 
 // Include promotion code system
 require_once __DIR__ . '/includes/promotion.php';
@@ -997,7 +998,7 @@ if ($finalAmount < 0) {
                             $itemSizeAddonTotal = $itemSizeAddon * $itemQuantity;
                         ?>
                             <div class="cart-summary-item">
-                                <img src="<?php echo htmlspecialchars($item['variant_image']); ?>" 
+                                <img src="<?php echo e_media_url($item['variant_image']); ?>" 
                                      alt="<?php echo htmlspecialchars($item['variant_name']); ?>"
                                      class="cart-summary-item-image">
                                 <div class="cart-summary-item-details">

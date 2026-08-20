@@ -90,12 +90,15 @@ class Slider {
       this.camera = null
       this.mesh = null
       
-      // Use local morph images for WebGL morphing background (optimized: PNG where available)
-      this.images = [
-        'images/morph1.png',  // Slide 1 background (optimized PNG)
-        'images/morph2.png',  // Slide 2 background (optimized PNG)
-        'images/morph3.png'   // Slide 3 background (optimized PNG)
-      ]
+      // Morph backgrounds from Cloudinary when PCS_MEDIA is injected by the page
+      const media = window.PCS_MEDIA || {}
+      this.images = (media.morph && media.morph.length === 3)
+        ? media.morph
+        : [
+            'images/morph1.png',
+            'images/morph2.png',
+            'images/morph3.png'
+          ]
       
       // Ensure exactly 3 images for 3 slides
       if (this.images.length !== 3) {

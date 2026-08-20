@@ -31,6 +31,11 @@
     DirectoryIndex index.html index.php
 </IfModule>
 
+# Parse PHP in the two HTML entry pages (they already contain PHP)
+<FilesMatch "^(index|behind-the-product)\.html$">
+    SetHandler application/x-httpd-php
+</FilesMatch>
+
 # ============================================
 # 2. SECURITY HEADERS
 # ============================================
@@ -53,7 +58,7 @@
     # Content Security Policy (Permissive for compatibility)
     # Note: CSP form-action does not support wildcard subdomains (*.domain.com)
     # List specific subdomains explicitly if needed (e.g., www, admin, api)
-    Header always set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://fonts.googleapis.com https://static.cloudflareinsights.com https://cdn.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://projectcutisem.com https://static.cloudflareinsights.com; frame-ancestors 'self'; base-uri 'self';"
+    Header always set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://fonts.googleapis.com https://static.cloudflareinsights.com https://cdn.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; media-src 'self' https://res.cloudinary.com; connect-src 'self' https://projectcutisem.com https://static.cloudflareinsights.com https://res.cloudinary.com; frame-ancestors 'self'; base-uri 'self';"
     
     # Strict Transport Security (uncomment with HTTPS)
     # Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"

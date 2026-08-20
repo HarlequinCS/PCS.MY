@@ -1,3 +1,6 @@
+<?php
+require_once __DIR__ . '/includes/cloudinary.php';
+?>
 <!DOCTYPE html>
 <html lang="en" dir="ltr" prefix="og: https://ogp.me/ns#">
 <head>
@@ -63,6 +66,9 @@
     <link rel="icon" type="image/png" sizes="512x512" href="/images/android-chrome-512x512.png">
     <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
     <link rel="manifest" href="/site.webmanifest">
+    
+    <link rel="preconnect" href="https://res.cloudinary.com" crossorigin>
+    <link rel="dns-prefetch" href="https://res.cloudinary.com">
     
     <!-- Preload Critical CSS -->
     <link rel="preload" href="css/behind-the-product.css?v=29" as="style" onload="this.onload=null;this.rel='stylesheet'">
@@ -155,7 +161,7 @@
                             </div>
                             <div class="card-media-section">
                                 <div class="media-container">
-                                    <img class="lazy-image" data-src="images/1.svg" alt="Phase 1: Initial button workshirt mockup design sketch" width="400" height="300" decoding="async" />
+                                    <img class="lazy-image" data-src="<?php echo e_media_url('images/1.svg'); ?>" alt="Phase 1: Initial button workshirt mockup design sketch" width="400" height="300" decoding="async" />
                                     <div class="placeholder"></div>
                                 </div>
                             </div>
@@ -191,7 +197,7 @@
                             </div>
                             <div class="card-media-section">
                                 <div class="media-container">
-                                    <img class="lazy-image" data-src="images/2.svg" alt="Phase 2: Color palette selection showing Red, Green, and Black options" width="400" height="300" decoding="async" />
+                                    <img class="lazy-image" data-src="<?php echo e_media_url('images/2.svg'); ?>" alt="Phase 2: Color palette selection showing Red, Green, and Black options" width="400" height="300" decoding="async" />
                                     <div class="placeholder"></div>
                                 </div>
                             </div>
@@ -223,7 +229,7 @@
                             </div>
                             <div class="card-media-section">
                                 <div class="media-container">
-                                    <img class="lazy-image" data-src="images/4.svg" alt="Phase 3: Japanese drill fabric material sample and texture" width="400" height="300" decoding="async" />
+                                    <img class="lazy-image" data-src="<?php echo e_media_url('images/4.svg'); ?>" alt="Phase 3: Japanese drill fabric material sample and texture" width="400" height="300" decoding="async" />
                                     <div class="placeholder"></div>
                                 </div>
                             </div>
@@ -255,7 +261,7 @@
                             </div>
                             <div class="card-media-section">
                                 <div class="media-container">
-                                    <img class="lazy-image" data-src="images/3.svg" alt="Phase 4: Design evolution from button to half-zipper style" width="400" height="300" decoding="async" />
+                                    <img class="lazy-image" data-src="<?php echo e_media_url('images/3.svg'); ?>" alt="Phase 4: Design evolution from button to half-zipper style" width="400" height="300" decoding="async" />
                                     <div class="placeholder"></div>
                                 </div>
                             </div>
@@ -287,7 +293,7 @@
                             </div>
                             <div class="card-media-section">
                                 <div class="media-container">
-                                    <video src="images/sulam.mp4" autoplay loop muted playsinline preload="metadata" aria-label="Phase 5: Embroidery sewing process video" width="400" height="300">
+                                    <video src="<?php echo e_media_url('images/sulam.mp4'); ?>" autoplay loop muted playsinline preload="metadata" aria-label="Phase 5: Embroidery sewing process video" width="400" height="300">
                                         <p>Your browser does not support the video element. This video shows the embroidery sewing process.</p>
                                     </video>
                                 </div>
@@ -320,7 +326,7 @@
                             </div>
                             <div class="card-media-section">
                                 <div class="media-container">
-                                    <img class="lazy-image" data-src="images/5.svg" alt="Phase 6: Final product sample with temporary packaging" width="400" height="300" decoding="async" />
+                                    <img class="lazy-image" data-src="<?php echo e_media_url('images/5.svg'); ?>" alt="Phase 6: Final product sample with temporary packaging" width="400" height="300" decoding="async" />
                                     <div class="placeholder"></div>
                                 </div>
                             </div>
@@ -352,7 +358,7 @@
                             </div>
                             <div class="card-media-section">
                                 <div class="media-container">
-                                    <img class="lazy-image" data-src="images/6.svg" alt="Phase 7: Casual product photoshoot for social media" width="400" height="300" decoding="async" />
+                                    <img class="lazy-image" data-src="<?php echo e_media_url('images/6.svg'); ?>" alt="Phase 7: Casual product photoshoot for social media" width="400" height="300" decoding="async" />
                                     <div class="placeholder"></div>
                                 </div>
                             </div>
