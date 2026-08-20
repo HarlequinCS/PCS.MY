@@ -998,7 +998,7 @@ if ($finalAmount < 0) {
                             $itemSizeAddonTotal = $itemSizeAddon * $itemQuantity;
                         ?>
                             <div class="cart-summary-item">
-                                <img src="<?php echo e_media_url($item['variant_image']); ?>" 
+                                <img src="<?php echo e_media_url($item['variant_image'], ['preset' => 'thumb']); ?>" 
                                      alt="<?php echo htmlspecialchars($item['variant_name']); ?>"
                                      class="cart-summary-item-image">
                                 <div class="cart-summary-item-details">

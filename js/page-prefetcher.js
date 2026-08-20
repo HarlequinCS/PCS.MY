@@ -36,12 +36,10 @@
   const PREFETCH_CONFIG = {
     // High priority: Most likely next pages (prefetch immediately)
     high: [
-      { url: 'order-baju.php', priority: 'high', delay: 0 },
-      { url: 'behind-the-product.html', priority: 'high', delay: 0 },
+      { url: 'order-baju.php', priority: 'high', delay: 3000 },
+      { url: 'behind-the-product.html', priority: 'high', delay: 4500 },
     ],
-    // Low priority: Less likely but still possible (prefetch after a delay)
     low: [
-      { url: 'checkout.php', priority: 'low', delay: 2000 },
     ]
   };
 

@@ -74,44 +74,23 @@ require_once __DIR__ . '/includes/cloudinary.php';
   <link rel="dns-prefetch" href="https://res.cloudinary.com">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="dns-prefetch" href="https://s3-us-west-2.amazonaws.com">
   
-  <!-- Preload critical hero images - Only preload first slide for fastest LCP -->
-  <link rel="preload" as="image" href="<?php echo e_media_url('images/hijaufront.svg'); ?>" fetchpriority="high">
-  <link rel="preload" as="image" href="<?php echo e_media_url('images/hijauback.svg'); ?>" fetchpriority="high">
+  <!-- Preload only the LCP hero pair — extra preloads steal bandwidth from first paint -->
+  <link rel="preload" as="image" href="<?php echo e_media_url('images/hijaufront.svg', ['preset' => 'hero']); ?>" fetchpriority="high">
+  <link rel="preload" as="image" href="<?php echo e_media_url('images/hijauback.svg', ['preset' => 'hero']); ?>">
   
-  <!-- Preload WebGL morph backgrounds (PNG optimized) -->
-  <link rel="preload" as="image" href="<?php echo e_media_url('images/morph1.png'); ?>" fetchpriority="high">
-  <link rel="preload" as="image" href="<?php echo e_media_url('images/morph2.png'); ?>" fetchpriority="high">
-  <link rel="preload" as="image" href="<?php echo e_media_url('images/morph3.png'); ?>" fetchpriority="high">
-  
-  <!-- Preload critical CSS - Non-blocking load with instant swap -->
-  <link rel="preload" href="css/workshirt.css?v=29" as="style" onload="this.onload=null;this.rel='stylesheet'">
-  <noscript><link rel="stylesheet" href="css/workshirt.css?v=29"></noscript>
+  <!-- Critical CSS: blocking load is better for LCP than async FOUC -->
+  <link rel="stylesheet" href="css/workshirt.css?v=30">
   <link rel="stylesheet" href="css/image-loader.css?v=1">
-  <script src="js/console-safe.js?v=1"></script>
-  <script>
-    // Fallback for browsers that don't support onload on link
-    (function() {
-      var link = document.querySelector('link[rel="preload"][as="style"]');
-      if (link && !link.onload) {
-        link.rel = 'stylesheet';
-      }
-    })();
-  </script>
+  <script src="js/console-safe.js?v=1" defer></script>
   
   <!-- Google Fonts - Deferred loading for better performance -->
-  <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Pinyon+Script&display=swap" rel="stylesheet" media="print" onload="this.media='all';this.onload=null">
   <noscript><link href="https://fonts.googleapis.com/css2?family=Pinyon+Script&display=swap" rel="stylesheet"></noscript>
   
   <!-- Complete Favicon Set -->
   <link rel="icon" type="image/x-icon" href="/favicon.ico">
-  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png">
   <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
-  <link rel="icon" type="image/png" sizes="192x192" href="/images/android-chrome-192x192.png">
-  <link rel="icon" type="image/png" sizes="512x512" href="/images/android-chrome-512x512.png">
   <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
   <link rel="manifest" href="/site.webmanifest">
   
@@ -237,10 +216,10 @@ require_once __DIR__ . '/includes/cloudinary.php';
     <article class="slide js-slide" role="listitem" aria-label="Forest Green Workshirt">
       <div class="slide__content">
         <figure class="slide__img js-slide__img">
-          <img src="<?php echo e_media_url('images/hijaufront.svg'); ?>" alt="Forest Green Workshirt - Front view showing premium Japanese drill fabric" loading="eager" fetchpriority="high" decoding="async">
+          <img src="<?php echo e_media_url('images/hijaufront.svg', ['preset' => 'hero']); ?>" alt="Forest Green Workshirt - Front view showing premium Japanese drill fabric" loading="eager" fetchpriority="high" decoding="async" width="500" height="700">
         </figure>
         <figure class="slide__img js-slide__img">
-          <img src="<?php echo e_media_url('images/hijauback.svg'); ?>" alt="Forest Green Workshirt - Back view with embroidered details" loading="eager" fetchpriority="high" decoding="async">
+          <img src="<?php echo e_media_url('images/hijauback.svg', ['preset' => 'hero']); ?>" alt="Forest Green Workshirt - Back view with embroidered details" loading="eager" decoding="async" width="500" height="700">
         </figure>
       </div>
       
@@ -256,11 +235,11 @@ require_once __DIR__ . '/includes/cloudinary.php';
     <article class="slide js-slide" role="listitem" aria-label="Classic Black Workshirt">
       <div class="slide__content">
         <figure class="slide__img js-slide__img">
-          <img class="lazy-image" data-src="<?php echo e_media_url('images/hitamdepan.svg'); ?>" alt="Classic Black Workshirt - Front view featuring half-zip YKK zipper" decoding="async">
+          <img class="lazy-image" data-src="<?php echo e_media_url('images/hitamdepan.svg', ['preset' => 'slide']); ?>" alt="Classic Black Workshirt - Front view featuring half-zip YKK zipper" decoding="async" width="500" height="700">
           <div class="placeholder"></div>
         </figure>
         <figure class="slide__img js-slide__img">
-          <img class="lazy-image" data-src="<?php echo e_media_url('images/hitamback.svg'); ?>" alt="Classic Black Workshirt - Back view with Les Étudiants embroidery" decoding="async">
+          <img class="lazy-image" data-src="<?php echo e_media_url('images/hitamback.svg', ['preset' => 'slide']); ?>" alt="Classic Black Workshirt - Back view with Les Étudiants embroidery" decoding="async" width="500" height="700">
           <div class="placeholder"></div>
         </figure>
       </div>
@@ -277,11 +256,11 @@ require_once __DIR__ . '/includes/cloudinary.php';
     <article class="slide js-slide" role="listitem" aria-label="Royal Red Workshirt">
       <div class="slide__content">
         <figure class="slide__img js-slide__img">
-          <img class="lazy-image" data-src="<?php echo e_media_url('images/merahdepan.svg'); ?>" alt="Royal Red Workshirt - Front view with PCS logo embroidery" decoding="async">
+          <img class="lazy-image" data-src="<?php echo e_media_url('images/merahdepan.svg', ['preset' => 'slide']); ?>" alt="Royal Red Workshirt - Front view with PCS logo embroidery" decoding="async" width="500" height="700">
           <div class="placeholder"></div>
         </figure>
         <figure class="slide__img js-slide__img">
-          <img class="lazy-image" data-src="<?php echo e_media_url('images/merahback.svg'); ?>" alt="Royal Red Workshirt - Back view with We Lead The Future emblem" decoding="async">
+          <img class="lazy-image" data-src="<?php echo e_media_url('images/merahback.svg', ['preset' => 'slide']); ?>" alt="Royal Red Workshirt - Back view with We Lead The Future emblem" decoding="async" width="500" height="700">
           <div class="placeholder"></div>
         </figure>
       </div>
@@ -420,11 +399,11 @@ require_once __DIR__ . '/includes/cloudinary.php';
         <article class="showcase-item showcase-item--left">
           <div class="showcase-images">
             <div class="showcase-image-main">
-              <img class="lazy-image" data-src="<?php echo e_media_url('images/halfzip.png'); ?>" alt="Half Zipper Detail - Main View showing YKK metal zipper quality" width="400" height="300" decoding="async">
+              <img class="lazy-image" data-src="<?php echo e_media_url('images/halfzip.png', ['preset' => 'showcase']); ?>" alt="Half Zipper Detail - Main View showing YKK metal zipper quality" width="400" height="300" decoding="async">
               <div class="placeholder"></div>
             </div>
             <div class="showcase-image-support">
-              <img class="lazy-image" data-src="<?php echo e_media_url('images/halfzip2.png'); ?>" alt="Half Zipper Detail - Supporting View of zipper mechanism" width="200" height="150" decoding="async">
+              <img class="lazy-image" data-src="<?php echo e_media_url('images/halfzip2.png', ['preset' => 'support']); ?>" alt="Half Zipper Detail - Supporting View of zipper mechanism" width="200" height="150" decoding="async">
               <div class="placeholder"></div>
             </div>
           </div>
@@ -446,11 +425,11 @@ require_once __DIR__ . '/includes/cloudinary.php';
           </div>
           <div class="showcase-images">
             <div class="showcase-image-main">
-              <img class="lazy-image" data-src="<?php echo e_media_url('images/pcs.png'); ?>" alt="Left Pocket PCS Logo Embroidery - Main View showing detailed stitching" width="400" height="300" decoding="async">
+              <img class="lazy-image" data-src="<?php echo e_media_url('images/pcs.png', ['preset' => 'showcase']); ?>" alt="Left Pocket PCS Logo Embroidery - Main View showing detailed stitching" width="400" height="300" decoding="async">
               <div class="placeholder"></div>
             </div>
             <div class="showcase-image-support">
-              <img class="lazy-image" data-src="<?php echo e_media_url('images/pcs2.png'); ?>" alt="Left Pocket PCS Logo Embroidery - Supporting View close-up" width="200" height="150" decoding="async">
+              <img class="lazy-image" data-src="<?php echo e_media_url('images/pcs2.png', ['preset' => 'support']); ?>" alt="Left Pocket PCS Logo Embroidery - Supporting View close-up" width="200" height="150" decoding="async">
               <div class="placeholder"></div>
             </div>
           </div>
@@ -460,11 +439,11 @@ require_once __DIR__ . '/includes/cloudinary.php';
         <article class="showcase-item showcase-item--left">
           <div class="showcase-images">
             <div class="showcase-image-main">
-              <img class="lazy-image" data-src="<?php echo e_media_url('images/lead.png'); ?>" alt="Right Pocket 'We Lead The Future' Emblem - Main View showing embroidered text" width="400" height="300" decoding="async">
+              <img class="lazy-image" data-src="<?php echo e_media_url('images/lead.png', ['preset' => 'showcase']); ?>" alt="Right Pocket 'We Lead The Future' Emblem - Main View showing embroidered text" width="400" height="300" decoding="async">
               <div class="placeholder"></div>
             </div>
             <div class="showcase-image-support">
-              <img class="lazy-image" data-src="<?php echo e_media_url('images/lead2.png'); ?>" alt="Right Pocket 'We Lead The Future' Emblem - Supporting View detail" width="200" height="150" decoding="async">
+              <img class="lazy-image" data-src="<?php echo e_media_url('images/lead2.png', ['preset' => 'support']); ?>" alt="Right Pocket 'We Lead The Future' Emblem - Supporting View detail" width="200" height="150" decoding="async">
               <div class="placeholder"></div>
             </div>
           </div>
@@ -486,11 +465,11 @@ require_once __DIR__ . '/includes/cloudinary.php';
           </div>
           <div class="showcase-images">
             <div class="showcase-image-main">
-              <img class="lazy-image" data-src="<?php echo e_media_url('images/etudiants.png'); ?>" alt="Back Embroidery 'Les Étudiants Mènent le Monde' - Main View showing French text" width="400" height="300" decoding="async">
+              <img class="lazy-image" data-src="<?php echo e_media_url('images/etudiants.png', ['preset' => 'showcase']); ?>" alt="Back Embroidery 'Les Étudiants Mènent le Monde' - Main View showing French text" width="400" height="300" decoding="async">
               <div class="placeholder"></div>
             </div>
             <div class="showcase-image-support">
-              <img class="lazy-image" data-src="<?php echo e_media_url('images/etudiants2.png'); ?>" alt="Back Embroidery 'Les Étudiants Mènent le Monde' - Supporting View close-up" width="200" height="150" decoding="async">
+              <img class="lazy-image" data-src="<?php echo e_media_url('images/etudiants2.png', ['preset' => 'support']); ?>" alt="Back Embroidery 'Les Étudiants Mènent le Monde' - Supporting View close-up" width="200" height="150" decoding="async">
               <div class="placeholder"></div>
             </div>
           </div>
@@ -553,7 +532,7 @@ require_once __DIR__ . '/includes/cloudinary.php';
             <a href="/behind-the-product" class="story-link">Learn More</a>
           </div>
           <div class="story-image">
-            <img class="lazy-image" data-src="<?php echo e_media_url('images/story.svg'); ?>" alt="Craftsmanship Detail" width="600" height="400" decoding="async">
+            <img class="lazy-image" data-src="<?php echo e_media_url('images/story.svg', ['preset' => 'story']); ?>" alt="Craftsmanship Detail" width="600" height="400" decoding="async">
             <div class="placeholder"></div>
           </div>
         </div>
@@ -638,10 +617,8 @@ require_once __DIR__ . '/includes/cloudinary.php';
   </button>
 
   <!-- Three.js Library - Using jsDelivr CDN with defer for non-blocking load -->
-  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js" defer crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-  
-  <!-- GSAP Library - Using jsDelivr CDN with defer for non-blocking load -->
-  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js" defer crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js" defer fetchpriority="low" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js" defer fetchpriority="low" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   
   <!-- Coming Soon Modal -->
   <div class="coming-soon-modal js-coming-soon-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" aria-describedby="modal-description" aria-hidden="true">
@@ -699,17 +676,17 @@ require_once __DIR__ . '/includes/cloudinary.php';
   <script>
     window.PCS_MEDIA = {
       morph: [
-        <?php echo json_encode(media_url('images/morph1.png')); ?>,
-        <?php echo json_encode(media_url('images/morph2.png')); ?>,
-        <?php echo json_encode(media_url('images/morph3.png')); ?>
+        <?php echo json_encode(media_url('images/morph1.png', ['preset' => 'morph'])); ?>,
+        <?php echo json_encode(media_url('images/morph2.png', ['preset' => 'morph'])); ?>,
+        <?php echo json_encode(media_url('images/morph3.png', ['preset' => 'morph'])); ?>
       ]
     };
   </script>
   <!-- Workshirt JavaScript - Loads after libraries with defer for non-blocking -->
-  <script src="js/workshirt.js?v=30" defer></script>
+  <script src="js/workshirt.js?v=31" defer></script>
   
   <!-- Page Prefetcher - Preloads next pages in background for instant navigation -->
-  <script src="js/page-prefetcher.js?v=1" defer></script>
+  <script src="js/page-prefetcher.js?v=2" defer></script>
   
   <!-- Image Lazy Loader -->
   <script src="js/image-lazy-loader.js?v=1" defer></script>

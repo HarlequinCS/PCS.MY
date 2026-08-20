@@ -207,9 +207,9 @@ class Slider {
         
         this.renderer = new THREE.WebGLRenderer({ 
           alpha: true,
-          antialias: true 
+          antialias: window.innerWidth > 768
         })
-        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, window.innerWidth > 768 ? 1.5 : 1))
         this.renderer.setSize(window.innerWidth, window.innerHeight)
         
         // Ensure canvas follows the viewport
@@ -360,28 +360,6 @@ class Slider {
       // Use fallback immediately, then try to load real texture
       this.disp = createFallbackDisp()
       onTextureLoaded()
-      
-      // Optionally try to load external displacement map (non-blocking)
-      // If it fails or is slow, fallback is already set
-      loader.load(
-        'https://s3-us-west-2.amazonaws.com/s.cdpn.io/58281/rock-_disp.png',
-        (loadedDisp) => {
-          // Replace fallback with real texture
-          loadedDisp.magFilter = loadedDisp.minFilter = THREE.LinearFilter
-          loadedDisp.wrapS = loadedDisp.wrapT = THREE.RepeatWrapping
-          loadedDisp.generateMipmaps = false
-          this.disp = loadedDisp
-          if (meshCreated && this.mat) {
-            this.mat.uniforms.disp.value = loadedDisp
-            this.render()
-          }
-        },
-        undefined,
-        (error) => {
-          // Fallback already set, just log warning
-          console.warn('Could not load external displacement map, using fallback')
-        }
-      )
     }
     
     createMesh() {
